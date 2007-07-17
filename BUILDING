@@ -1,0 +1,9 @@
+CMake (http://www.cmake.org) is used to build yajl.  Steps to build are:
+
+1. attain cmake (tested against cmake 2.4.5 and 2.4.6
+2. mkdir build
+3. cd build
+4. cmake ..
+5. make 
+
+build output is left in dist/

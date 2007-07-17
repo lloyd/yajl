@@ -1,0 +1,6 @@
+array open '['
+double: 10.000000
+double: 10.000000
+double: 3.141569
+double: 1000.000000
+array close ']'

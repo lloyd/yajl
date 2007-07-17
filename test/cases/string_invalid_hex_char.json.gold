@@ -1,0 +1,3 @@
+lexical error: invalid (non-hex) character occurs after '\u' inside string.
+           blah \u0123 \u4567 \u89ab \uc/ef \uABCD \uEFFE bar baz bing
+                     (right here) ------^
