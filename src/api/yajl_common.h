@@ -37,7 +37,7 @@
 
 /* msft dll export gunk.  To build a DLL on windows, you
  * must define WIN32, YAJL_SHARED, and YAJL_BUILD.  To use a shared
- * DLL, you must define YAJL_SHARED */
+ * DLL, you must define YAJL_SHARED and WIN32 */
 #if defined(WIN32) && defined(YAJL_SHARED)
 #  ifdef YAJL_BUILD
 #    define YAJL_API __declspec(dllexport)
