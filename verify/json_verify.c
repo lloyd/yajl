@@ -40,7 +40,9 @@ static void
 usage(const char * progname)
 {
     fprintf(stderr, "usage:  %s\n"
-                    "    -q quiet mode\n", progname);
+                    "    -q quiet mode\n"
+                    "    -c allow comments\n",
+            progname);
     exit(1);
 }
 
@@ -56,9 +58,19 @@ main(int argc, char ** argv)
     yajl_parser_config cfg = { 0 };
 
     /* check arguments.*/
-    /* XXX: comment flag! */
-    if (argc == 2 && !strcmp("-q", argv[1])) {
-        quiet = 1;
+    if (argc > 1 && argc < 4) {
+        unsigned int i;
+
+        for (i=1; i < argc;i++) {
+            if (!strcmp("-q", argv[i])) {
+                quiet = 1;
+            } else if (!strcmp("-c", argv[i])) {
+                cfg.allowComments = 1;
+            } else {
+                fprintf(stderr, "unrecognized option: '%s'\n\n", argv[i]);
+                usage(argv[0]);
+            }
+        }
     } else if (argc != 1) {
         usage(argv[0]);
     }
