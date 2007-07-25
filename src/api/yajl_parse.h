@@ -82,8 +82,23 @@ extern "C" {
         int (* yajl_end_array)(void * ctx);        
     } yajl_callbacks;
     
-    /** allocate a parser handle */
+    /** configuration structure for the generator */
+    typedef struct {
+        /** if nonzero, javascript style comments will be allowed in
+         *  the json input, both slash star and slash slash */
+        unsigned int allowComments;
+    } yajl_parser_config;
+
+    /** allocate a parser handle
+     *  \param callbacks  a yajl callbacks structure specifying the
+     *                    functions to call when different JSON entities
+     *                    are encountered in the input text.  May be NULL,
+     *                    which is only useful for validation.
+     *  \param config     configuration parameters for the parse.
+     *  \param ctx        a context pointer that will be passed to callbacks.
+     */
     yajl_handle YAJL_API yajl_alloc(const yajl_callbacks * callbacks,
+                                    const yajl_parser_config * config,
                                     void * ctx);
 
     /** free a parser handle */    

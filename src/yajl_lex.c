@@ -68,7 +68,7 @@ tokToStr(yajl_tok tok)
  * bits of a chunk of JSON before the last bits are available (still on
  * the network or disk).  This makes the lexer more complex.  The
  * responsibility of the lexer is to handle transparently the case where
- * a chunk boundary falls in the middle of a token.  The way this is
+ * a chunk boundary falls in the middle of a token.  This is
  * accomplished is via a buffer and a character reading abstraction. 
  *
  * Overview of implementation
@@ -99,6 +99,9 @@ struct yajl_lexer_t {
 
     /* are we using the lex buf? */
     unsigned int bufInUse;
+
+    /* shall we allow comments? */
+    unsigned int allowComments;
 };
 
 static unsigned char
@@ -120,10 +123,11 @@ unreadChar(yajl_lexer lxr, unsigned int *off)
 }
 
 yajl_lexer
-yajl_lex_alloc(void)
+yajl_lex_alloc(unsigned int allowComments)
 {
     yajl_lexer lxr = (yajl_lexer) calloc(1, sizeof(struct yajl_lexer_t));
     lxr->buf = yajl_buf_alloc();
+    lxr->allowComments = allowComments;
     return lxr;
 }
 
@@ -270,7 +274,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
     return tok;
 }
 
-#define NUM_CHECK_EOF if (*offset >= jsonTextLen) return yajl_tok_eof;
+#define RETURN_IF_EOF if (*offset >= jsonTextLen) return yajl_tok_eof;
 
 static yajl_tok
 yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
@@ -284,22 +288,22 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     yajl_tok tok = yajl_tok_integer;
 
-    NUM_CHECK_EOF;    
+    RETURN_IF_EOF;    
     c = readChar(lexer, jsonText, offset);
 
     /* optional leading minus */
     if (c == '-') {
-        NUM_CHECK_EOF;    
+        RETURN_IF_EOF;    
         c = readChar(lexer, jsonText, offset); 
     }
 
     /* a single zero, or a series of integers */
     if (c == '0') {
-        NUM_CHECK_EOF;    
+        RETURN_IF_EOF;    
         c = readChar(lexer, jsonText, offset); 
     } else if (c >= '1' && c <= '9') {
         do {
-            NUM_CHECK_EOF;    
+            RETURN_IF_EOF;    
             c = readChar(lexer, jsonText, offset); 
         } while (c >= '0' && c <= '9');
     } else {
@@ -312,12 +316,12 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
     if (c == '.') {
         int numRd = 0;
         
-        NUM_CHECK_EOF;
+        RETURN_IF_EOF;
         c = readChar(lexer, jsonText, offset); 
 
         while (c >= '0' && c <= '9') {
             numRd++;
-            NUM_CHECK_EOF;
+            RETURN_IF_EOF;
             c = readChar(lexer, jsonText, offset); 
         } 
 
@@ -331,18 +335,18 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     /* optional exponent (indicates this is floating point) */
     if (c == 'e' || c == 'E') {
-        NUM_CHECK_EOF;
+        RETURN_IF_EOF;
         c = readChar(lexer, jsonText, offset); 
 
         /* optional sign */
         if (c == '+' || c == '-') {
-            NUM_CHECK_EOF;
+            RETURN_IF_EOF;
             c = readChar(lexer, jsonText, offset); 
         }
 
         if (c >= '1' && c <= '9') {
             do {
-                NUM_CHECK_EOF;
+                RETURN_IF_EOF;
                 c = readChar(lexer, jsonText, offset); 
             } while (c >= '0' && c <= '9');
         } else {
@@ -355,6 +359,46 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
     
     /* we always go "one too far" */
     unreadChar(lexer, offset);
+    
+    return tok;
+}
+
+static yajl_tok
+yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
+                 unsigned int jsonTextLen, unsigned int * offset)
+{
+    unsigned char c;
+
+    yajl_tok tok = yajl_tok_comment;
+
+    RETURN_IF_EOF;    
+    c = readChar(lexer, jsonText, offset);
+
+    /* either slash or star expected */
+    if (c == '/') {
+        /* now we throw away until end of line */
+        do {
+            RETURN_IF_EOF;    
+            c = readChar(lexer, jsonText, offset); 
+        } while (c != '\n');
+    } else if (c == '*') {
+        /* now we throw away until end of comment */        
+        for (;;) {
+            RETURN_IF_EOF;    
+            c = readChar(lexer, jsonText, offset); 
+            if (c == '*') {
+                c = readChar(lexer, jsonText, offset);                 
+                if (c == '/') {
+                    break;
+                } else {
+                    unreadChar(lexer, offset);
+                }
+            }
+        }
+    } else {
+        lexer->error = yajl_lex_invalid_char;
+        tok = yajl_tok_error;
+    }
     
     return tok;
 }
@@ -471,6 +515,34 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                                       jsonTextLen, context);
                 goto lexed;
             }
+            case '/':
+                /* hey, look, a probable comment!  If comments are disabled
+                 * it's an error. */
+                if (!lexer->allowComments) {
+                    unreadChar(lexer, context);
+                    lexer->error = yajl_lex_unallowed_comment;
+                    tok = yajl_tok_error;
+                    goto lexed;
+                }
+                /* if comments are enabled, then we should try to lex
+                 * the thing.  possible outcomes are
+                 * - successful lex (tok_comment, which means continue),
+                 * - malformed comment opening (slash not followed by
+                 *   '*' or '/') (tok_error)
+                 * - eof hit. (tok_eof) */
+                tok = yajl_lex_comment(lexer, (unsigned char *) jsonText,
+                                       jsonTextLen, context);
+                if (tok == yajl_tok_comment) {
+                    /* "error" is silly, but that's the initial
+                     * state of tok.  guilty until proven innocent. */  
+                    tok = yajl_tok_error;
+                    yajl_buf_clear(lexer->buf);
+                    lexer->bufInUse = 0;
+                    startCtx = *context; 
+                    break;
+                }
+                /* hit error or eof, bail */
+                goto lexed;
             default:
                 lexer->error = yajl_lex_invalid_char;
                 tok = yajl_tok_error;
@@ -549,6 +621,9 @@ yajl_lex_error_to_string(yajl_lex_error error)
         case yajl_lex_missing_integer_after_minus:
             return "malformed number, a digit is required after the "
                    "minus sign.";
+        case yajl_lex_unallowed_comment:
+            return "probable comment found in input text, comments are "
+                   "not enabled.";
     }
     return "unknown error code";
 }

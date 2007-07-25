@@ -53,12 +53,15 @@ typedef enum {
     /* we differentiate between strings which require further processing,
      * and strings that do not */
     yajl_tok_string,
-    yajl_tok_string_with_escapes
+    yajl_tok_string_with_escapes,
+
+    /* comment tokens are not currently returned to the parser, ever */
+    yajl_tok_comment
 } yajl_tok;
 
 typedef struct yajl_lexer_t * yajl_lexer;
 
-yajl_lexer yajl_lex_alloc(void);
+yajl_lexer yajl_lex_alloc(unsigned int allowComments);
 
 void yajl_lex_free(yajl_lexer lexer);
 
@@ -70,7 +73,7 @@ void yajl_lex_free(yajl_lexer lexer);
  *
  * the client may be interested in the value of offset when an error is
  * returned from the lexer.  This allows the client to render useful
- * error messages.
+n * error messages.
  *
  * When you pass the next chunk of data, context should be reinitialized
  * to zero.
@@ -102,7 +105,8 @@ typedef enum {
     yajl_lex_invalid_string,
     yajl_lex_missing_integer_after_decimal,
     yajl_lex_missing_integer_after_exponent,
-    yajl_lex_missing_integer_after_minus
+    yajl_lex_missing_integer_after_minus,
+    yajl_lex_unallowed_comment
 } yajl_lex_error;
 
 const char * yajl_lex_error_to_string(yajl_lex_error error);

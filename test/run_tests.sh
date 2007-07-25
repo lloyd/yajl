@@ -11,8 +11,14 @@ let testsSucceeded=0
 let testsTotal=0 
 
 for file in cases/*.json ; do
+  allowComments="-c"
+
+  # if the filename starts with dc_, we disallow comments for this test
+  if [[ $(basename $file) == dc_* ]] ; then
+    allowComments=""
+  fi
   echo -n " test case: '$file': "
-  $testBin $file > ${file}.test  2>&1
+  $testBin $allowComments $file > ${file}.test  2>&1
   diff -u ${file}.gold ${file}.test
   if [[ $? == 0 ]] ; then
     let testsSucceeded+=1

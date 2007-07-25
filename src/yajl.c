@@ -46,13 +46,21 @@ yajl_status_to_string(yajl_status code)
 }
 
 yajl_handle
-yajl_alloc(const yajl_callbacks * callbacks, void * ctx)
+yajl_alloc(const yajl_callbacks * callbacks,
+           const yajl_parser_config * config,
+           void * ctx)
 {
+    unsigned int allowComments = 0;
+    
+    if (config != NULL) {
+        allowComments = config->allowComments;
+    }
+
     yajl_handle hand = (yajl_handle) malloc(sizeof(struct yajl_handle_t));
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = yajl_lex_alloc();
+    hand->lexer = yajl_lex_alloc(allowComments);
     hand->errorOffset = 0;
     hand->decodeBuf = yajl_buf_alloc();
     hand->stateBuf = yajl_buf_alloc();

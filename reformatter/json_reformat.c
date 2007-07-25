@@ -143,6 +143,8 @@ main(int argc, char ** argv)
 	yajl_gen g;
     yajl_status stat;
     size_t rd;
+    /* allow comments */
+    yajl_parser_config cfg = { 1 };
 
     /* check arguments.  We expect exactly one! */
     if (argc == 2) {
@@ -158,7 +160,7 @@ main(int argc, char ** argv)
     g = yajl_gen_alloc(&conf);
 
     /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, (void *) g);
+    hand = yajl_alloc(&callbacks, &cfg, (void *) g);
         
     rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
         

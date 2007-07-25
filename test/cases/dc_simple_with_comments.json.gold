@@ -1,0 +1,6 @@
+lexical error: probable comment found in input text, comments are not enabled.
+                      {   "this": "is", // ignore this   "really": "si
+                     (right here) ------^
+map open '{'
+key: 'this'
+string: 'is'

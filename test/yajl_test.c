@@ -121,6 +121,15 @@ static yajl_callbacks callbacks = {
     test_yajl_end_array
 };
 
+static void usage(const char * progname)
+{
+    fprintf(stderr,
+            "usage:  %s [options] <filename>\n"
+            "   -c  allow comments\n",
+            progname);
+    exit(1);
+}
+
 int 
 main(int argc, char ** argv)
 {
@@ -130,14 +139,20 @@ main(int argc, char ** argv)
     FILE * fileHand;
     yajl_status stat;
     size_t rd;
+    yajl_parser_config cfg = { 0 };
 
     /* check arguments.  We expect exactly one! */
-    if (argc != 2) {
-        fprintf(stderr, "usage:  %s <filename>\n", argv[0]);
-        exit(1);
+    if (argc == 3) {
+        if (!strcmp("-c", argv[1])) {
+            cfg.allowComments = 1;
+        } else {
+            usage(argv[0]);
+        }
+    } else if (argc != 2) {
+        usage(argv[0]);
     }
 
-    fileName = argv[1];
+    fileName = argv[argc-1];
 
     fileHand = fopen(fileName, "r");
 
@@ -147,7 +162,7 @@ main(int argc, char ** argv)
     }
 
     /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, NULL);
+    hand = yajl_alloc(&callbacks, &cfg, NULL);
 
     do {
         rd = fread((void *) fileData, 1, sizeof(fileData), fileHand);

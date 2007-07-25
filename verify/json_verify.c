@@ -53,8 +53,10 @@ main(int argc, char ** argv)
     static unsigned char fileData[8192];
     int quiet = 0;
 	int retval;
+    yajl_parser_config cfg = { 0 };
 
     /* check arguments.*/
+    /* XXX: comment flag! */
     if (argc == 2 && !strcmp("-q", argv[1])) {
         quiet = 1;
     } else if (argc != 1) {
@@ -62,7 +64,7 @@ main(int argc, char ** argv)
     }
     
     /* allocate a parser */
-    hand = yajl_alloc(NULL, NULL);
+    hand = yajl_alloc(NULL, &cfg, NULL);
         
     rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
 
