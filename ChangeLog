@@ -1,2 +1,11 @@
-YAJL 1.0.0
-	* Initial release
+0.2.1
+     * fix yajl_reformat and yajl_verify to work on arbitrarily sized
+	inputs.
+     * fix win32 build break, clean up all errors and warnings.
+     * fix optimized build flags.
+	
+0.2.0
+     * optionally support comments in input text
+	
+0.1.0
+     * Initial release
