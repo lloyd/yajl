@@ -137,7 +137,7 @@ int
 main(int argc, char ** argv)
 {
     yajl_handle hand;
-    static unsigned char fileData[8192];
+    static unsigned char fileData[65536];
     /* generator config */
     yajl_gen_config conf = { 1, "  " };
 	yajl_gen g;
@@ -162,29 +162,39 @@ main(int argc, char ** argv)
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, (void *) g);
         
-    rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
+    for (;;) {
+        rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
         
-    if (rd == 0) {
-        fprintf(stderr, "read EOF\n");
-    } else {
-
-        fileData[rd] = 0;
-
-        /* read file data, pass to parser */
-        stat = yajl_parse(hand, fileData, rd);
-        if (stat != yajl_status_ok) {
-            unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
-            fprintf(stderr, (const char *) str);
-            yajl_free_error(str);
+        if (rd == 0) {
+            if (feof(stdin)) {
+                break;
+            } else {
+                fprintf(stderr, "error on file read.\n");
+                break;
+            }
         } else {
-            const unsigned char * buf;
-            unsigned int len;
-            yajl_gen_get_buf(g, &buf, &len);
-            printf((const char *) buf);
+            fileData[rd] = 0;
+            
+            /* read file data, pass to parser */
+            stat = yajl_parse(hand, fileData, rd);
+            if (stat != yajl_status_ok &&
+                stat != yajl_status_insufficient_data)
+            {
+                unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+                fprintf(stderr, (const char *) str);
+                yajl_free_error(str);
+            } else {
+                const unsigned char * buf;
+                unsigned int len;
+                yajl_gen_get_buf(g, &buf, &len);
+                fwrite(buf, 1, len, stdout);
+                yajl_gen_clear(g);
+            }
         }
     }
+
     yajl_gen_free(g);
     yajl_free(hand);
-
+    
     return 0;
 }

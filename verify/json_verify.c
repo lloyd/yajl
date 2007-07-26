@@ -52,7 +52,7 @@ main(int argc, char ** argv)
     yajl_status stat;
     size_t rd;
     yajl_handle hand;
-    static unsigned char fileData[8192];
+    static unsigned char fileData[65536];
     int quiet = 0;
 	int retval;
     yajl_parser_config cfg = { 0 };
@@ -78,26 +78,39 @@ main(int argc, char ** argv)
     /* allocate a parser */
     hand = yajl_alloc(NULL, &cfg, NULL);
         
-    rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
+    for (;;) {
+        rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
 
-    retval = 0;
+        retval = 0;
         
-    if (rd == 0) {
-        fprintf(stderr, "read EOF\n");
-	} else {
-        fileData[rd] = 0;
-
-        /* read file data, pass to parser */
-        stat = yajl_parse(hand, fileData, rd);
-        if (stat != yajl_status_ok) {
-            if (!quiet) {
-                unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
-                fprintf(stderr, (const char *) str);
-                yajl_free_error(str);
+        if (rd == 0) {
+            if (feof(stdin)) {
+                break;
+            } else {
+                if (!quiet) {
+                    fprintf(stderr, "error encountered on file read\n");
+                }
+                retval = 1;
+                break;
             }
-            retval = 1;
+        } else {
+            fileData[rd] = 0;
+            
+            /* read file data, pass to parser */
+            stat = yajl_parse(hand, fileData, rd);
+            if (stat != yajl_status_ok &&
+                stat != yajl_status_insufficient_data)
+            {
+                if (!quiet) {
+                    unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+                    fprintf(stderr, (const char *) str);
+                    yajl_free_error(str);
+                }
+                retval = 1;
+            }
         }
     }
+    
     yajl_free(hand);
 
     if (!quiet) {

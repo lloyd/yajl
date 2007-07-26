@@ -28,6 +28,12 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# set up a paths
+SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../dist/bin)
+
+# create a directories
+FILE(MAKE_DIRECTORY ${binDir})
+
 SET (SRCS json_reformat.c)
 
 # use the library we build, duh.
@@ -37,3 +43,9 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../dist/lib)
 ADD_EXECUTABLE(json_reformat ${SRCS})
 
 TARGET_LINK_LIBRARIES(json_reformat yajl_s)
+
+# copy the binary into the output directory
+GET_TARGET_PROPERTY(binPath json_reformat LOCATION)
+
+ADD_CUSTOM_COMMAND(TARGET json_reformat POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
