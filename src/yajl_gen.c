@@ -91,7 +91,7 @@ yajl_gen_free(yajl_gen g)
 #define INSERT_WHITESPACE                                              \
     if (g->pretty) {                                                    \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
-            int i;                                                      \
+            unsigned int i;                                             \
             for (i=0;i<g->depth;i++)                                    \
                 yajl_buf_append(g->buf, g->indentString,                \
                                 strlen(g->indentString));               \

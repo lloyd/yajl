@@ -39,10 +39,24 @@
 #include <assert.h>
 
 const char *
-yajl_status_to_string(yajl_status code)
+yajl_status_to_string(yajl_status stat)
 {
-    /* XXX */
-    return NULL;
+    const char * statStr = "unknown";
+    switch (stat) {
+        case yajl_status_ok:
+            statStr = "ok, no error";
+            break;
+        case yajl_status_client_canceled:
+            statStr = "client canceled parse";
+            break;
+        case yajl_status_insufficient_data:
+            statStr = "eof was met before the parse could complete";
+            break;
+        case yajl_status_error:
+            statStr = "parse error";
+            break;
+    }
+    return statStr;
 }
 
 yajl_handle
@@ -51,12 +65,11 @@ yajl_alloc(const yajl_callbacks * callbacks,
            void * ctx)
 {
     unsigned int allowComments = 0;
-    
+    yajl_handle hand = (yajl_handle) malloc(sizeof(struct yajl_handle_t));
+
     if (config != NULL) {
         allowComments = config->allowComments;
     }
-
-    yajl_handle hand = (yajl_handle) malloc(sizeof(struct yajl_handle_t));
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;

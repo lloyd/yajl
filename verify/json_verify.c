@@ -59,7 +59,7 @@ main(int argc, char ** argv)
 
     /* check arguments.*/
     if (argc > 1 && argc < 4) {
-        unsigned int i;
+        int i;
 
         for (i=1; i < argc;i++) {
             if (!strcmp("-q", argv[i])) {
@@ -82,11 +82,9 @@ main(int argc, char ** argv)
 
     retval = 0;
         
-    if (rd < 0) {
-        exit(1);
-    } else if (rd == 0) {
+    if (rd == 0) {
         fprintf(stderr, "read EOF\n");
-    } else {
+	} else {
         fileData[rd] = 0;
 
         /* read file data, pass to parser */

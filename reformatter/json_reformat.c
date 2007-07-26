@@ -164,9 +164,7 @@ main(int argc, char ** argv)
         
     rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
         
-    if (rd < 0) {
-        exit(1);
-    } else if (rd == 0) {
+    if (rd == 0) {
         fprintf(stderr, "read EOF\n");
     } else {
 

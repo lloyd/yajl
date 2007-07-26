@@ -164,13 +164,13 @@ main(int argc, char ** argv)
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, NULL);
 
-    do {
+	for(;;) {
         rd = fread((void *) fileData, 1, sizeof(fileData), fileHand);
         
-        if (rd < 0) {
-            fprintf(stderr, "error reading from '%s'\n", fileName);
-            break;
-        } else if (rd == 0) {
+        if (rd == 0) {
+            if (!feof(fileHand)) {
+                fprintf(stderr, "error reading from '%s'\n", fileName);
+            }
             break;
         } else {
             /* read file data, pass to parser */
@@ -184,8 +184,8 @@ main(int argc, char ** argv)
                 break;
             }
         }
-    } while (1);
-    
+    } 
+
     yajl_free(hand);
     fclose(fileHand);
 
