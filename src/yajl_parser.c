@@ -120,7 +120,14 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
 }
 
 /* check for client cancelation */
-#define _CC_CHK(x) if (!(x)) return yajl_status_client_canceled;
+#define _CC_CHK(x)                                                \
+    if (!(x)) {                                                   \
+        yajl_state_set(hand, yajl_state_parse_error);             \
+        hand->parseError =                                        \
+            "client cancelled parse via callback return value";   \
+        return yajl_status_client_canceled;                       \
+    }
+
 
 yajl_status
 yajl_do_parse(yajl_handle hand, unsigned int * offset,
