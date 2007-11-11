@@ -61,7 +61,8 @@ typedef enum {
 
 typedef struct yajl_lexer_t * yajl_lexer;
 
-yajl_lexer yajl_lex_alloc(unsigned int allowComments);
+yajl_lexer yajl_lex_alloc(unsigned int allowComments,
+                          unsigned int validateUTF8);
 
 void yajl_lex_free(yajl_lexer lexer);
 
@@ -98,6 +99,7 @@ yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
 
 typedef enum {
     yajl_lex_e_ok = 0,
+    yajl_lex_string_invalid_utf8,
     yajl_lex_string_invalid_escaped_char,
     yajl_lex_string_invalid_json_char,
     yajl_lex_string_invalid_hex_char,

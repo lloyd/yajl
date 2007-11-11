@@ -18,16 +18,25 @@ for file in cases/*.json ; do
     allowComments=""
   fi
   echo -n " test case: '$file': "
-  $testBin $allowComments $file > ${file}.test  2>&1
-  diff -u ${file}.gold ${file}.test
-  if [[ $? == 0 ]] ; then
-    let testsSucceeded+=1
-    echo  " success"
-  else 
-    echo  " -- FAILURE!"
-  fi
+  let iter=1
+  success="success"
+
+  # parse with a read buffer size ranging from 1-31 to stress stream parsing
+  while (( $iter < 32 )) && [ $success == "success" ] ; do
+    $testBin $allowComments -b $iter < $file > ${file}.test  2>&1
+    diff -u ${file}.gold ${file}.test
+    if [[ $? == 0 ]] ; then
+      if (( $iter == 31 )) ; then let testsSucceeded+=1 ; fi
+    else 
+      success="FAILURE"
+      let iter=32
+    fi
+    let iter+=1
+    rm ${file}.test
+  done
+
+  echo $success
   let testsTotal+=1
-  rm ${file}.test
 done
 
 echo $testsSucceeded/$testsTotal tests successful

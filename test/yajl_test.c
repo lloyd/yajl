@@ -125,7 +125,8 @@ static void usage(const char * progname)
 {
     fprintf(stderr,
             "usage:  %s [options] <filename>\n"
-            "   -c  allow comments\n",
+            "   -c  allow comments\n"
+            "   -b  set the read buffer size\n",
             progname);
     exit(1);
 }
@@ -135,40 +136,59 @@ main(int argc, char ** argv)
 {
     yajl_handle hand;
     const char * fileName;
-    static unsigned char fileData[BUF_SIZE];
-    FILE * fileHand;
+    static unsigned char * fileData = NULL;
+    unsigned int bufSize = BUF_SIZE;
     yajl_status stat;
     size_t rd;
-    yajl_parser_config cfg = { 0 };
+    yajl_parser_config cfg = { 0, 1 };
+    int i, j;
 
     /* check arguments.  We expect exactly one! */
-    if (argc == 3) {
-        if (!strcmp("-c", argv[1])) {
+    for (i=1;i<argc;i++) {
+        if (!strcmp("-c", argv[i])) {
             cfg.allowComments = 1;
+        } else if (!strcmp("-b", argv[i])) {
+            if (++i >= argc) usage(argv[0]);
+
+            /* validate integer */
+            for (j=0;j<strlen(argv[i]);j++) {
+                if (argv[i][j] <= '9' && argv[i][j] >= '0') continue;
+                fprintf(stderr, "-b requires an integer argument.  '%s' "
+                        "is invalid\n", argv[i]);
+                usage(argv[0]);
+            }
+
+            bufSize = atoi(argv[i]);
+            if (!bufSize) {
+                fprintf(stderr, "%d is an invalid buffer size\n",
+                        bufSize);
+            }
         } else {
+            fprintf(stderr, "invalid command line option: '%s'\n",
+                    argv[i]);
             usage(argv[0]);
         }
-    } else if (argc != 2) {
-        usage(argv[0]);
+    }
+
+    fileData = (unsigned char *) malloc(bufSize);
+
+    if (fileData == NULL) {
+        fprintf(stderr,
+                "failed to allocate read buffer of %u bytes, exiting.",
+                bufSize);
+        exit(2);
     }
 
     fileName = argv[argc-1];
-
-    fileHand = fopen(fileName, "r");
-
-    if (fileHand == NULL) {
-        fprintf(stderr, "couldn't open '%s' for reading\n", fileName);
-        exit(1);
-    }
 
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, NULL);
 
 	for(;;) {
-        rd = fread((void *) fileData, 1, sizeof(fileData), fileHand);
+        rd = fread((void *) fileData, 1, bufSize, stdin);
         
         if (rd == 0) {
-            if (!feof(fileHand)) {
+            if (!feof(stdin)) {
                 fprintf(stderr, "error reading from '%s'\n", fileName);
             }
             break;
@@ -178,7 +198,7 @@ main(int argc, char ** argv)
             if (stat != yajl_status_insufficient_data &&
                 stat != yajl_status_ok)
             {
-                unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+                unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
                 fprintf(stderr, (char *) str);
                 yajl_free_error(str);
                 break;
@@ -187,7 +207,7 @@ main(int argc, char ** argv)
     } 
 
     yajl_free(hand);
-    fclose(fileHand);
+    free(fileData);
 
     return 0;
 }

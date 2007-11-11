@@ -1,3 +1,1 @@
 lexical error: malformed number, a digit is required after the decimal point.
-                                     10.e2 
-                     (right here) ------^

@@ -102,6 +102,9 @@ struct yajl_lexer_t {
 
     /* shall we allow comments? */
     unsigned int allowComments;
+
+    /* shall we validate utf8 inside strings? */
+    unsigned int validateUTF8;
 };
 
 static unsigned char
@@ -123,11 +126,12 @@ unreadChar(yajl_lexer lxr, unsigned int *off)
 }
 
 yajl_lexer
-yajl_lex_alloc(unsigned int allowComments)
+yajl_lex_alloc(unsigned int allowComments, unsigned int validateUTF8)
 {
     yajl_lexer lxr = (yajl_lexer) calloc(1, sizeof(struct yajl_lexer_t));
     lxr->buf = yajl_buf_alloc();
     lxr->allowComments = allowComments;
+    lxr->validateUTF8 = validateUTF8;
     return lxr;
 }
 
@@ -193,6 +197,59 @@ const static char charLookupTable[256] =
        0      , 0      , 0      , 0      , 0      , 0      , 0      , 0
 };
 
+/** process a variable length utf8 encoded codepoint.
+ *
+ *  returns:
+ *    yajl_tok_string - if valid utf8 char was parsed and offset was
+ *                      advanced
+ *    yajl_tok_eof - if end of input was hit before validation could
+ *                   complete
+ *    yajl_tok_error - if invalid utf8 was encountered
+ * 
+ *  NOTE: on error the offset will point to the first char of the
+ *  invalid utf8 */
+#define UTF8_CHECK_EOF if (*offset >= jsonTextLen) { return yajl_tok_eof; }
+
+static yajl_tok
+yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
+                   unsigned int jsonTextLen, unsigned int * offset,
+                   unsigned char curChar)
+{
+    if (curChar <= 0x7f) {
+        /* single byte */
+        return yajl_tok_string;
+    } else if ((curChar >> 5) == 0x6) {
+        /* two byte */ 
+        UTF8_CHECK_EOF;
+        curChar = readChar(lexer, jsonText, offset);
+        if ((curChar >> 6) == 0x2) return yajl_tok_string;
+    } else if ((curChar >> 4) == 0x0d) {
+        /* three byte */
+        UTF8_CHECK_EOF;
+        curChar = readChar(lexer, jsonText, offset);
+        if ((curChar >> 6) == 0x2) {
+            UTF8_CHECK_EOF;
+            curChar = readChar(lexer, jsonText, offset);
+            if ((curChar >> 6) == 0x2) return yajl_tok_string;
+        }
+    } else if ((curChar >> 3) == 0x1d) {
+        /* four byte */
+        UTF8_CHECK_EOF;
+        curChar = readChar(lexer, jsonText, offset);
+        if ((curChar >> 6) == 0x2) {
+            UTF8_CHECK_EOF;
+            curChar = readChar(lexer, jsonText, offset);
+            if ((curChar >> 6) == 0x2) {
+                UTF8_CHECK_EOF;
+                curChar = readChar(lexer, jsonText, offset);
+                if ((curChar >> 6) == 0x2) return yajl_tok_string;
+            }
+        }
+    } 
+
+    return yajl_tok_error;
+}
+
 /* lex a string.  input is the lexer, pointer to beginning of
  * json text, and start of string (offset).
  * a token is returned which has the following meanings:
@@ -206,7 +263,7 @@ const static char charLookupTable[256] =
 #define STR_CHECK_EOF \
 if (*offset >= jsonTextLen) { \
    tok = yajl_tok_eof; \
-   break; \
+   goto finish_string_lex; \
 }
 
 static yajl_tok
@@ -255,12 +312,26 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
                 goto finish_string_lex;                
             } 
         }
-        /* check if it's a valid json char */
-        else if (charLookupTable[curChar] & IJC) {
+        /* when not validating UTF8 it's a simple table lookup to determine
+         * if the present character is invalid */
+        else if(charLookupTable[curChar] & IJC) {
             /* back up to offending char */
             unreadChar(lexer, offset);
             lexer->error = yajl_lex_string_invalid_json_char;
             goto finish_string_lex;                
+        }
+        /* when in validate UTF8 mode we need to do some extra work */
+        else if (lexer->validateUTF8) {
+            yajl_tok t = yajl_lex_utf8_char(lexer, jsonText, jsonTextLen,
+                                            offset, curChar);
+            
+            if (t == yajl_tok_eof) {
+                tok = yajl_tok_eof;
+                goto finish_string_lex;
+            } else if (t == yajl_tok_error) {
+                lexer->error = yajl_lex_string_invalid_utf8;
+                goto finish_string_lex;
+            } 
         }
         /* accept it, and move on */ 
     }
@@ -601,6 +672,8 @@ yajl_lex_error_to_string(yajl_lex_error error)
     switch (error) {
         case yajl_lex_e_ok:
             return "ok, no error";
+        case yajl_lex_string_invalid_utf8:
+            return "invalid bytes in UTF8 string.";
         case yajl_lex_string_invalid_escaped_char:
             return "inside a string, '\\' occurs before a character "
                    "which it may not.";

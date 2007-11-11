@@ -65,15 +65,17 @@ yajl_alloc(const yajl_callbacks * callbacks,
            void * ctx)
 {
     unsigned int allowComments = 0;
+    unsigned int validateUTF8 = 0;
     yajl_handle hand = (yajl_handle) malloc(sizeof(struct yajl_handle_t));
 
     if (config != NULL) {
         allowComments = config->allowComments;
+        validateUTF8 = config->checkUTF8;
     }
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = yajl_lex_alloc(allowComments);
+    hand->lexer = yajl_lex_alloc(allowComments, validateUTF8);
     hand->errorOffset = 0;
     hand->decodeBuf = yajl_buf_alloc();
     hand->stateBuf = yajl_buf_alloc();

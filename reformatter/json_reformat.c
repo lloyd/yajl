@@ -127,7 +127,8 @@ static void
 usage(const char * progname)
 {
     fprintf(stderr, "usage:  %s <filename>\n"
-                    "    -m minimize json rather than beautify (default)\n",
+            "    -m minimize json rather than beautify (default)\n"
+            "    -u allow invalid UTF8 inside strings during parsing\n",
             progname);
     exit(1);
 
@@ -144,12 +145,15 @@ main(int argc, char ** argv)
     yajl_status stat;
     size_t rd;
     /* allow comments */
-    yajl_parser_config cfg = { 1 };
+    yajl_parser_config cfg = { 1, 1 };
 
     /* check arguments.  We expect exactly one! */
     if (argc == 2) {
         if (!strcmp("-m", argv[1])) {
             conf.beautify = 0;
+
+        } else if (!strcmp("-u", argv[1])) {
+            cfg.checkUTF8 = 0;
         } else {
             usage(argv[0]);
         }

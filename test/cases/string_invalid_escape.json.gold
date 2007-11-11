@@ -1,4 +1,2 @@
 lexical error: inside a string, '\' occurs before a character which it may not.
-          \"\\ and you can't escape thi\s"] 
-                     (right here) ------^
 array open '['

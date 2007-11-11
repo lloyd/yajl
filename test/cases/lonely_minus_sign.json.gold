@@ -1,6 +1,4 @@
 lexical error: malformed number, a digit is required after the minus sign.
-          ou?", "oh boo hoo!",         -  ]  
-                     (right here) ------^
 array open '['
 string: 'foo'
 bool: true

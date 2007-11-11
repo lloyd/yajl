@@ -1,6 +1,4 @@
 lexical error: invalid string in json text.
-          meone, misspelled \"true\"", ture,  "who says JSON is easy f
-                     (right here) ------^
 array open '['
 string: 'this'
 string: 'is'

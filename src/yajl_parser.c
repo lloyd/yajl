@@ -92,8 +92,14 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
         for (i=0;i<spacesNeeded;i++) text[i] = ' ';
 
         for (;start < end;start++, i++) {
-            if (isprint(jsonText[start])) text[i] = jsonText[start];
-            else text[i] = ' ';
+            if (jsonText[start] != '\n' && jsonText[start] != '\r')
+            {
+                text[i] = jsonText[start];
+            }
+            else
+            {
+                text[i] = ' ';
+            }
         }
         assert(i <= 71);
         text[i++] = '\n';

@@ -39,9 +39,11 @@
 static void
 usage(const char * progname)
 {
-    fprintf(stderr, "usage:  %s\n"
+    fprintf(stderr, "%s: validate json from stdin\n"
+                    "usage: json_verify [options]\n"
                     "    -q quiet mode\n"
-                    "    -c allow comments\n",
+                    "    -c allow comments\n"
+                    "    -u allow invalid utf8 inside strings\n",
             progname);
     exit(1);
 }
@@ -55,7 +57,7 @@ main(int argc, char ** argv)
     static unsigned char fileData[65536];
     int quiet = 0;
 	int retval;
-    yajl_parser_config cfg = { 0 };
+    yajl_parser_config cfg = { 0, 1 };
 
     /* check arguments.*/
     if (argc > 1 && argc < 4) {
@@ -66,6 +68,8 @@ main(int argc, char ** argv)
                 quiet = 1;
             } else if (!strcmp("-c", argv[i])) {
                 cfg.allowComments = 1;
+            } else if (!strcmp("-u", argv[i])) {
+                cfg.checkUTF8 = 0;
             } else {
                 fprintf(stderr, "unrecognized option: '%s'\n\n", argv[i]);
                 usage(argv[0]);

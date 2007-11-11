@@ -87,6 +87,9 @@ extern "C" {
         /** if nonzero, javascript style comments will be allowed in
          *  the json input, both slash star and slash slash */
         unsigned int allowComments;
+        /** if nonzero, invalid UTF8 strings will cause a parse
+         *  error */
+        unsigned int checkUTF8;
     } yajl_parser_config;
 
     /** allocate a parser handle
