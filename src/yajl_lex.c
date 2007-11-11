@@ -458,6 +458,7 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
             RETURN_IF_EOF;    
             c = readChar(lexer, jsonText, offset); 
             if (c == '*') {
+                RETURN_IF_EOF;    
                 c = readChar(lexer, jsonText, offset);                 
                 if (c == '/') {
                     break;
