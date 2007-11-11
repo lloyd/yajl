@@ -119,6 +119,9 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
     return str;
 }
 
+/* check for client cancelation */
+#define _CC_CHK(x) if (!(x)) return yajl_status_client_canceled;
+
 yajl_status
 yajl_do_parse(yajl_handle hand, unsigned int * offset,
               const unsigned char * jsonText, unsigned int jsonTextLen)
@@ -159,37 +162,39 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                     goto around_again;
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
-                        hand->callbacks->yajl_string(hand->ctx, buf, bufLen);
+                        _CC_CHK(hand->callbacks->yajl_string(hand->ctx,
+                                                             buf, bufLen));
                     }
                     break;
                 case yajl_tok_string_with_escapes:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
-                        hand->callbacks->yajl_string(
-                            hand->ctx, yajl_buf_data(hand->decodeBuf),
-                            yajl_buf_len(hand->decodeBuf));
+                        _CC_CHK(hand->callbacks->yajl_string(
+                                    hand->ctx, yajl_buf_data(hand->decodeBuf),
+                                    yajl_buf_len(hand->decodeBuf)));
                     }
                     break;
                 case yajl_tok_bool: 
                     if (hand->callbacks && hand->callbacks->yajl_boolean) {
-                        hand->callbacks->yajl_boolean(hand->ctx, *buf == 't');
+                        _CC_CHK(hand->callbacks->yajl_boolean(hand->ctx,
+                                                              *buf == 't'));
                     }
                     break;
                 case yajl_tok_null: 
                     if (hand->callbacks && hand->callbacks->yajl_null) {
-                        hand->callbacks->yajl_null(hand->ctx);
+                        _CC_CHK(hand->callbacks->yajl_null(hand->ctx));
                     }
                     break;
                 case yajl_tok_left_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_start_map) {
-                        hand->callbacks->yajl_start_map(hand->ctx);
+                        _CC_CHK(hand->callbacks->yajl_start_map(hand->ctx));
                     }
                     stateToPush = yajl_state_map_start;
                     break;
                 case yajl_tok_left_brace:
                     if (hand->callbacks && hand->callbacks->yajl_start_array) {
-                        hand->callbacks->yajl_start_array(hand->ctx);
+                        _CC_CHK(hand->callbacks->yajl_start_array(hand->ctx));
                     }
                     stateToPush = yajl_state_array_start;
                     break;
@@ -217,7 +222,7 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                         }
                         sscanf((char *) buf, "%lld", &i);
                         if (neg) i -= (i<<1);
-                        hand->callbacks->yajl_integer(hand->ctx, i);
+                        _CC_CHK(hand->callbacks->yajl_integer(hand->ctx, i));
                     }
                     break;
                 case yajl_tok_double:
@@ -232,7 +237,7 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                         }
                         sscanf((char *) buf, "%lf", &d);
                         if (neg) d *= -1.0;
-                        hand->callbacks->yajl_double(hand->ctx, d);
+                        _CC_CHK(hand->callbacks->yajl_double(hand->ctx, d));
                     }
                     break;
                 case yajl_tok_right_brace: {
@@ -240,7 +245,7 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                         if (hand->callbacks &&
                             hand->callbacks->yajl_end_array)
                         {
-                            hand->callbacks->yajl_end_array(hand->ctx);
+                            _CC_CHK(hand->callbacks->yajl_end_array(hand->ctx));
                         }
                         (void) yajl_state_pop(hand);
                         goto around_again;                        
@@ -299,14 +304,15 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                     /* intentional fall-through */
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
-                        hand->callbacks->yajl_map_key(hand->ctx, buf, bufLen);
+                        _CC_CHK(hand->callbacks->yajl_map_key(hand->ctx, buf,
+                                                              bufLen));
                     }
                     yajl_state_set(hand, yajl_state_map_sep);
                     goto around_again;
                 case yajl_tok_right_bracket:
                     if (yajl_state_current(hand) == yajl_state_map_start) {
                         if (hand->callbacks && hand->callbacks->yajl_end_map) {
-                            hand->callbacks->yajl_end_map(hand->ctx);
+                            _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
                         }
                         (void) yajl_state_pop(hand);
                         goto around_again;                        
@@ -343,7 +349,7 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
             switch (tok) {
                 case yajl_tok_right_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_end_map) {
-                        hand->callbacks->yajl_end_map(hand->ctx);
+                        _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
                     }
                     (void) yajl_state_pop(hand);
                     goto around_again;                        
@@ -371,7 +377,7 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
             switch (tok) {
                 case yajl_tok_right_brace:
                     if (hand->callbacks && hand->callbacks->yajl_end_array) {
-                        hand->callbacks->yajl_end_array(hand->ctx);
+                        _CC_CHK(hand->callbacks->yajl_end_array(hand->ctx));
                     }
                     (void) yajl_state_pop(hand);
                     goto around_again;                        

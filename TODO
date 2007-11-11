@@ -1,5 +1,4 @@
 * line and char offsets in the lexer and in error messages
-* client cancelation of parse via zero return from callback
 * numbers at eof bug. (lth: still pertinent?)
 * testing:
   a. the permuter
