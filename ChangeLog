@@ -1,14 +1,24 @@
+0.3.0
+     * lth all tests run 32x with ranging buffer sizes to stress stream
+        parsing
+     * lth yajl_test accepts -b option to allow read buffer size to be
+        set
+     * lth option to validate UTF8 added to parser (argument in
+        yajl_parser_cfg)
+     * lth fix buffer overrun when chunk ends inside \u escaped text
+     * lth support client cancelation
+
 0.2.2
      * lth on windows build debug with C7 symbols and no pdb files.
- 	
+        
 0.2.1
      * fix yajl_reformat and yajl_verify to work on arbitrarily sized
-	inputs.
+        inputs.
      * fix win32 build break, clean up all errors and warnings.
      * fix optimized build flags.
-	
+        
 0.2.0
      * optionally support comments in input text
-	
+        
 0.1.0
      * Initial release
