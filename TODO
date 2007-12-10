@@ -6,3 +6,4 @@
 * doxygen setup and compelete documentation
 * non-cmake build system
 * investigate pull instead of push parsing
+* make install step
