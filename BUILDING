@@ -4,10 +4,16 @@ Short story (If you already have ruby and cmake):
 
 When things go wrong:
 
-CMake (http://www.cmake.org) is used to build yajl, and a small configure
-ruby script is provided to emulate an autotools environment.  
+attain CMake (http://www.cmake.org) and ruby (http://ruby-lang.org) and
+try again.
 
-1. attain cmake (tested against cmake 2.4.5 and 2.4.6)
+OR, attain CMake and build by hand:
+
+1. mkdir build
+2. cd build
+3. cmake ..
+4. make 
+5. build output left in yajl-X.Y.Z
 
 best,
 lloyd
