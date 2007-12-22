@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # Copyright 2007, Lloyd Hilaiel.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -28,24 +29,58 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# set up a paths
-SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/bin)
+require 'fileutils'
+require 'optparse'
 
-# create a directories
-FILE(MAKE_DIRECTORY ${binDir})
+prefix = "/usr/local"
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: configure [options]"
+  opts.on("-p", "--prefix PATH", "Set installation prefix") do |p|
+    prefix = p
+  end
+  opts.on_tail("-h", "--help", "Output usage summary") do 
+    puts opts
+    exit
+  end
 
-SET (SRCS json_reformat.c)
+  opts.parse!(ARGV)
+end
 
-# use the library we build, duh.
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include)
-LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
+puts "== removing old build files"
+FileUtils.rm_rf("build")
+FileUtils.rm_f("Makefile")
+puts "== running CMake in build directory"
+FileUtils.mkdir("build")
+FileUtils.cd("build") do 
+  if (!system("cmake .."))
+    puts "The \"cmake\" program is required to configure yajl.  It's"
+    puts "available from most ports/packaging systems and http://cmake.org"
+    exit 1
+  end
+end
 
-ADD_EXECUTABLE(json_reformat ${SRCS})
+# now generate a Makefile
+puts "== Generating Makefile"
+File.open("Makefile", "w+") do |f| 
+  f.puts ".PHONY: all clean distclean install package"
+  f.puts "all:"
+  f.puts "	@cd build && make"
+  f.puts
+  f.puts "clean:"  
+  f.puts "	@cd build && make clean"
+  f.puts
+  f.puts "distclean:"  
+  f.puts "	@rm -rf Makefile build"
+  f.puts "	@rm yajl-*.tgz"
+  f.puts
+  f.puts "install: all" 
+  f.puts "	@echo oops, install target not yet implemented"
+  f.puts
+  f.puts "package: all"
+  f.puts "	@echo \"compressing to `basename build/yajl-*`.tgz\""
+  f.puts "	@cd build && tar czf ../`basename yajl-*`.tgz yajl-*"
+end
 
-TARGET_LINK_LIBRARIES(json_reformat yajl_s)
+puts "== Configured with installation prefix: #{prefix}"
 
-# copy the binary into the output directory
-GET_TARGET_PROPERTY(binPath json_reformat LOCATION)
-
-ADD_CUSTOM_COMMAND(TARGET json_reformat POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
