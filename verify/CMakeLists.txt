@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 # set up some paths
-SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../dist/bin)
+SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/bin)
 
 # create some directories
 FILE(MAKE_DIRECTORY ${binDir})
@@ -37,8 +37,8 @@ FILE(MAKE_DIRECTORY ${binDir})
 SET (SRCS json_verify.c)
 
 # use the library we build, duh.
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../dist/include)
-LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../dist/lib)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include)
+LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(json_verify ${SRCS})
 

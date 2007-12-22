@@ -56,7 +56,7 @@ main(int argc, char ** argv)
     yajl_handle hand;
     static unsigned char fileData[65536];
     int quiet = 0;
-	int retval;
+	int retval = 0;
     yajl_parser_config cfg = { 0, 1 };
 
     /* check arguments.*/
@@ -111,6 +111,7 @@ main(int argc, char ** argv)
                     yajl_free_error(str);
                 }
                 retval = 1;
+                break;
             }
         }
     }
