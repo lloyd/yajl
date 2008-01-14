@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 
-testBin="../build/test/yajl_test"
-
-if [[ ! -x $testBin ]] ; then
-  echo "cannot execute test binary: '$testBin'"  
-  exit 1;
+DIFF_FLAGS="-u"
+if [[ `uname` == *W32* ]] ; then
+  DIFF_FLAGS="-wu"
 fi
+
+# find test binary on both platforms
+testBin="../build/test/Debug/yajl_test.exe"
+if [[ ! -x $testBin ]] ; then
+  testBin="../build/test/yajl_test"
+  if [[ ! -x $testBin ]] ; then
+    echo "cannot execute test binary: '$testBin'"  
+    exit 1;
+  fi
+fi
+
+echo "using test binary: $testBin"
 
 let testsSucceeded=0
 let testsTotal=0 
@@ -24,7 +34,7 @@ for file in cases/*.json ; do
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while (( $iter < 32 )) && [ $success == "success" ] ; do
     $testBin $allowComments -b $iter < $file > ${file}.test  2>&1
-    diff -u ${file}.gold ${file}.test
+    diff ${DIFF_FLAGS} ${file}.gold ${file}.test
     if [[ $? == 0 ]] ; then
       if (( $iter == 31 )) ; then let testsSucceeded+=1 ; fi
     else 
