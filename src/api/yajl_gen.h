@@ -50,7 +50,8 @@ extern "C" {
         /** at a point where a map key is generated, a function other than
          *  yajl_gen_string was called */
         yajl_gen_keys_must_be_strings,
-        /** YAJL's maximum generation depth was exceeded */
+        /** YAJL's maximum generation depth was exceeded.  see
+         *  YAJL_MAX_DEPTH */
         yajl_max_depth_exceeded,
         /** A generator function (yajl_gen_XXX) was called while in an error
          *  state */
