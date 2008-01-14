@@ -30,6 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+/**
+ * \file yajl_parse.h
+ * Interface to YAJL's JSON parsing facilities.
+ */
+
 #include <yajl/yajl_common.h>
 
 #ifndef __YAJL_PARSE_H__

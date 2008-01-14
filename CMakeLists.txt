@@ -70,3 +70,8 @@ ADD_SUBDIRECTORY(reformatter)
 ADD_SUBDIRECTORY(verify)
 
 INCLUDE(YAJLDoc.cmake)
+
+# a test target
+ADD_CUSTOM_TARGET(test
+                  ./run_tests.sh
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)

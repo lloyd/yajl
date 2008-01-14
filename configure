@@ -63,9 +63,17 @@ end
 # now generate a Makefile
 puts "== Generating Makefile"
 File.open("Makefile", "w+") do |f| 
-  f.puts ".PHONY: all clean distclean install package"
-  f.puts "all:"
+  f.puts ".PHONY: all clean distclean install package test distro"
+  f.puts "all: distro doc test"
+  f.puts
+  f.puts "distro:"
   f.puts "	@cd build && make"
+  f.puts
+  f.puts "doc:"
+  f.puts "	@cd build && make doc"
+  f.puts
+  f.puts "test:"
+  f.puts "	@cd build && make test"
   f.puts
   f.puts "clean:"  
   f.puts "	@cd build && make clean"

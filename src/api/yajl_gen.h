@@ -30,6 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+/**
+ * \file yajl_gen.h
+ * Interface to YAJL's JSON generation facilities.
+ */
+
 #include <yajl/yajl_common.h>
 
 #ifndef __YAJL_GEN_H__
@@ -38,11 +43,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif    
+    /** generator status codes */
     typedef enum {
+        /** no error */
         yajl_gen_status_ok = 0,
+        /** at a point where a map key is generated, a function other than
+         *  yajl_gen_string was called */
         yajl_gen_keys_must_be_strings,
+        /** YAJL's maximum generation depth was exceeded */
         yajl_max_depth_exceeded,
+        /** A generator function (yajl_gen_XXX) was called while in an error
+         *  state */
         yajl_gen_in_error_state,
+        /** A complete JSON document has been generated */
         yajl_gen_generation_complete                
     } yajl_gen_status;
 
@@ -51,7 +64,11 @@ extern "C" {
 
     /** configuration structure for the generator */
     typedef struct {
+        /** generate indented (beautiful) output */
         unsigned int beautify;
+        /** an opportunity to define an indent string.  such as \\t or
+         *  some number of spaces.  default is four spaces '    '.  This
+         *  member is only relevant when beautify is true */
         const char * indentString;
     } yajl_gen_config;
 
@@ -74,10 +91,16 @@ extern "C" {
     yajl_gen_status YAJL_API yajl_gen_array_open(yajl_gen hand);
     yajl_gen_status YAJL_API yajl_gen_array_close(yajl_gen hand);
 
+    /** access the null terminated generator buffer.  If incrementally
+     *  outputing JSON, one should call yajl_gen_clear to clear the
+     *  buffer.  This allows stream generation. */
     yajl_gen_status YAJL_API yajl_gen_get_buf(yajl_gen hand,
                                               const unsigned char ** buf,
                                               unsigned int * len);
 
+    /** clear yajl's output buffer, but maintain all internal generation
+     *  state.  This function will not "reset" the generator state, and is
+     *  intended to enable incremental JSON outputing. */
     void YAJL_API yajl_gen_clear(yajl_gen hand);
 
 #ifdef __cplusplus
