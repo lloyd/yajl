@@ -151,7 +151,7 @@ main(int argc, char ** argv)
             if (++i >= argc) usage(argv[0]);
 
             /* validate integer */
-            for (j=0;j<strlen(argv[i]);j++) {
+            for (j=0;j<(int)strlen(argv[i]);j++) {
                 if (argv[i][j] <= '9' && argv[i][j] >= '0') continue;
                 fprintf(stderr, "-b requires an integer argument.  '%s' "
                         "is invalid\n", argv[i]);
@@ -199,6 +199,7 @@ main(int argc, char ** argv)
                 stat != yajl_status_ok)
             {
                 unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
+                fflush(stdout);
                 fprintf(stderr, (char *) str);
                 yajl_free_error(str);
                 break;
