@@ -40,9 +40,16 @@ extern "C" {
 #endif    
     /** error codes returned from this interface */
     typedef enum {
+        /** no error was encountered */
         yajl_status_ok,
+        /** a client callback returned zero, stopping the parse */
         yajl_status_client_canceled,
+        /** The parse cannot yet complete because more json input text
+         *  is required, call yajl_parse with the next buffer of input text.
+         *  (pertinent only when stream parsing) */
         yajl_status_insufficient_data,
+        /** An error occured during the parse.  Call yajl_get_error for
+         *  more information about the encountered error */
         yajl_status_error
     } yajl_status;
 
@@ -68,8 +75,8 @@ extern "C" {
         int (* yajl_boolean)(void * ctx, int boolVal);
         int (* yajl_integer)(void * ctx, long long integerVal);
         int (* yajl_double)(void * ctx, double doubleVal);
-        /* strings are returned as pointers into the JSON text when,
-         * possible, they are not null padded */
+        /** strings are returned as pointers into the JSON text when,
+         * possible, as a result, they are _not_ null padded */
         int (* yajl_string)(void * ctx, const unsigned char * stringVal,
                             unsigned int stringLen);
 
@@ -107,7 +114,11 @@ extern "C" {
     /** free a parser handle */    
     void YAJL_API yajl_free(yajl_handle handle);
 
-    /** parse some json! */
+    /** Parse some json!
+     *  \param hand - a handle to the json parser allocated with yajl_alloc
+     *  \param jsonText - a pointer to the UTF8 json text to be parsed
+     *  \param jsonTextLength - the length, in bytes, of input text
+     */
     yajl_status YAJL_API yajl_parse(yajl_handle hand,
                                     const unsigned char * jsonText,
                                     unsigned int jsonTextLength);
@@ -126,6 +137,7 @@ extern "C" {
                                             const unsigned char * jsonText,
                                             unsigned int jsonTextLength);
 
+    /** free an error returned from yajl_get_error */
     void YAJL_API yajl_free_error(unsigned char * str);
 
 #ifdef __cplusplus

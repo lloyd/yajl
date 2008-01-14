@@ -1,0 +1,11 @@
+/*! \mainpage yajl
+    \author Lloyd Hilaiel
+    \date 2007-2008
+
+\section overview Overview
+
+YAJL is a small event-driven (SAX-style) JSON parser written in ANSI
+C, and a small validating JSON generator. YAJL is released under the
+BSD license.
+
+*/

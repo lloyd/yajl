@@ -1,4 +1,11 @@
 0.3.0
+     * lth doxygen documentation (html & man) generated as part of the
+	build
+     * lth many documentation updates.
+     * lth fix to work with older versions of cmake (don't use LOOSE_LOOP
+	constructs)
+     * lth work around different behavior of freebsd 4 scanf.  initialize
+	parameter to scanf to zero.
      * lth all tests run 32x with ranging buffer sizes to stress stream
         parsing
      * lth yajl_test accepts -b option to allow read buffer size to be

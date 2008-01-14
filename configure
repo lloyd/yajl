@@ -72,7 +72,7 @@ File.open("Makefile", "w+") do |f|
   f.puts
   f.puts "distclean:"  
   f.puts "	@rm -rf Makefile build"
-  f.puts "	@rm yajl-*.tgz"
+  f.puts "	@rm -f yajl-*.tgz"
   f.puts
   f.puts "install: all" 
   f.puts "	@echo oops, install target not yet implemented"

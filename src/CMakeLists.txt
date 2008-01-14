@@ -57,17 +57,7 @@ SET_TARGET_PROPERTIES(yajl PROPERTIES
 FILE(MAKE_DIRECTORY ${libDir})
 FILE(MAKE_DIRECTORY ${incDir})
 
-# copy in the library
-#GET_TARGET_PROPERTY(libPath yajl_s LOCATION)
-
-#ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${libPath} ${libDir})
-
-#GET_TARGET_PROPERTY(libPath yajl LOCATION)
-
-#ADD_CUSTOM_COMMAND(TARGET yajl POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${libPath} ${libDir})
-
+# copy public headers to output directory
 FOREACH (header ${PUB_HDRS})
   SET (header ${CMAKE_CURRENT_SOURCE_DIR}/${header})
 
@@ -75,6 +65,6 @@ FOREACH (header ${PUB_HDRS})
 
   ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
-ENDFOREACH ()
+ENDFOREACH (header ${PUB_HDRS})
 
 INCLUDE_DIRECTORIES(${incDir}/..)
