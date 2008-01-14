@@ -1,4 +1,3 @@
-lexical error: malformed number, a digit is required after the minus sign.
 array open '['
 string: 'foo'
 bool: true
@@ -6,3 +5,4 @@ bool: true
 string: 'blue'
 string: 'baby where are you?'
 string: 'oh boo hoo!'
+lexical error: malformed number, a digit is required after the minus sign.
