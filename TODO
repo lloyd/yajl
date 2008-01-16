@@ -3,6 +3,5 @@
 * testing:
   a. the permuter
   b. some performance comparison against json_checker.
-* doxygen setup and compelete documentation
 * investigate pull instead of push parsing
 * make install step
