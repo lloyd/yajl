@@ -415,7 +415,7 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
             c = readChar(lexer, jsonText, offset); 
         }
 
-        if (c >= '1' && c <= '9') {
+        if (c >= '0' && c <= '9') {
             do {
                 RETURN_IF_EOF;
                 c = readChar(lexer, jsonText, offset); 
