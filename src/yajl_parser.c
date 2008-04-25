@@ -34,10 +34,13 @@
 #include "yajl_parser.h"
 #include "yajl_encode.h"
 #include <stdlib.h>
+#include <limits.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <math.h>
 
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
@@ -145,7 +148,6 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
         case yajl_state_parse_error:            
             hand->errorOffset = *offset;
             return yajl_status_error;
-
         case yajl_state_start:
         case yajl_state_map_need_val:
         case yajl_state_array_need_val:
@@ -207,7 +209,7 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                     break;
                 case yajl_tok_integer:
                     /*
-                     * note.  sscanf does not respect the length of
+                     * note.  strtol does not respect the length of
                      * the lexical token.  in a corner case where the
                      * lexed number is a integer with a trailing zero,
                      * immediately followed by the end of buffer,
@@ -215,36 +217,61 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                      * crash.  for this reason we copy the integer
                      * (and doubles), into our parse buffer (the same
                      * one used for unescaping strings), before
-                     * calling sscanf.  yajl_buf ensures null padding,
+                     * calling strtol.  yajl_buf ensures null padding,
                      * so we're safe.
                      */
-                    if (hand->callbacks && hand->callbacks->yajl_integer) {
-                        long long int i = 0;
-                        int neg = 0;
-                        yajl_buf_clear(hand->decodeBuf);
-                        yajl_buf_append(hand->decodeBuf, buf, bufLen);
-                        buf = yajl_buf_data(hand->decodeBuf);
-                        if (*buf == '-') {
-                            buf++; neg = 1;
+                    if (hand->callbacks) {
+                        if (hand->callbacks->yajl_number) {
+                            _CC_CHK(hand->callbacks->yajl_number(hand->ctx,
+                                                                 (char *) buf,
+                                                                 bufLen));
+                        } else if (hand->callbacks->yajl_integer) {
+                            long int i = 0;
+                            yajl_buf_clear(hand->decodeBuf);
+                            yajl_buf_append(hand->decodeBuf, buf, bufLen);
+                            buf = yajl_buf_data(hand->decodeBuf);
+                            i = strtol((char *) buf, NULL, 10);
+                            if ((i == LONG_MIN || i == LONG_MAX) &&
+                                errno == ERANGE)
+                            {
+                                yajl_state_set(hand, yajl_state_parse_error);
+                                hand->parseError = "integer overflow" ;
+                                /* try to restore error offset */
+                                if (*offset >= bufLen) *offset -= bufLen;
+                                else *offset = 0;
+                                goto around_again;
+                            }
+                            _CC_CHK(hand->callbacks->yajl_integer(hand->ctx,
+                                                                  i));
                         }
-                        sscanf((char *) buf, "%lld", &i);
-                        if (neg) i -= (i<<1);
-                        _CC_CHK(hand->callbacks->yajl_integer(hand->ctx, i));
                     }
                     break;
                 case yajl_tok_double:
-                    if (hand->callbacks && hand->callbacks->yajl_double) {
-                        double d;
-                        int neg = 0;
-                        yajl_buf_clear(hand->decodeBuf);
-                        yajl_buf_append(hand->decodeBuf, buf, bufLen);
-                        buf = yajl_buf_data(hand->decodeBuf);
-                        if (*buf == '-') {
-                            buf++; neg = 1;
+                    if (hand->callbacks) {
+                        if (hand->callbacks->yajl_number) {
+                            _CC_CHK(hand->callbacks->yajl_number(hand->ctx,
+                                                                 (char *) buf,
+                                                                 bufLen));
+                        } else if (hand->callbacks->yajl_double) {
+                            double d = 0.0;
+                            yajl_buf_clear(hand->decodeBuf);
+                            yajl_buf_append(hand->decodeBuf, buf, bufLen);
+                            buf = yajl_buf_data(hand->decodeBuf);
+                            d = strtod((char *) buf, NULL);
+                            if ((d == HUGE_VAL || d == -HUGE_VAL) &&
+                                errno == ERANGE)
+                            {
+                                yajl_state_set(hand, yajl_state_parse_error);
+                                hand->parseError = "numeric (floating point) "
+                                    "overflow";
+                                /* try to restore error offset */
+                                if (*offset >= bufLen) *offset -= bufLen;
+                                else *offset = 0;
+                                goto around_again;
+                            }
+                            _CC_CHK(hand->callbacks->yajl_double(hand->ctx,
+                                                                 d));
                         }
-                        sscanf((char *) buf, "%lf", &d);
-                        if (neg) d *= -1.0;
-                        _CC_CHK(hand->callbacks->yajl_double(hand->ctx, d));
                     }
                     break;
                 case yajl_tok_right_brace: {

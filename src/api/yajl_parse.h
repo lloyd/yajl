@@ -74,12 +74,27 @@ extern "C" {
      *  All callbacks return an integer.  If non-zero, the parse will
      *  continue.  If zero, the parse will be canceled and
      *  yajl_status_client_canceled will be returned from the parse.
+     *
+     *  Note about handling of numbers:
+     *    yajl will only convert numbers that can be represented in a double
+     *    or a long int.  All other numbers will be passed to the client
+     *    in string form using the yajl_number callback.  Furthermore, if
+     *    yajl_number is not NULL, it will always be used to return numbers,
+     *    that is yajl_integer and yajl_double will be ignored.  If
+     *    yajl_number is NULL but one of yajl_integer or yajl_double are
+     *    defined, parsing of a number larger than is representable
+     *    in a double or long int will result in a parse error.
      */
     typedef struct {
         int (* yajl_null)(void * ctx);
         int (* yajl_boolean)(void * ctx, int boolVal);
-        int (* yajl_integer)(void * ctx, long long integerVal);
+        int (* yajl_integer)(void * ctx, long integerVal);
         int (* yajl_double)(void * ctx, double doubleVal);
+        /** A callback which passes the string representation of the number
+         *  back to the client.  Will be used for all numbers when present */
+        int (* yajl_number)(void * ctx, const char * numberVal,
+                            unsigned int numberLen);
+
         /** strings are returned as pointers into the JSON text when,
          * possible, as a result, they are _not_ null padded */
         int (* yajl_string)(void * ctx, const unsigned char * stringVal,

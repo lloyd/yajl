@@ -8,6 +8,6 @@ integer: 6
 integer: 7
 integer: 123456789
 integer: -123456789
-integer: 9223372036854775807
-integer: -9223372036854775807
-array close ']'
+integer: 2147483647
+integer: -2147483647
+parse error: integer overflow

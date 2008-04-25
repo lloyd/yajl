@@ -44,24 +44,17 @@ int reformat_null(void * ctx)
     return 1;
 }
 
-int reformat_boolean(void * ctx, int boolVal)
+int reformat_boolean(void * ctx, int boolean)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_bool(g, boolVal);
+    yajl_gen_bool(g, boolean);
     return 1;
 }
 
-int reformat_integer(void * ctx, long long integerVal)
+int reformat_number(void * ctx, const char * s, unsigned int l)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_integer(g, integerVal);
-    return 1;
-}
-
-int reformat_double(void * ctx, double doubleVal)
-{
-    yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_double(g, doubleVal);
+    yajl_gen_number(g, s, l);
     return 1;
 }
 
@@ -113,8 +106,9 @@ int reformat_end_array(void * ctx)
 static yajl_callbacks callbacks = {
     reformat_null,
     reformat_boolean,
-    reformat_integer,
-    reformat_double,
+    NULL,
+    NULL,
+    reformat_number,
     reformat_string,
     reformat_start_map,
     reformat_map_key,

@@ -139,11 +139,11 @@ yajl_gen_free(yajl_gen g)
         yajl_buf_append(g->buf, "\n", 1);        
     
 yajl_gen_status
-yajl_gen_integer(yajl_gen g, long long int number)
+yajl_gen_integer(yajl_gen g, long int number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%lld", number);
+    sprintf(i, "%ld", number);
     yajl_buf_append(g->buf, i, strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
@@ -158,6 +158,17 @@ yajl_gen_double(yajl_gen g, double number)
     sprintf(i, "%lf", number);
     yajl_buf_append(g->buf, i, strlen(i));
     APPENDED_ATOM;
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+
+yajl_gen_status
+yajl_gen_number(yajl_gen g, const char * s, unsigned int l)
+{
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    yajl_buf_append(g->buf, s, l);
+    APPENDED_ATOM;
+    FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
 

@@ -1,3 +1,5 @@
+* add a test for 0x1F bug
+* numeric overflow in integers and double
 * line and char offsets in the lexer and in error messages
 * numbers at eof bug. (lth: still pertinent?)
 * testing:

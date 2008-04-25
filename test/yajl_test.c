@@ -51,9 +51,9 @@ int test_yajl_boolean(void * ctx, int boolVal)
     return 1;
 }
 
-int test_yajl_integer(void *ctx, long long integerVal)
+int test_yajl_integer(void *ctx, long integerVal)
 {
-    printf("integer: %lld\n", integerVal);
+    printf("integer: %ld\n", integerVal);
     return 1;
 }
 
@@ -113,6 +113,7 @@ static yajl_callbacks callbacks = {
     test_yajl_boolean,
     test_yajl_integer,
     test_yajl_double,
+    NULL,
     test_yajl_string,
     test_yajl_start_map,
     test_yajl_map_key,
