@@ -1,3 +1,17 @@
+0.4.0
+     * lth buffer overflow bug in yajl_gen_double s/%lf/%g/ - thanks to
+	Eric Bergstrome
+     * lth yajl_number callback to allow passthrough of arbitrary precision
+	numbers to client.  Thanks to Hatem Nassrat.
+     * lth yajl_integer now deals in long, instead of long long.  This
+	combined with yajl_number improves compiler compatibility while
+	maintaining precision.
+     * lth better ./configure && make experience (still requires cmake and
+	ruby)
+     * lth fix handling of special characters hex 0F and 1F in yajl_encode
+	(thanks to Robert Geiger)
+     * lth allow leading zeros in exponents (thanks to Hatem Nassrat)
+    
 0.3.0
      * lth doxygen documentation (html & man) generated as part of the
 	build
