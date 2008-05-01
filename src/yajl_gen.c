@@ -155,7 +155,7 @@ yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%lf", number);
+    sprintf(i, "%g", number);
     yajl_buf_append(g->buf, i, strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
