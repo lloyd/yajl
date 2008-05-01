@@ -19,4 +19,8 @@ IF (doxygenPath)
 
 ELSE (doxygenPath)
   MESSAGE("!! doxygen not found, not generating documentation")     
+  ADD_CUSTOM_TARGET(
+    doc
+    echo doxygen not installed, not generating documentation
+  )
 ENDIF (doxygenPath)
