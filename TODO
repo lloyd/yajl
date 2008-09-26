@@ -7,3 +7,5 @@
   b. some performance comparison against json_checker.
 * investigate pull instead of push parsing
 * make install step
+* Handle memory allocation failures gracefully
+* allow client to override malloc/calloc/free impl.
