@@ -9,3 +9,4 @@
 * make install step
 * Handle memory allocation failures gracefully
 * allow client to override malloc/calloc/free impl.
+* cygwin/msys support on win32
