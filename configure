@@ -83,7 +83,7 @@ File.open("Makefile", "w+") do |f|
   f.puts "	@rm -f yajl-*.tgz"
   f.puts
   f.puts "install: all" 
-  f.puts "	@echo oops, install target not yet implemented"
+  f.puts "	@cd build && make install"
   f.puts
   f.puts "package: all"
   f.puts "	@echo \"compressing to `basename build/yajl-*`.tgz\""

@@ -49,3 +49,5 @@ GET_TARGET_PROPERTY(binPath json_verify LOCATION)
 
 ADD_CUSTOM_COMMAND(TARGET json_verify POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
+
+INSTALL(TARGETS json_verify RUNTIME DESTINATION bin)
