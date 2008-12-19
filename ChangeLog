@@ -1,3 +1,6 @@
+1.0.0
+     * lth add 'make install' rules, thaks to Andrei Soroker for the
+	contribution.
 0.4.0
      * lth buffer overflow bug in yajl_gen_double s/%lf/%g/ - thanks to
 	Eric Bergstrome
