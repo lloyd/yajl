@@ -113,7 +113,8 @@ readChar(yajl_lexer lxr, const unsigned char * txt, unsigned int *off)
     if (lxr->bufInUse && yajl_buf_len(lxr->buf) &&
         lxr->bufOff < yajl_buf_len(lxr->buf))
     {
-        return *((unsigned char *) yajl_buf_data(lxr->buf) + (lxr->bufOff)++);
+        return *((const unsigned char *) yajl_buf_data(lxr->buf) +
+                                         (lxr->bufOff)++);
     }
     return txt[(*off)++];
 }
@@ -153,7 +154,7 @@ yajl_lex_free(yajl_lexer lxr)
 #define VEC 1
 #define IJC 2
 #define VHC 4
-const static char charLookupTable[256] =
+static const char charLookupTable[256] =
 {
 /*00*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*08*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
@@ -574,7 +575,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 goto lexed;
             }
             case '"': {
-                tok = yajl_lex_string(lexer, (unsigned char *) jsonText,
+                tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
                                       jsonTextLen, context);
                 goto lexed;
             }
@@ -583,7 +584,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             case '5': case '6': case '7': case '8': case '9': {
                 /* integer parsing wants to start from the beginning */
                 unreadChar(lexer, context);
-                tok = yajl_lex_number(lexer, (unsigned char *) jsonText,
+                tok = yajl_lex_number(lexer, (const unsigned char *) jsonText,
                                       jsonTextLen, context);
                 goto lexed;
             }
@@ -602,7 +603,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                  * - malformed comment opening (slash not followed by
                  *   '*' or '/') (tok_error)
                  * - eof hit. (tok_eof) */
-                tok = yajl_lex_comment(lexer, (unsigned char *) jsonText,
+                tok = yajl_lex_comment(lexer, (const unsigned char *) jsonText,
                                        jsonTextLen, context);
                 if (tok == yajl_tok_comment) {
                     /* "error" is silly, but that's the initial

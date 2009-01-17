@@ -222,15 +222,14 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                      */
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
-                            _CC_CHK(hand->callbacks->yajl_number(hand->ctx,
-                                                                 (char *) buf,
-                                                                 bufLen));
+                            _CC_CHK(hand->callbacks->yajl_number(
+                                        hand->ctx,(const char *) buf, bufLen));
                         } else if (hand->callbacks->yajl_integer) {
                             long int i = 0;
                             yajl_buf_clear(hand->decodeBuf);
                             yajl_buf_append(hand->decodeBuf, buf, bufLen);
                             buf = yajl_buf_data(hand->decodeBuf);
-                            i = strtol((char *) buf, NULL, 10);
+                            i = strtol((const char *) buf, NULL, 10);
                             if ((i == LONG_MIN || i == LONG_MAX) &&
                                 errno == ERANGE)
                             {
@@ -249,9 +248,8 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
-                            _CC_CHK(hand->callbacks->yajl_number(hand->ctx,
-                                                                 (char *) buf,
-                                                                 bufLen));
+                            _CC_CHK(hand->callbacks->yajl_number(
+                                        hand->ctx, (const char *) buf, bufLen));
                         } else if (hand->callbacks->yajl_double) {
                             double d = 0.0;
                             yajl_buf_clear(hand->decodeBuf);

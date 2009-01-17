@@ -37,44 +37,44 @@
 #include <stdlib.h>
 #include <string.h>
 
-int reformat_null(void * ctx)
+static int reformat_null(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_null(g);
     return 1;
 }
 
-int reformat_boolean(void * ctx, int boolean)
+static int reformat_boolean(void * ctx, int boolean)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_bool(g, boolean);
     return 1;
 }
 
-int reformat_number(void * ctx, const char * s, unsigned int l)
+static int reformat_number(void * ctx, const char * s, unsigned int l)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_number(g, s, l);
     return 1;
 }
 
-int reformat_string(void * ctx, const unsigned char * stringVal,
-                     unsigned int stringLen)
+static int reformat_string(void * ctx, const unsigned char * stringVal,
+                           unsigned int stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_string(g, stringVal, stringLen);
     return 1;
 }
 
-int reformat_map_key(void * ctx, const unsigned char * stringVal,
-                   unsigned int stringLen)
+static int reformat_map_key(void * ctx, const unsigned char * stringVal,
+                            unsigned int stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_string(g, stringVal, stringLen);
     return 1;
 }
 
-int reformat_start_map(void * ctx)
+static int reformat_start_map(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_map_open(g);
@@ -82,21 +82,21 @@ int reformat_start_map(void * ctx)
 }
 
 
-int reformat_end_map(void * ctx)
+static int reformat_end_map(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_map_close(g);
     return 1;
 }
 
-int reformat_start_array(void * ctx)
+static int reformat_start_array(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_array_open(g);
     return 1;
 }
 
-int reformat_end_array(void * ctx)
+static int reformat_end_array(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_array_close(g);

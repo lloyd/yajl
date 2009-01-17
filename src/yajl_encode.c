@@ -55,7 +55,7 @@ yajl_string_encode(yajl_buf buf, const unsigned char * str,
     hexBuf[6] = 0;
 
     while (end < len) {
-        char * escaped = NULL;
+        const char * escaped = NULL;
         switch (str[end]) {
             case '\r': escaped = "\\r"; break;
             case '\n': escaped = "\\n"; break;
