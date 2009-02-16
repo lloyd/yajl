@@ -39,32 +39,32 @@
 
 #define BUF_SIZE 2048
 
-int test_yajl_null(void *ctx)
+static int test_yajl_null(void *ctx)
 {
     printf("null\n");
     return 1;
 }
 
-int test_yajl_boolean(void * ctx, int boolVal)
+static int test_yajl_boolean(void * ctx, int boolVal)
 {
     printf("bool: %s\n", boolVal ? "true" : "false");
     return 1;
 }
 
-int test_yajl_integer(void *ctx, long integerVal)
+static int test_yajl_integer(void *ctx, long integerVal)
 {
     printf("integer: %ld\n", integerVal);
     return 1;
 }
 
-int test_yajl_double(void *ctx, double doubleVal)
+static int test_yajl_double(void *ctx, double doubleVal)
 {
-    printf("double: %lf\n", doubleVal);
+    printf("double: %g\n", doubleVal);
     return 1;
 }
 
-int test_yajl_string(void *ctx, const unsigned char * stringVal,
-                     unsigned int stringLen)
+static int test_yajl_string(void *ctx, const unsigned char * stringVal,
+                            unsigned int stringLen)
 {
     printf("string: '");
     fwrite(stringVal, 1, stringLen, stdout);
@@ -72,8 +72,8 @@ int test_yajl_string(void *ctx, const unsigned char * stringVal,
     return 1;
 }
 
-int test_yajl_map_key(void *ctx, const unsigned char * stringVal,
-                     unsigned int stringLen)
+static int test_yajl_map_key(void *ctx, const unsigned char * stringVal,
+                             unsigned int stringLen)
 {
     char * str = (char *) malloc(stringLen + 1);
     str[stringLen] = 0;
@@ -83,26 +83,26 @@ int test_yajl_map_key(void *ctx, const unsigned char * stringVal,
     return 1;
 }
 
-int test_yajl_start_map(void *ctx)
+static int test_yajl_start_map(void *ctx)
 {
     printf("map open '{'\n");
     return 1;
 }
 
 
-int test_yajl_end_map(void *ctx)
+static int test_yajl_end_map(void *ctx)
 {
     printf("map close '}'\n");
     return 1;
 }
 
-int test_yajl_start_array(void *ctx)
+static int test_yajl_start_array(void *ctx)
 {
     printf("array open '['\n");
     return 1;
 }
 
-int test_yajl_end_array(void *ctx)
+static int test_yajl_end_array(void *ctx)
 {
     printf("array close ']'\n");
     return 1;
