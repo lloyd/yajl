@@ -5,76 +5,385 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-	<title>lloyd/yajl @ GitHub</title>
-	
-	<style type="text/css">
-		body {
-  		margin-top: 1.0em;
-  		background-color: #b7281a;
-		  font-family: "helvetica"; 
-  		color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-		h1 { font-size: 3.8em; color: #48d7e5; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
-		h1 a { text-decoration: none }
-		h2 { font-size: 1.5em; color: #48d7e5; }
-    h3 { text-align: center; color: #48d7e5; }
-    a { color: #48d7e5; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-		pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-	</style>
-	
+	<title>yajl</title>
+    
+    <style type="text/css">
+      body {
+	    background-color: #D5D6D7;
+	    padding:20px;
+	    text-align: center;
+        align: center;
+	  }
+      .header {
+	    border-bottom: 1px solid #959596;
+	    padding: 5px;
+        color: #ffffff;
+        background-color: rgb(115, 160, 197);
+	  }
+      .header a {
+	    text-decoration: none;
+        color: #ffffff;
+	  }
+      .pageTitle {
+	    font-size: 3em;
+	    font-weight: normal;
+	  }
+      .small { font-size: 1em; }
+
+      #outerContainer {
+        border:1px solid #959596;
+        font-family: "helvetica"; 
+        color: #000000;
+        margin: 0 auto;
+        background-color: #ffffff;
+      }
+      #container {
+        margin-left: auto;
+        margin-right: auto;
+        text-align: left;
+        width: 700px;
+        color: #333333;
+      }
+      h1 { font-size: 3.8em; color: #736f30; margin-bottom: 3px; }
+      h1 .small { font-size: 0.4em; }
+      h1 a { text-decoration: none }
+      h2 { font-size: 1.5em; text-align: center;}
+      h3 { font-size: 1.2em; color: #111144}
+      .description {
+	    font-size: 1.2em;
+	    margin-bottom: 30px;
+	    margin-top: 30px;
+	    font-style: italic;
+	  }
+      .download { float: right; }
+      pre { background: #000; color: #fff; padding: 15px;}
+      hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+      .footer { text-align:center; padding-top:30px; font-style: italic; }
+      .styleCredit { font-size: 75%; }
+    </style>
+    
 </head>
 
 <body>
   <a href="http://github.com/lloyd/yajl"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
   
+  <div id="outerContainer">
+  <div class="header">
+    <span class="pageTitle">
+      <a href="http://github.com/lloyd/yajl">yajl</a>
+	</span><br>
+    <span class="small">
+	  by <a href="http://github.com/lloyd">lloyd</a>
+	</span>
+  </div>
   <div id="container">
-
-    <div class="download">
-      <a href="http://github.com/lloyd/yajl/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/lloyd/yajl/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
-      
-    <h1><a href="http://github.com/lloyd/yajl">yajl</a> 
-      <span class="small">by <a href="http://github.com/lloyd">lloyd</a></small></h1>
-
     <div class="description">
-      Yet Another JSON Library - A Portable JSON parsing and serialization library in ANSI C
     </div>
 
-    <h2>Authors</h2>
-<p>Lloyd Hilaiel (lloyd@hilaiel.com)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Lloyd Hilaiel (lloyd@hilaiel.com)<br/>      </p>
+    <h2>Overview</h2>
 
+      Yet Another JSON Library. YAJL is a small event-driven
+      (SAX-style) JSON parser written in ANSI C, and a small
+      validating JSON generator. YAJL is released under the BSD
+      license.
 
     <h2>Download</h2>
     <p>
-      You can download this project in either
-      <a href="http://github.com/lloyd/yajl/zipball/master">zip</a> or
-      <a href="http://github.com/lloyd/yajl/tarball/master">tar</a> formats.
+      <ul>
+      <li><a href="http://github.com/lloyd/yajl/zipball/0.4.0">yajl-0.4.0.zip</a>
+      <li><a href="http://github.com/lloyd/yajl/tarball/0.4.0">yajl-0.4.0.tar.gz</a>
+      <li><a href="http://github.com/lloyd/yajl/zipball/master">yajl-trunk.zip</a>
+      <li><a href="http://github.com/lloyd/yajl/tarball/master">yajl-trunk.tar.gz</a>
+       </ul>
     </p>
     <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
       by running:
       <pre>$ git clone git://github.com/lloyd/yajl</pre>
     </p>
-      
+
+    <h2>Features</h2>
+
+
+  <h3> Simple Interface </h3>
+
+  Largely because YAJL is event driven, the interface is very concise
+  object oriented C.  The interface is not cluttered with data
+  representation, that bit is left up to higher level code.  Indeed
+  it should be possible to port most existing JSON libraries onto YAJL
+  if so desired.
+
+  <h3> portable </h3>
+
+  It's all ANSI C.  It's been successfully compiled
+  on debian linux, OSX 10.4 i386 & ppc, OSX 10.5 i386, winXP,
+  FreeBSD 4.10, FreeBSD 6.1 amd64, FreeBSD 7 i386, and windows vista.
+  More platforms and binaries as time permits.
+
+  <h3> Stream parsing </h3>
+
+  YAJL remembers all state required to support restarting parsing.
+  This allows parsing to occur incrementally as data is read off a
+  disk or network.
+
+  <h3> Fast </h3>
+
+  A second motivation for writing YAJL, was that many available free
+  JSON parsers fall over on large or complex inputs.  YAJL is careful
+  to minimize memory copying and input re-scanning when possible.  The
+  result is a parser that should be fast enough for most applications
+  or tunable for any application.  On my mac pro (2.66 ghz) it takes 1s
+  to verify a 60meg json file.  Minimizing that same file with
+  json_reformat takes 4s.  
+
+  <h3> Low resource consumption </h3>  
+
+  Largely because YAJL deals with streams, it's possible to parse JSON in
+  low memory environments.  Oftentimes with other parsers an application
+  must hold both the input text and the memory representation of the
+  tree in memory at one time.  With YAJL you can incrementally read the 
+  input stream and hold only the in memory representation.  Or for
+  filtering or validation tasks, it's not required to hold the entire
+  input text in memory.
+
+  <h3> sample programs </h3>
+
+  included in the source are a couple sample programs to demonstrate and
+  test yajl:<br>
+  <b>json_reformat</b>: a minimizer and beautifier in one.<br/
+  <b>json_verify</b>: a JSON verifier.
+
+  <h3> comments in JSON </h3>
+
+  If you're dead set on using JSON throughout your system, you'll
+  probably end up using it for your configuration files too.  A little
+  crazy, perhaps.  But so am I.  At parser allocation time you may
+  specify a configuration parameter to allow comments inside the JSON
+  input text.  This is supported in versions 0.2.0 and above.
+
+
+    <h2>Example Programmatic Usage In C</h2>
+
+    <textarea name="code" class="c">
+#include <yajl/yajl_parse.h>
+#include <yajl/yajl_gen.h>
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+static int reformat_null(void * ctx)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_null(g);
+    return 1;
+}
+ 
+static int reformat_boolean(void * ctx, int boolean)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_bool(g, boolean);
+    return 1;
+}
+ 
+static int reformat_number(void * ctx, const char * s, unsigned int l)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_number(g, s, l);
+    return 1;
+}
+ 
+static int reformat_string(void * ctx, const unsigned char * stringVal,
+                           unsigned int stringLen)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_string(g, stringVal, stringLen);
+    return 1;
+}
+ 
+static int reformat_map_key(void * ctx, const unsigned char * stringVal,
+                            unsigned int stringLen)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_string(g, stringVal, stringLen);
+    return 1;
+}
+ 
+static int reformat_start_map(void * ctx)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_map_open(g);
+    return 1;
+}
+ 
+ 
+static int reformat_end_map(void * ctx)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_map_close(g);
+    return 1;
+}
+ 
+static int reformat_start_array(void * ctx)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_array_open(g);
+    return 1;
+}
+ 
+static int reformat_end_array(void * ctx)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    yajl_gen_array_close(g);
+    return 1;
+}
+ 
+static yajl_callbacks callbacks = {
+    reformat_null,
+    reformat_boolean,
+    NULL,
+    NULL,
+    reformat_number,
+    reformat_string,
+    reformat_start_map,
+    reformat_map_key,
+    reformat_end_map,
+    reformat_start_array,
+    reformat_end_array
+};
+ 
+static void
+usage(const char * progname)
+{
+    fprintf(stderr, "usage:  %s <filename>\n"
+            "    -m minimize json rather than beautify (default)\n"
+            "    -u allow invalid UTF8 inside strings during parsing\n",
+            progname);
+    exit(1);
+ 
+}
+ 
+int 
+main(int argc, char ** argv)
+{
+    yajl_handle hand;
+    static unsigned char fileData[65536];
+    /* generator config */
+    yajl_gen_config conf = { 1, "  " };
+  yajl_gen g;
+    yajl_status stat;
+    size_t rd;
+    /* allow comments */
+    yajl_parser_config cfg = { 1, 1 };
+ 
+    /* check arguments.  We expect exactly one! */
+    if (argc == 2) {
+        if (!strcmp("-m", argv[1])) {
+            conf.beautify = 0;
+ 
+        } else if (!strcmp("-u", argv[1])) {
+            cfg.checkUTF8 = 0;
+        } else {
+            usage(argv[0]);
+        }
+    } else if (argc != 1) {
+        usage(argv[0]);
+    }
+    
+    g = yajl_gen_alloc(&conf);
+ 
+    /* ok.  open file.  let's read and parse */
+    hand = yajl_alloc(&callbacks, &cfg, (void *) g);
+        
+    for (;;) {
+        rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
+        
+        if (rd == 0) {
+            if (feof(stdin)) {
+                break;
+            } else {
+                fprintf(stderr, "error on file read.\n");
+                break;
+            }
+        } else {
+            fileData[rd] = 0;
+            
+            /* read file data, pass to parser */
+            stat = yajl_parse(hand, fileData, rd);
+            if (stat != yajl_status_ok &&
+                stat != yajl_status_insufficient_data)
+            {
+                unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+                fprintf(stderr, (const char *) str);
+                yajl_free_error(str);
+            } else {
+                const unsigned char * buf;
+                unsigned int len;
+                yajl_gen_get_buf(g, &buf, &len);
+                fwrite(buf, 1, len, stdout);
+                yajl_gen_clear(g);
+            }
+        }
+    }
+ 
+    yajl_gen_free(g);
+    yajl_free(hand);
+    
+    return 0;
+}
+    </textarea>
+
+    <h2>License</h2>
+
+    <pre>
+ Copyright 2007, Lloyd Hilaiel.
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+ 
+  1. Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+ 
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in
+     the documentation and/or other materials provided with the
+     distribution.
+ 
+  3. Neither the name of Lloyd Hilaiel nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+</pre>
+
+    <h2>Author</h2>
+      <p>Lloyd Hilaiel (lloyd@hilaiel.com)</p>
+
     <div class="footer">
       get the source code on GitHub : <a href="http://github.com/lloyd/yajl">lloyd/yajl</a>
     </div>
     
-  </div>
-
-  
+    <div class="styleCredit footer">
+      (page style "borrowed" from
+	   <a href="http://kylecordes.com">Kyle Cordes</a>)
+    </div>
+    
+  </div></div>
 </body>
+
+<link type="text/css" rel="stylesheet" href="dp.SyntaxHighlighter/SyntaxHighlighter.css"></link>
+<script language="javascript" src="dp.SyntaxHighlighter/shCore.js"></script>
+<script language="javascript" src="dp.SyntaxHighlighter/shBrushCpp.js"></script>
+<script language="javascript">
+dp.SyntaxHighlighter.HighlightAll('code');
+</script>
 </html>
