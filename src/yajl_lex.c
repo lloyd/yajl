@@ -478,25 +478,25 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
 
 yajl_tok
 yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
-             unsigned int jsonTextLen, unsigned int * context,
+             unsigned int jsonTextLen, unsigned int * offset,
              const unsigned char ** outBuf, unsigned int * outLen)
 {
     yajl_tok tok = yajl_tok_error;
     unsigned char c;
-    unsigned int startCtx = *context;
+    unsigned int startOffset = *offset;
 
     *outBuf = NULL;
     *outLen = 0;
 
     for (;;) {
-        assert(*context <= jsonTextLen);
+        assert(*offset <= jsonTextLen);
 
-        if (*context >= jsonTextLen) {
+        if (*offset >= jsonTextLen) {
             tok = yajl_tok_eof;
             goto lexed;
         }
 
-        c = readChar(lexer, jsonText, context);
+        c = readChar(lexer, jsonText, offset);
 
         switch (c) {
             case '{':
@@ -518,18 +518,18 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 tok = yajl_tok_colon;
                 goto lexed;
             case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
-                startCtx++;
+                startOffset++;
                 break;
             case 't': {
                 const char * want = "rue";
                 do {
-                    if (*context >= jsonTextLen) {
+                    if (*offset >= jsonTextLen) {
                         tok = yajl_tok_eof;
                         goto lexed;
                     }
-                    c = readChar(lexer, jsonText, context);
+                    c = readChar(lexer, jsonText, offset);
                     if (c != *want) {
-                        unreadChar(lexer, context);
+                        unreadChar(lexer, offset);
                         lexer->error = yajl_lex_invalid_string;
                         tok = yajl_tok_error;
                         goto lexed;
@@ -541,13 +541,13 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             case 'f': {
                 const char * want = "alse";
                 do {
-                    if (*context >= jsonTextLen) {
+                    if (*offset >= jsonTextLen) {
                         tok = yajl_tok_eof;
                         goto lexed;
                     }
-                    c = readChar(lexer, jsonText, context);
+                    c = readChar(lexer, jsonText, offset);
                     if (c != *want) {
-                        unreadChar(lexer, context);
+                        unreadChar(lexer, offset);
                         lexer->error = yajl_lex_invalid_string;
                         tok = yajl_tok_error;
                         goto lexed;
@@ -559,13 +559,13 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             case 'n': {
                 const char * want = "ull";
                 do {
-                    if (*context >= jsonTextLen) {
+                    if (*offset >= jsonTextLen) {
                         tok = yajl_tok_eof;
                         goto lexed;
                     }
-                    c = readChar(lexer, jsonText, context);
+                    c = readChar(lexer, jsonText, offset);
                     if (c != *want) {
-                        unreadChar(lexer, context);
+                        unreadChar(lexer, offset);
                         lexer->error = yajl_lex_invalid_string;
                         tok = yajl_tok_error;
                         goto lexed;
@@ -576,23 +576,23 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             }
             case '"': {
                 tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
-                                      jsonTextLen, context);
+                                      jsonTextLen, offset);
                 goto lexed;
             }
             case '-':
             case '0': case '1': case '2': case '3': case '4': 
             case '5': case '6': case '7': case '8': case '9': {
                 /* integer parsing wants to start from the beginning */
-                unreadChar(lexer, context);
+                unreadChar(lexer, offset);
                 tok = yajl_lex_number(lexer, (const unsigned char *) jsonText,
-                                      jsonTextLen, context);
+                                      jsonTextLen, offset);
                 goto lexed;
             }
             case '/':
                 /* hey, look, a probable comment!  If comments are disabled
                  * it's an error. */
                 if (!lexer->allowComments) {
-                    unreadChar(lexer, context);
+                    unreadChar(lexer, offset);
                     lexer->error = yajl_lex_unallowed_comment;
                     tok = yajl_tok_error;
                     goto lexed;
@@ -604,14 +604,14 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                  *   '*' or '/') (tok_error)
                  * - eof hit. (tok_eof) */
                 tok = yajl_lex_comment(lexer, (const unsigned char *) jsonText,
-                                       jsonTextLen, context);
+                                       jsonTextLen, offset);
                 if (tok == yajl_tok_comment) {
                     /* "error" is silly, but that's the initial
                      * state of tok.  guilty until proven innocent. */  
                     tok = yajl_tok_error;
                     yajl_buf_clear(lexer->buf);
                     lexer->bufInUse = 0;
-                    startCtx = *context; 
+                    startOffset = *offset; 
                     break;
                 }
                 /* hit error or eof, bail */
@@ -630,7 +630,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     if (tok == yajl_tok_eof || lexer->bufInUse) {
         if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
         lexer->bufInUse = 1;
-        yajl_buf_append(lexer->buf, jsonText + startCtx, *context - startCtx);
+        yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
         lexer->bufOff = 0;
         
         if (tok != yajl_tok_eof) {
@@ -639,8 +639,8 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             lexer->bufInUse = 0;
         }
     } else if (tok != yajl_tok_error) {
-        *outBuf = jsonText + startCtx;
-        *outLen = *context - startCtx;
+        *outBuf = jsonText + startOffset;
+        *outLen = *offset - startOffset;
     }
 
     /* special case for strings. skip the quotes. */
