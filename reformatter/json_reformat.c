@@ -140,7 +140,8 @@ main(int argc, char ** argv)
     size_t rd;
     /* allow comments */
     yajl_parser_config cfg = { 1, 1 };
-
+    int done = 0;
+    
     /* check arguments.  We expect exactly one! */
     if (argc == 2) {
         if (!strcmp("-m", argv[1])) {
@@ -160,34 +161,37 @@ main(int argc, char ** argv)
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, (void *) g);
         
-    for (;;) {
+	while (!done) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
         
         if (rd == 0) {
-            if (feof(stdin)) {
-                break;
-            } else {
+            if (!feof(stdin)) {
                 fprintf(stderr, "error on file read.\n");
                 break;
             }
-        } else {
-            fileData[rd] = 0;
-            
+            done = 1;
+        }
+        fileData[rd] = 0;
+        
+        if (done)
+            /* parse any remaining buffered data */
+            stat = yajl_parse_complete(hand);
+        else
             /* read file data, pass to parser */
             stat = yajl_parse(hand, fileData, rd);
-            if (stat != yajl_status_ok &&
-                stat != yajl_status_insufficient_data)
-            {
-                unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
-                fprintf(stderr, (const char *) str);
-                yajl_free_error(str);
-            } else {
-                const unsigned char * buf;
-                unsigned int len;
-                yajl_gen_get_buf(g, &buf, &len);
-                fwrite(buf, 1, len, stdout);
-                yajl_gen_clear(g);
-            }
+
+        if (stat != yajl_status_ok &&
+            stat != yajl_status_insufficient_data)
+        {
+            unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+            fprintf(stderr, (const char *) str);
+            yajl_free_error(str);
+        } else {
+            const unsigned char * buf;
+            unsigned int len;
+            yajl_gen_get_buf(g, &buf, &len);
+            fwrite(buf, 1, len, stdout);
+            yajl_gen_clear(g);
         }
     }
 
