@@ -142,7 +142,7 @@ main(int argc, char ** argv)
     yajl_status stat;
     size_t rd;
     yajl_parser_config cfg = { 0, 1 };
-    int i, j;
+    int i, j, done;
 
     /* check arguments.  We expect exactly one! */
     for (i=1;i<argc;i++) {
@@ -185,7 +185,7 @@ main(int argc, char ** argv)
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, NULL);
 
-    int done = 0;
+    done = 0;
 	while (!done) {
         rd = fread((void *) fileData, 1, bufSize, stdin);
         
