@@ -143,6 +143,17 @@ extern "C" {
                                     const unsigned char * jsonText,
                                     unsigned int jsonTextLength);
 
+    /** Parse any remaining buffered json.
+     *  Since yajl is a stream-based parser, without an explicit end of
+     *  input, yajl sometimes can't decide if content at the end of the
+     *  stream is valid or not.  For example, if "1" has been fed in,
+     *  yajl can't know whether another digit is next or some character
+     *  that would terminate the integer token.
+     *
+     *  \param hand - a handle to the json parser allocated with yajl_alloc
+     */
+    yajl_status yajl_parse_complete(yajl_handle hand);
+    
     /** get an error string describing the state of the
      *  parse.
      *

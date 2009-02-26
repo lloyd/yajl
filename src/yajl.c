@@ -104,6 +104,18 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
     return status;
 }
 
+yajl_status
+yajl_parse_complete(yajl_handle hand)
+{
+    /* The particular case we want to handle is a trailing number.
+     * Further input consisting of digits could cause our interpretation
+     * of the number to change (buffered "1" but "2" comes in).
+     * A very simple approach to this is to inject whitespace to terminate
+     * any number in the lex buffer.
+     */
+    return yajl_parse(hand, (const unsigned char *)" ", 1);
+}
+
 unsigned char *
 yajl_get_error(yajl_handle hand, int verbose,
                const unsigned char * jsonText, unsigned int jsonTextLen)

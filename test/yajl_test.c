@@ -185,26 +185,33 @@ main(int argc, char ** argv)
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, NULL);
 
-	for(;;) {
+    int done = 0;
+	while (!done) {
         rd = fread((void *) fileData, 1, bufSize, stdin);
         
         if (rd == 0) {
             if (!feof(stdin)) {
                 fprintf(stderr, "error reading from '%s'\n", fileName);
-            }
-            break;
-        } else {
-            /* read file data, pass to parser */
-            stat = yajl_parse(hand, fileData, rd);
-            if (stat != yajl_status_insufficient_data &&
-                stat != yajl_status_ok)
-            {
-                unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
-                fflush(stdout);
-                fprintf(stderr, (char *) str);
-                yajl_free_error(str);
                 break;
             }
+            done = 1;
+        }
+
+        if (done)
+            /* parse any remaining buffered data */
+            stat = yajl_parse_complete(hand);
+        else
+            /* read file data, pass to parser */
+            stat = yajl_parse(hand, fileData, rd);
+        
+        if (stat != yajl_status_insufficient_data &&
+            stat != yajl_status_ok)
+        {
+            unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
+            fflush(stdout);
+            fprintf(stderr, (char *) str);
+            yajl_free_error(str);
+            break;
         }
     } 
 
