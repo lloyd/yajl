@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -156,10 +156,10 @@ main(int argc, char ** argv)
         usage(argv[0]);
     }
     
-    g = yajl_gen_alloc(&conf);
+    g = yajl_gen_alloc(&conf, NULL);
 
     /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, &cfg, (void *) g);
+    hand = yajl_alloc(&callbacks, &cfg, (void *) g, NULL);
         
 	while (!done) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
@@ -185,7 +185,7 @@ main(int argc, char ** argv)
         {
             unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
             fprintf(stderr, (const char *) str);
-            yajl_free_error(str);
+            yajl_free_error(hand, str);
         } else {
             const unsigned char * buf;
             unsigned int len;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,6 +33,7 @@
 #include "api/yajl_parse.h"
 #include "yajl_lex.h"
 #include "yajl_parser.h"
+#include "yajl_alloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -62,11 +63,29 @@ yajl_status_to_string(yajl_status stat)
 yajl_handle
 yajl_alloc(const yajl_callbacks * callbacks,
            const yajl_parser_config * config,
+           const yajl_alloc_funcs * afs,
            void * ctx)
 {
     unsigned int allowComments = 0;
     unsigned int validateUTF8 = 0;
-    yajl_handle hand = (yajl_handle) malloc(sizeof(struct yajl_handle_t));
+    yajl_handle hand = NULL;
+    yajl_alloc_funcs afsBuffer;
+    
+    /* first order of business is to set up memory allocation routines */
+    if (afs != NULL) {
+        if (afs->malloc == NULL || afs->realloc == NULL || afs->free == NULL)
+        {
+            return NULL;
+        }
+    } else {
+        yajl_set_default_alloc_funcs(&afsBuffer);
+        afs = &afsBuffer;
+    }
+
+    hand = (yajl_handle) YA_MALLOC(afs, sizeof(struct yajl_handle_t));
+
+    /* copy in pointers to allocation routines */
+    memcpy((void *) &(hand->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
 
     if (config != NULL) {
         allowComments = config->allowComments;
@@ -75,10 +94,10 @@ yajl_alloc(const yajl_callbacks * callbacks,
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = yajl_lex_alloc(allowComments, validateUTF8);
+    hand->lexer = yajl_lex_alloc(&(hand->alloc), allowComments, validateUTF8);
     hand->errorOffset = 0;
-    hand->decodeBuf = yajl_buf_alloc();
-    hand->stateBuf = yajl_buf_alloc();
+    hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
+    hand->stateBuf = yajl_buf_alloc(&(hand->alloc));
 
     yajl_state_push(hand, yajl_state_start);    
 
@@ -91,7 +110,7 @@ yajl_free(yajl_handle handle)
     yajl_buf_free(handle->stateBuf);
     yajl_buf_free(handle->decodeBuf);
     yajl_lex_free(handle->lexer);
-    free(handle);
+    YA_FREE(&(handle->alloc), handle);
 }
 
 yajl_status
@@ -124,10 +143,10 @@ yajl_get_error(yajl_handle hand, int verbose,
 }
 
 void
-yajl_free_error(unsigned char * str)
+yajl_free_error(yajl_handle hand, unsigned char * str)
 {
-    /* XXX: use memory allocation functions if set */
-    free(str);
+    /* use memory allocation functions if set */
+    YA_FREE(&(hand->alloc), str);
 }
 
 /* XXX: add utility routines to parse from file */

@@ -1,6 +1,17 @@
 1.0.0
      * lth add 'make install' rules, thaks to Andrei Soroker for the
 	contribution.
+     * lth client may override allocation routines at generator or parser
+	allocation time
+     * tjw add yajl_parse_complete routine to allow client to explicitly
+	specify end-of-input, solving the "lonely number" case, where
+	json text consists only of an element with no explicit syntactic
+	end.
+     * tjw many new test cases	
+     * tjw cleanup of code for symmetry and ease of reading
+     * lth integration of patches from Robert Varga which cleanup
+	compilation warnings on 64 bit linux
+	
 0.4.0
      * lth buffer overflow bug in yajl_gen_double s/%lf/%g/ - thanks to
 	Eric Bergstrome

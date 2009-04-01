@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,6 +33,10 @@
 #ifndef __YAJL_COMMON_H__
 #define __YAJL_COMMON_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif    
+
 #define YAJL_MAX_DEPTH 128
 
 /* msft dll export gunk.  To build a DLL on windows, you
@@ -47,5 +51,35 @@
 #else
 #  define YAJL_API
 #endif 
+
+/** pointer to a malloc function, supporting client overriding memory
+ *  allocation routines */
+typedef void * (*yajl_malloc_func)(void *ctx, unsigned int sz);
+
+/** pointer to a free function, supporting client overriding memory
+ *  allocation routines */
+typedef void (*yajl_free_func)(void *ctx, void * ptr);
+
+/** pointer to a realloc function which can resize an allocation. */
+typedef void * (*yajl_realloc_func)(void *ctx, void * ptr, unsigned int sz);
+
+/** A structure which can be passed to yajl_*_alloc routines to allow the
+ *  client to specify memory allocation functions to be used. */
+typedef struct
+{
+    /** pointer to a function that can allocate uninitialized memory */
+    yajl_malloc_func malloc;
+    /** pointer to a function that can resize memory allocations */
+    yajl_realloc_func realloc;
+    /** pointer to a function that can free memory allocated using
+     *  reallocFunction or mallocFunction */
+    yajl_free_func free;
+    /** a context pointer that will be passed to above allocation routines */
+    void * ctx;
+} yajl_alloc_funcs;
+
+#ifdef __cplusplus
+};
+#endif    
 
 #endif

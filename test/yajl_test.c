@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,6 +37,48 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <assert.h>
+
+/* memory debugging routines */
+typedef struct 
+{
+    unsigned int numFrees;
+    unsigned int numMallocs;    
+    /* XXX: we really need a hash table here with per-allocation
+     *      information */ 
+} yajlTestMemoryContext;
+
+/* cast void * into context */
+#define TEST_CTX(vptr) ((yajlTestMemoryContext *) (vptr))
+
+static void yajlTestFree(void * ctx, void * ptr)
+{
+    assert(ptr != NULL);
+    TEST_CTX(ctx)->numFrees++;
+    free(ptr);
+}
+
+static void * yajlTestMalloc(void * ctx, unsigned int sz)
+{
+    assert(sz != 0);
+    TEST_CTX(ctx)->numMallocs++;
+    return malloc(sz);
+}
+
+static void * yajlTestRealloc(void * ctx, void * ptr, unsigned int sz)
+{
+    if (ptr == NULL) {
+        assert(sz != 0);
+        TEST_CTX(ctx)->numMallocs++;        
+    } else if (sz == 0) {
+        TEST_CTX(ctx)->numFrees++;                
+    }
+
+    return realloc(ctx, sz);
+}
+
+
+/* begin parsing callback routines */
 #define BUF_SIZE 2048
 
 static int test_yajl_null(void *ctx)
@@ -144,6 +186,21 @@ main(int argc, char ** argv)
     yajl_parser_config cfg = { 0, 1 };
     int i, j, done;
 
+    /* memory allocation debugging: allocate a structure which collects
+     * statistics */
+    yajlTestMemoryContext memCtx = { 0,0 };
+
+    /* memory allocation debugging: allocate a structure which holds
+     * allocation routines */
+    yajl_alloc_funcs allocFuncs = {
+        yajlTestMalloc,
+        yajlTestRealloc,
+        yajlTestFree,
+        (void *) NULL
+    };
+
+    allocFuncs.ctx = (void *) &memCtx;
+
     /* check arguments.  We expect exactly one! */
     for (i=1;i<argc;i++) {
         if (!strcmp("-c", argv[i])) {
@@ -183,7 +240,7 @@ main(int argc, char ** argv)
     fileName = argv[argc-1];
 
     /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, &cfg, NULL);
+    hand = yajl_alloc(&callbacks, &cfg, &allocFuncs, NULL);
 
     done = 0;
 	while (!done) {
@@ -210,13 +267,23 @@ main(int argc, char ** argv)
             unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
             fflush(stdout);
             fprintf(stderr, (char *) str);
-            yajl_free_error(str);
+            yajl_free_error(hand, str);
             break;
         }
     } 
 
     yajl_free(hand);
     free(fileData);
+
+    /* finally, print out some memory statistics */
+
+/* (lth) only print leaks here, as allocations and frees may vary depending
+ *       on read buffer size, causing false failures.
+ *
+ *  printf("allocations:\t%u\n", memCtx.numMallocs);
+ *  printf("frees:\t\t%u\n", memCtx.numFrees);
+*/
+    printf("memory leaks:\t%u\n", memCtx.numMallocs - memCtx.numFrees);    
 
     return 0;
 }

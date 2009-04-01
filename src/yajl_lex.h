@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,6 +33,8 @@
 #ifndef __YAJL_LEX_H__
 #define __YAJL_LEX_H__
 
+#include "api/yajl_common.h"
+
 typedef enum {
     yajl_tok_bool,         
     yajl_tok_colon,
@@ -61,7 +63,8 @@ typedef enum {
 
 typedef struct yajl_lexer_t * yajl_lexer;
 
-yajl_lexer yajl_lex_alloc(unsigned int allowComments,
+yajl_lexer yajl_lex_alloc(yajl_alloc_funcs * alloc,
+                          unsigned int allowComments,
                           unsigned int validateUTF8);
 
 void yajl_lex_free(yajl_lexer lexer);

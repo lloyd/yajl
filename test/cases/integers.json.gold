@@ -11,3 +11,4 @@ integer: -123456789
 integer: 2147483647
 integer: -2147483647
 parse error: integer overflow
+memory leaks:	0

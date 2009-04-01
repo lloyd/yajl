@@ -1,7 +1,7 @@
 /*!
     \mainpage Yet Another JSON Library (YAJL)       
     \author Lloyd Hilaiel
-    \date 2007-2008
+    \date 2007-2009
 
 Yet Another JSON Library (YAJL) is a small event-driven (SAX-style)
 JSON parser written in ANSI C, and a small validating JSON

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -105,6 +105,8 @@ struct yajl_lexer_t {
 
     /* shall we validate utf8 inside strings? */
     unsigned int validateUTF8;
+
+    yajl_alloc_funcs * alloc;
 };
 
 static unsigned char
@@ -127,12 +129,15 @@ unreadChar(yajl_lexer lxr, unsigned int *off)
 }
 
 yajl_lexer
-yajl_lex_alloc(unsigned int allowComments, unsigned int validateUTF8)
+yajl_lex_alloc(yajl_alloc_funcs * alloc,
+               unsigned int allowComments, unsigned int validateUTF8)
 {
-    yajl_lexer lxr = (yajl_lexer) calloc(1, sizeof(struct yajl_lexer_t));
-    lxr->buf = yajl_buf_alloc();
+    yajl_lexer lxr = (yajl_lexer) YA_MALLOC(alloc, sizeof(struct yajl_lexer_t));
+    memset((void *) lxr, 0, sizeof(struct yajl_lexer_t));
+    lxr->buf = yajl_buf_alloc(alloc);
     lxr->allowComments = allowComments;
     lxr->validateUTF8 = validateUTF8;
+    lxr->alloc = alloc;
     return lxr;
 }
 
@@ -140,7 +145,7 @@ void
 yajl_lex_free(yajl_lexer lxr)
 {
     yajl_buf_free(lxr->buf);
-    free(lxr);
+    YA_FREE(lxr->alloc, lxr);
     return;
 }
 

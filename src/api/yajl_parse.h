@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -129,6 +129,7 @@ extern "C" {
      */
     yajl_handle YAJL_API yajl_alloc(const yajl_callbacks * callbacks,
                                     const yajl_parser_config * config,
+                                    const yajl_alloc_funcs * allocFuncs,
                                     void * ctx);
 
     /** free a parser handle */    
@@ -169,7 +170,7 @@ extern "C" {
                                             unsigned int jsonTextLength);
 
     /** free an error returned from yajl_get_error */
-    void YAJL_API yajl_free_error(unsigned char * str);
+    void YAJL_API yajl_free_error(yajl_handle hand, unsigned char * str);
 
 #ifdef __cplusplus
 };

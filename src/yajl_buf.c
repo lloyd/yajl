@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -42,6 +42,7 @@ struct yajl_buf_t {
     unsigned int len;
     unsigned int used;
     unsigned char * data;
+    yajl_alloc_funcs * alloc;
 };
 
 static
@@ -54,7 +55,7 @@ void yajl_buf_ensure_available(yajl_buf buf, unsigned int want)
     /* first call */
     if (buf->data == NULL) {
         buf->len = YAJL_BUF_INIT_SIZE;
-        buf->data = (unsigned char *) malloc(buf->len);
+        buf->data = (unsigned char *) YA_MALLOC(buf->alloc, buf->len);
         buf->data[0] = 0;
     }
 
@@ -63,21 +64,24 @@ void yajl_buf_ensure_available(yajl_buf buf, unsigned int want)
     while (want >= (need - buf->used)) need <<= 1;
 
     if (need != buf->len) {
-        buf->data = (unsigned char *) realloc(buf->data, need);
+        buf->data = (unsigned char *) YA_REALLOC(buf->alloc, buf->data, need);
         buf->len = need;
     }
 }
 
-yajl_buf yajl_buf_alloc(void)
+yajl_buf yajl_buf_alloc(yajl_alloc_funcs * alloc)
 {
-    return (yajl_buf) calloc(1, sizeof(struct yajl_buf_t));
+    yajl_buf b = YA_MALLOC(alloc, sizeof(struct yajl_buf_t));
+    memset((void *) b, 0, sizeof(struct yajl_buf_t));
+    b->alloc = alloc;
+    return b;
 }
 
 void yajl_buf_free(yajl_buf buf)
 {
     assert(buf != NULL);
-    if (buf->data) free(buf->data);
-    free(buf);
+    if (buf->data) YA_FREE(buf->alloc, buf->data);
+    YA_FREE(buf->alloc, buf);
 }
 
 void yajl_buf_append(yajl_buf buf, const void * data, unsigned int len)

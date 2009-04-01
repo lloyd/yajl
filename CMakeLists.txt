@@ -1,4 +1,4 @@
-# Copyright 2007, Lloyd Hilaiel.
+# Copyright 2007-2009, Lloyd Hilaiel.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -32,9 +32,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(YetAnotherJSONParser)
 
-SET (YAJL_MAJOR 0)
-SET (YAJL_MINOR 4)
-SET (YAJL_MICRO 1)
+SET (YAJL_MAJOR 1)
+SET (YAJL_MINOR 0)
+SET (YAJL_MICRO 0)
 
 SET (YAJL_DIST_NAME "yajl-${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO}")
 

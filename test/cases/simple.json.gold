@@ -6,3 +6,4 @@ string: 'simple'
 key: 'json'
 string: 'right?'
 map close '}'
+memory leaks:	0

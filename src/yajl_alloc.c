@@ -30,57 +30,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#ifndef __YAJL_PARSER_H__
-#define __YAJL_PARSER_H__
+/**
+ * \file yajl_alloc.h
+ * default memory allocation routines for yajl which use malloc/realloc and
+ * free
+ */
 
-#include "api/yajl_parse.h"
-#include "yajl_buf.h"
+#include "yajl_alloc.h"
+#include <stdlib.h>
 
-typedef enum {
-    yajl_state_start = 0,
-    yajl_state_parse_complete,
-    yajl_state_parse_error,
-    yajl_state_lexical_error,
-    yajl_state_map_start,
-    yajl_state_map_sep,    
-    yajl_state_map_need_val,
-    yajl_state_map_got_val,
-    yajl_state_map_need_key,
-    yajl_state_array_start,
-    yajl_state_array_got_val,
-    yajl_state_array_need_val
-} yajl_state;
+static void * yajl_internal_malloc(void *ctx, unsigned int sz)
+{
+    return malloc(sz);
+}
 
-struct yajl_handle_t {
-    const yajl_callbacks * callbacks;
-    void * ctx;
-    yajl_lexer lexer;
-    const char * parseError;
-    unsigned int errorOffset;
-    /* temporary storage for decoded strings */
-    yajl_buf decodeBuf;
-    /* a stack of states.  access with yajl_state_XXX routines */
-    yajl_buf stateBuf;
-    /* memory allocation routines */
-    yajl_alloc_funcs alloc;
-};
+static void * yajl_internal_realloc(void *ctx, void * previous,
+                                    unsigned int sz)
+{
+    return realloc(previous, sz);
+}
 
-yajl_status
-yajl_do_parse(yajl_handle handle, unsigned int * offset,
-              const unsigned char * jsonText, unsigned int jsonTextLen);
+static void yajl_internal_free(void *ctx, void * ptr)
+{
+    free(ptr);
+}
 
-unsigned char *
-yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
-                         unsigned int jsonTextLen, int verbose);
+void yajl_set_default_alloc_funcs(yajl_alloc_funcs * yaf)
+{
+    yaf->malloc = yajl_internal_malloc;
+    yaf->free = yajl_internal_free;
+    yaf->realloc = yajl_internal_realloc;
+    yaf->ctx = NULL;
+}
 
-yajl_state yajl_state_current(yajl_handle handle);
-
-void yajl_state_push(yajl_handle handle, yajl_state state);
-
-yajl_state yajl_state_pop(yajl_handle handle);
-
-unsigned int yajl_parse_depth(yajl_handle handle);
-
-void yajl_state_set(yajl_handle handle, yajl_state state);
-
-#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -56,18 +56,39 @@ struct yajl_gen_t
     const char * indentString;
     yajl_gen_state state[YAJL_MAX_DEPTH];
     yajl_buf buf;
+    /* memory allocation routines */
+    yajl_alloc_funcs alloc;
 };
 
 yajl_gen
-yajl_gen_alloc(const yajl_gen_config * config)
+yajl_gen_alloc(const yajl_gen_config * config,
+               const yajl_alloc_funcs * afs)
 {
-    yajl_gen g = (yajl_gen) malloc(sizeof(struct yajl_gen_t));
+    yajl_gen g = NULL;
+    yajl_alloc_funcs afsBuffer;
+
+    /* first order of business is to set up memory allocation routines */
+    if (afs != NULL) {
+        if (afs->malloc == NULL || afs->realloc == NULL || afs->free == NULL)
+        {
+            return NULL;
+        }
+    } else {
+        yajl_set_default_alloc_funcs(&afsBuffer);
+        afs = &afsBuffer;
+    }
+
+    g = (yajl_gen) YA_MALLOC(afs, sizeof(struct yajl_gen_t));
     memset((void *) g, 0, sizeof(struct yajl_gen_t));
+    /* copy in pointers to allocation routines */
+    memcpy((void *) &(g->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
+
     if (config) {
         g->pretty = config->beautify;
         g->indentString = config->indentString ? config->indentString : "  ";
     }
-    g->buf = yajl_buf_alloc();
+    g->buf = yajl_buf_alloc(&(g->alloc));
+
     return g;
 }
 
@@ -75,7 +96,7 @@ void
 yajl_gen_free(yajl_gen g)
 {
     yajl_buf_free(g->buf);
-    free(g);
+    YA_FREE(&(g->alloc), g);
 }
 
 #define INSERT_SEP \

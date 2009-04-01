@@ -30,57 +30,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#ifndef __YAJL_PARSER_H__
-#define __YAJL_PARSER_H__
+/**
+ * \file yajl_alloc.h
+ * default memory allocation routines for yajl which use malloc/realloc and
+ * free
+ */
 
-#include "api/yajl_parse.h"
-#include "yajl_buf.h"
+#ifndef __YAJL_ALLOC_H__
+#define __YAJL_ALLOC_H__
 
-typedef enum {
-    yajl_state_start = 0,
-    yajl_state_parse_complete,
-    yajl_state_parse_error,
-    yajl_state_lexical_error,
-    yajl_state_map_start,
-    yajl_state_map_sep,    
-    yajl_state_map_need_val,
-    yajl_state_map_got_val,
-    yajl_state_map_need_key,
-    yajl_state_array_start,
-    yajl_state_array_got_val,
-    yajl_state_array_need_val
-} yajl_state;
+#include "api/yajl_common.h"
 
-struct yajl_handle_t {
-    const yajl_callbacks * callbacks;
-    void * ctx;
-    yajl_lexer lexer;
-    const char * parseError;
-    unsigned int errorOffset;
-    /* temporary storage for decoded strings */
-    yajl_buf decodeBuf;
-    /* a stack of states.  access with yajl_state_XXX routines */
-    yajl_buf stateBuf;
-    /* memory allocation routines */
-    yajl_alloc_funcs alloc;
-};
+#define YA_MALLOC(afs, sz) (afs)->malloc((afs)->ctx, (sz))
+#define YA_FREE(afs, ptr) (afs)->free((afs)->ctx, (ptr))
+#define YA_REALLOC(afs, ptr, sz) (afs)->realloc((afs)->ctx, (ptr), (sz))
 
-yajl_status
-yajl_do_parse(yajl_handle handle, unsigned int * offset,
-              const unsigned char * jsonText, unsigned int jsonTextLen);
-
-unsigned char *
-yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
-                         unsigned int jsonTextLen, int verbose);
-
-yajl_state yajl_state_current(yajl_handle handle);
-
-void yajl_state_push(yajl_handle handle, yajl_state state);
-
-yajl_state yajl_state_pop(yajl_handle handle);
-
-unsigned int yajl_parse_depth(yajl_handle handle);
-
-void yajl_state_set(yajl_handle handle, yajl_state state);
+void yajl_set_default_alloc_funcs(yajl_alloc_funcs * yaf);
 
 #endif

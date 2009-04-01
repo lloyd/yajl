@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -73,8 +73,18 @@ extern "C" {
         const char * indentString;
     } yajl_gen_config;
 
-    /** allocate a generator handle */
-    yajl_gen YAJL_API yajl_gen_alloc(const yajl_gen_config * config);
+    /** allocate a generator handle
+     *  \param config a pointer to a structure containing parameters which
+     *                configure the behavior of the json generator
+     *  \param allocFuncs an optional pointer to a structure which allows
+     *                    the client to overide the memory allocation
+     *                    used by yajl.  May be NULL, in which case
+     *                    malloc/free/realloc will be used.
+     *
+     *  \returns an allocated handle on success, NULL on failure (bad params)
+     */
+    yajl_gen YAJL_API yajl_gen_alloc(const yajl_gen_config * config,
+                                     const yajl_alloc_funcs * allocFuncs);
 
     /** free a generator handle */    
     void YAJL_API yajl_gen_free(yajl_gen handle);

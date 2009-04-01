@@ -19,3 +19,4 @@ array close ']'
 string: '
 \'
 array close ']'
+memory leaks:	0

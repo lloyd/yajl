@@ -1,5 +1,5 @@
 /*
- * Copyright 2007, Lloyd Hilaiel.
+ * Copyright 2007-2009, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -71,7 +71,7 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
             memneeded += strlen(": ");            
             memneeded += strlen(errorText);            
         }
-        str = (unsigned char *) malloc(memneeded + 2);
+        str = (unsigned char *) YA_MALLOC(&(hand->alloc), memneeded + 2);
         str[0] = 0;
         strcat((char *) str, errorType);
         strcat((char *) str, " error");    
@@ -108,14 +108,15 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
         text[i++] = '\n';
         text[i] = 0;
         {
-            char * newStr = (char *) malloc(strlen((char *) str) +
-                                            strlen((char *) text) +
-                                            strlen(arrow) + 1);
+            char * newStr = (char *)
+                YA_MALLOC(&(hand->alloc), (strlen((char *) str) +
+                                           strlen((char *) text) +
+                                           strlen(arrow) + 1));
             newStr[0] = 0;
             strcat((char *) newStr, (char *) str);
             strcat((char *) newStr, text);
             strcat((char *) newStr, arrow);    
-            free(str);
+            YA_FREE(&(hand->alloc), str);
             str = (unsigned char *) newStr;
         }
     }
