@@ -1,3 +1,7 @@
+1.0.1
+     * lth resolve crash in json_reformatter due to incorrectly ordered
+	parameters.
+
 1.0.0
      * lth add 'make install' rules, thaks to Andrei Soroker for the
 	contribution.

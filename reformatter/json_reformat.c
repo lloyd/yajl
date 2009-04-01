@@ -159,7 +159,7 @@ main(int argc, char ** argv)
     g = yajl_gen_alloc(&conf, NULL);
 
     /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, &cfg, (void *) g, NULL);
+    hand = yajl_alloc(&callbacks, &cfg, NULL, (void *) g);
         
 	while (!done) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
