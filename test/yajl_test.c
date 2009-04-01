@@ -283,6 +283,8 @@ main(int argc, char ** argv)
  *  printf("allocations:\t%u\n", memCtx.numMallocs);
  *  printf("frees:\t\t%u\n", memCtx.numFrees);
 */
+    fflush(stderr);
+    fflush(stdout);
     printf("memory leaks:\t%u\n", memCtx.numMallocs - memCtx.numFrees);    
 
     return 0;
