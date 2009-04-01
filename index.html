@@ -90,8 +90,8 @@
     <h2>Download</h2>
     <p>
       <ul>
-      <li><a href="http://github.com/lloyd/yajl/zipball/0.4.0">yajl-0.4.0.zip</a>
-      <li><a href="http://github.com/lloyd/yajl/tarball/0.4.0">yajl-0.4.0.tar.gz</a>
+      <li><a href="http://github.com/lloyd/yajl/zipball/1.0.0">yajl-1.0.0.zip</a>
+      <li><a href="http://github.com/lloyd/yajl/tarball/1.0.0">yajl-1.0.0.tar.gz</a>
       <li><a href="http://github.com/lloyd/yajl/zipball/master">yajl-trunk.zip</a>
       <li><a href="http://github.com/lloyd/yajl/tarball/master">yajl-trunk.tar.gz</a>
        </ul>
@@ -288,10 +288,10 @@ main(int argc, char ** argv)
         usage(argv[0]);
     }
     
-    g = yajl_gen_alloc(&conf);
+    g = yajl_gen_alloc(&conf, NULL);
  
     /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, &cfg, (void *) g);
+    hand = yajl_alloc(&callbacks, &cfg,  NULL, (void *) g);
         
     for (;;) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
@@ -313,7 +313,7 @@ main(int argc, char ** argv)
             {
                 unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
                 fprintf(stderr, (const char *) str);
-                yajl_free_error(str);
+                yajl_free_error(hand, str);
             } else {
                 const unsigned char * buf;
                 unsigned int len;
