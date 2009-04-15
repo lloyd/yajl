@@ -1,3 +1,7 @@
+1.0.2
+     * lth update doxygen documentation with new sample code, passing NULL
+	for allocation functions added in 1.0.0
+	
 1.0.1
      * lth resolve crash in json_reformatter due to incorrectly ordered
 	parameters.
