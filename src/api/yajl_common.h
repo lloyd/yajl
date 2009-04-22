@@ -79,7 +79,7 @@ typedef struct
 } yajl_alloc_funcs;
 
 #ifdef __cplusplus
-};
+}
 #endif    
 
 #endif

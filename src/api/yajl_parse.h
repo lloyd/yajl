@@ -173,7 +173,7 @@ extern "C" {
     void YAJL_API yajl_free_error(yajl_handle hand, unsigned char * str);
 
 #ifdef __cplusplus
-};
+}
 #endif    
 
 #endif

@@ -117,7 +117,7 @@ extern "C" {
     void YAJL_API yajl_gen_clear(yajl_gen hand);
 
 #ifdef __cplusplus
-};
+}
 #endif    
 
 #endif
