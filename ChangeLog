@@ -1,3 +1,8 @@
+1.0.4
+     * lth fix broken utf8 validation for three & four byte represenations.
+	thanks to http://github.com/brianmario and 
+	http://github.com/technoweenie
+
 1.0.3
      * lth fix syntax error in cplusplus extern "C" statements for wider
 	compiler support
