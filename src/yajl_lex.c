@@ -229,7 +229,7 @@ yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
         UTF8_CHECK_EOF;
         curChar = readChar(lexer, jsonText, offset);
         if ((curChar >> 6) == 0x2) return yajl_tok_string;
-    } else if ((curChar >> 4) == 0x0d) {
+    } else if ((curChar >> 4) == 0x0e) {
         /* three byte */
         UTF8_CHECK_EOF;
         curChar = readChar(lexer, jsonText, offset);
@@ -238,7 +238,7 @@ yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
             curChar = readChar(lexer, jsonText, offset);
             if ((curChar >> 6) == 0x2) return yajl_tok_string;
         }
-    } else if ((curChar >> 3) == 0x1d) {
+    } else if ((curChar >> 3) == 0x1e) {
         /* four byte */
         UTF8_CHECK_EOF;
         curChar = readChar(lexer, jsonText, offset);
