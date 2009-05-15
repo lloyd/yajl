@@ -109,24 +109,12 @@ struct yajl_lexer_t {
     yajl_alloc_funcs * alloc;
 };
 
-static unsigned char
-readChar(yajl_lexer lxr, const unsigned char * txt, unsigned int *off) 
-{
-    if (lxr->bufInUse && yajl_buf_len(lxr->buf) &&
-        lxr->bufOff < yajl_buf_len(lxr->buf))
-    {
-        return *((const unsigned char *) yajl_buf_data(lxr->buf) +
-                                         (lxr->bufOff)++);
-    }
-    return txt[(*off)++];
-}
+#define readChar(lxr, txt, off)                      \
+    (((lxr)->bufInUse && yajl_buf_len((lxr)->buf) && lxr->bufOff < yajl_buf_len((lxr)->buf)) ? \
+     (*((const unsigned char *) yajl_buf_data((lxr)->buf) + ((lxr)->bufOff)++)) : \
+     ((txt)[(*(off))++]))
 
-static void
-unreadChar(yajl_lexer lxr, unsigned int *off) 
-{
-    if (*off > 0) (*off)--;
-    else (lxr->bufOff)--;
-}
+#define unreadChar(lxr, off) ((*(off) > 0) ? (*(off))-- : ((lxr)->bufOff--))
 
 yajl_lexer
 yajl_lex_alloc(yajl_alloc_funcs * alloc,
