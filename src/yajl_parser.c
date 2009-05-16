@@ -42,6 +42,52 @@
 #include <assert.h>
 #include <math.h>
 
+/**** state stack maintenence routines
+ *
+ * Implementation/Performance notes.  Here we need a stack, we chose to
+ * reuse the buffer abstraction and treat is as a dynamic array of bytes.
+ * some performance could be obtained by re-implementing a simple custom
+ * state management mechanism here in file with zero function call overhead
+ */
+void yajl_state_push(yajl_handle h, yajl_state s)
+{
+    unsigned char c = (unsigned char) s;
+    yajl_buf_append(h->stateBuf, &c, sizeof(c));
+}
+
+#define yajl_state_current(h)                                                \
+    ((yajl_state) *(yajl_buf_data((h)->stateBuf) +                           \
+                    yajl_buf_len((h)->stateBuf) - 1))
+
+static yajl_state yajl_state_pop(yajl_handle h)
+{
+    yajl_state s;
+    unsigned int len = yajl_buf_len(h->stateBuf);
+    /* start state is never popped */
+    assert(len > 1);
+    s = (yajl_state) *(yajl_buf_data(h->stateBuf) + len - 1);
+    yajl_buf_truncate(h->stateBuf, len - 1);
+    return s;
+}
+
+/*
+unused!?
+static unsigned int yajl_parse_depth(yajl_handle h)
+{
+    assert(yajl_buf_len(h->stateBuf) > 0);
+    return (yajl_buf_len(h->stateBuf) - 1);
+}
+*/
+
+#define yajl_state_set(h, state)                                           \
+{                                                                          \
+    assert(yajl_buf_len((h)->stateBuf) > 0);                               \
+    *(unsigned char *) (yajl_buf_data((h)->stateBuf) +                     \
+                        yajl_buf_len((h)->stateBuf) - 1) =                 \
+        (unsigned char) (state);                                           \
+}
+/**** end state stack maintenence routines */
+
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                          unsigned int jsonTextLen, int verbose)
@@ -435,41 +481,3 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
     return yajl_status_error;
 }
 
-/* state stack maintenence routines */
-yajl_state
-yajl_state_current(yajl_handle h)
-{
-    assert(yajl_buf_len(h->stateBuf) > 0);
-    return (yajl_state) *(yajl_buf_data(h->stateBuf) +
-                          yajl_buf_len(h->stateBuf) - 1);
-}
-
-void yajl_state_push(yajl_handle h, yajl_state s)
-{
-    unsigned char c = (unsigned char) s;
-    yajl_buf_append(h->stateBuf, &c, sizeof(c));
-}
-
-yajl_state yajl_state_pop(yajl_handle h)
-{
-    yajl_state s;
-    unsigned int len = yajl_buf_len(h->stateBuf);
-    /* start state is never popped */
-    assert(len > 1);
-    s = (yajl_state) *(yajl_buf_data(h->stateBuf) + len - 1);
-    yajl_buf_truncate(h->stateBuf, len - 1);
-    return s;
-}
-
-unsigned int yajl_parse_depth(yajl_handle h)
-{
-    assert(yajl_buf_len(h->stateBuf) > 0);
-    return (yajl_buf_len(h->stateBuf) - 1);
-}
-
-void yajl_state_set(yajl_handle h, yajl_state state)
-{
-    assert(yajl_buf_len(h->stateBuf) > 0);
-    *(unsigned char *) (yajl_buf_data(h->stateBuf) +
-                        yajl_buf_len(h->stateBuf) - 1) = (unsigned char) state;
-}

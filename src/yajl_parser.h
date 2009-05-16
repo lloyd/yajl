@@ -73,14 +73,6 @@ unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                          unsigned int jsonTextLen, int verbose);
 
-yajl_state yajl_state_current(yajl_handle handle);
-
 void yajl_state_push(yajl_handle handle, yajl_state state);
-
-yajl_state yajl_state_pop(yajl_handle handle);
-
-unsigned int yajl_parse_depth(yajl_handle handle);
-
-void yajl_state_set(yajl_handle handle, yajl_state state);
 
 #endif
