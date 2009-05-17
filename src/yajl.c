@@ -97,9 +97,9 @@ yajl_alloc(const yajl_callbacks * callbacks,
     hand->lexer = yajl_lex_alloc(&(hand->alloc), allowComments, validateUTF8);
     hand->errorOffset = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
-    hand->stateBuf = yajl_buf_alloc(&(hand->alloc));
+    yajl_bs_init(hand->stateStack, &(hand->alloc));
 
-    yajl_state_push(hand, yajl_state_start);    
+    yajl_bs_push(hand->stateStack, yajl_state_start);    
 
     return hand;
 }
@@ -107,7 +107,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
 void
 yajl_free(yajl_handle handle)
 {
-    yajl_buf_free(handle->stateBuf);
+    yajl_bs_free(handle->stateStack);
     yajl_buf_free(handle->decodeBuf);
     yajl_lex_free(handle->lexer);
     YA_FREE(&(handle->alloc), handle);

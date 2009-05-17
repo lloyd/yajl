@@ -34,7 +34,9 @@
 #define __YAJL_PARSER_H__
 
 #include "api/yajl_parse.h"
+#include "yajl_bytestack.h"
 #include "yajl_buf.h"
+
 
 typedef enum {
     yajl_state_start = 0,
@@ -60,7 +62,7 @@ struct yajl_handle_t {
     /* temporary storage for decoded strings */
     yajl_buf decodeBuf;
     /* a stack of states.  access with yajl_state_XXX routines */
-    yajl_buf stateBuf;
+    yajl_bytestack stateStack;
     /* memory allocation routines */
     yajl_alloc_funcs alloc;
 };
@@ -73,6 +75,5 @@ unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                          unsigned int jsonTextLen, int verbose);
 
-void yajl_state_push(yajl_handle handle, yajl_state state);
 
 #endif
