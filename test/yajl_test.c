@@ -74,7 +74,7 @@ static void * yajlTestRealloc(void * ctx, void * ptr, unsigned int sz)
         TEST_CTX(ctx)->numFrees++;                
     }
 
-    return realloc(ctx, sz);
+    return realloc(ptr, sz);
 }
 
 
