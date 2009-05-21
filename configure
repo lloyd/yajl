@@ -53,7 +53,7 @@ FileUtils.rm_f("Makefile")
 puts "== running CMake in build directory"
 FileUtils.mkdir("build")
 FileUtils.cd("build") do 
-  if (!system("cmake .."))
+  if (!system("cmake -DCMAKE_INSTALL_PREFIX='#{prefix}' .."))
     puts "The \"cmake\" program is required to configure yajl.  It's"
     puts "available from most ports/packaging systems and http://cmake.org"
     exit 1
