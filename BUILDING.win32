@@ -5,9 +5,8 @@ build the software and by specifying a generator explicitly at cmake:
 2. mkdir build
 3. cd build
 4. cmake ..
-5. devenv YetAnotherJSONParser.sln
-6. build the ALL_BUILD target
-7. build output is left in build/yajl-X.Y.Z
+5. devenv YetAnotherJSONParser.sln /project ALL_BUILD /build Release
+6. build output is left in build/yajl-X.Y.Z
 
 Earlier versions of visual studio have not been tested, but should 
 work without any major issues.
