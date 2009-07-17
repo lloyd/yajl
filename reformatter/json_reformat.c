@@ -140,7 +140,7 @@ main(int argc, char ** argv)
     size_t rd;
     /* allow comments */
     yajl_parser_config cfg = { 1, 1 };
-    int done = 0;
+    int retval = 0, done = 0;
 
     /* check arguments.*/
     if (argc > 1 && argc < 4) {
@@ -171,6 +171,7 @@ main(int argc, char ** argv)
         if (rd == 0) {
             if (!feof(stdin)) {
                 fprintf(stderr, "error on file read.\n");
+                retval = 1;
                 break;
             }
             done = 1;
@@ -190,6 +191,8 @@ main(int argc, char ** argv)
             unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
             fprintf(stderr, (const char *) str);
             yajl_free_error(hand, str);
+            retval = 1;
+            break;
         } else {
             const unsigned char * buf;
             unsigned int len;
@@ -202,5 +205,5 @@ main(int argc, char ** argv)
     yajl_gen_free(g);
     yajl_free(hand);
     
-    return 0;
+    return retval;
 }
