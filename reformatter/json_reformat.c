@@ -141,16 +141,20 @@ main(int argc, char ** argv)
     /* allow comments */
     yajl_parser_config cfg = { 1, 1 };
     int done = 0;
-    
-    /* check arguments.  We expect exactly one! */
-    if (argc == 2) {
-        if (!strcmp("-m", argv[1])) {
-            conf.beautify = 0;
 
-        } else if (!strcmp("-u", argv[1])) {
-            cfg.checkUTF8 = 0;
-        } else {
-            usage(argv[0]);
+    /* check arguments.*/
+    if (argc > 1 && argc < 4) {
+        int i;
+
+        for (i=1; i < argc;i++) {
+            if (!strcmp("-m", argv[i])) {
+                conf.beautify = 0;
+            } else if (!strcmp("-u", argv[i])) {
+                cfg.checkUTF8 = 0;
+            } else {
+                fprintf(stderr, "unrecognized option: '%s'\n\n", argv[i]);
+                usage(argv[0]);
+            }
         }
     } else if (argc != 1) {
         usage(argv[0]);

@@ -60,7 +60,7 @@ main(int argc, char ** argv)
     yajl_parser_config cfg = { 0, 1 };
 
     /* check arguments.*/
-    if (argc > 1 && argc < 4) {
+    if (argc > 1 && argc < 5) {
         int i;
 
         for (i=1; i < argc;i++) {
