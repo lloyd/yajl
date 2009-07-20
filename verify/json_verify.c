@@ -60,22 +60,28 @@ main(int argc, char ** argv)
     yajl_parser_config cfg = { 0, 1 };
 
     /* check arguments.*/
-    if (argc > 1 && argc < 5) {
+    int a = 1;
+    while ((a < argc) && (argv[a][0] == '-') && (strlen(argv[a]) > 1)) {
         int i;
-
-        for (i=1; i < argc;i++) {
-            if (!strcmp("-q", argv[i])) {
-                quiet = 1;
-            } else if (!strcmp("-c", argv[i])) {
-                cfg.allowComments = 1;
-            } else if (!strcmp("-u", argv[i])) {
-                cfg.checkUTF8 = 0;
-            } else {
-                fprintf(stderr, "unrecognized option: '%s'\n\n", argv[i]);
-                usage(argv[0]);
+        for ( i=1; i < strlen(argv[a]); i++) {
+            switch (argv[a][i]) {
+                case 'q':
+                    quiet = 1;
+                    break;
+                case 'c':
+                    cfg.allowComments = 1;
+                    break;
+                case 'u':
+                    cfg.checkUTF8 = 0;
+                    break;
+                default:
+                    fprintf(stderr, "unrecognized option: '%c'\n\n", argv[a][i]);
+                    usage(argv[0]);
             }
         }
-    } else if (argc != 1) {
+        ++a;
+    }
+    if (a < argc) {
         usage(argv[0]);
     }
     

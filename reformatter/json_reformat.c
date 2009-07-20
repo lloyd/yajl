@@ -120,7 +120,8 @@ static yajl_callbacks callbacks = {
 static void
 usage(const char * progname)
 {
-    fprintf(stderr, "usage:  %s <filename>\n"
+    fprintf(stderr, "%s: reformat json from stdin\n"
+            "usage:  json_reformat [options]\n"
             "    -m minimize json rather than beautify (default)\n"
             "    -u allow invalid UTF8 inside strings during parsing\n",
             progname);
@@ -143,20 +144,25 @@ main(int argc, char ** argv)
     int retval = 0, done = 0;
 
     /* check arguments.*/
-    if (argc > 1 && argc < 4) {
+    int a = 1;
+    while ((a < argc) && (argv[a][0] == '-') && (strlen(argv[a]) > 1)) {
         int i;
-
-        for (i=1; i < argc;i++) {
-            if (!strcmp("-m", argv[i])) {
-                conf.beautify = 0;
-            } else if (!strcmp("-u", argv[i])) {
-                cfg.checkUTF8 = 0;
-            } else {
-                fprintf(stderr, "unrecognized option: '%s'\n\n", argv[i]);
-                usage(argv[0]);
+        for ( i=1; i < strlen(argv[a]); i++) {
+            switch (argv[a][i]) {
+                case 'm':
+                    conf.beautify = 0;
+                    break;
+                case 'u':
+                    cfg.checkUTF8 = 0;
+                    break;
+                default:
+                    fprintf(stderr, "unrecognized option: '%c'\n\n", argv[a][i]);
+                    usage(argv[0]);
             }
         }
-    } else if (argc != 1) {
+        ++a;
+    }
+    if (a < argc) {
         usage(argv[0]);
     }
     
