@@ -10,5 +10,5 @@ integer: 123456789
 integer: -123456789
 integer: 2147483647
 integer: -2147483647
-parse error: integer overflow
+array close ']'
 memory leaks:	0
