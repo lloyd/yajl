@@ -266,7 +266,7 @@ main(int argc, char ** argv)
         {
             unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
             fflush(stdout);
-            fprintf(stderr, (char *) str);
+            fprintf(stderr, "%s", (char *) str);
             yajl_free_error(hand, str);
             break;
         }
