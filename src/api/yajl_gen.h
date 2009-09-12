@@ -57,7 +57,10 @@ extern "C" {
          *  state */
         yajl_gen_in_error_state,
         /** A complete JSON document has been generated */
-        yajl_gen_generation_complete                
+        yajl_gen_generation_complete,                
+        /** yajl_gen_double was passed an invalid floating point value
+         *  (infinity or NaN). */
+        yajl_gen_invalid_number
     } yajl_gen_status;
 
     /** an opaque handle to a generator */
@@ -90,6 +93,9 @@ extern "C" {
     void YAJL_API yajl_gen_free(yajl_gen handle);
 
     yajl_gen_status YAJL_API yajl_gen_integer(yajl_gen hand, long int number);
+    /** generate a floating point number.  number may not be infinity or
+     *  NaN, as these have no representation in JSON.  In these cases the
+     *  generator will return 'yajl_gen_invalid_number' */
     yajl_gen_status YAJL_API yajl_gen_double(yajl_gen hand, double number);
     yajl_gen_status YAJL_API yajl_gen_number(yajl_gen hand,
                                              const char * num,

@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 typedef enum {
     yajl_gen_start,
@@ -175,7 +176,9 @@ yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
-    ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY; 
+    if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
+    INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%g", number);
     yajl_buf_append(g->buf, i, strlen(i));
     APPENDED_ATOM;
