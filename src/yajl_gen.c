@@ -172,6 +172,12 @@ yajl_gen_integer(yajl_gen g, long int number)
     return yajl_gen_status_ok;
 }
 
+#ifdef WIN32
+#include <float.h>
+#define isnan _isnan
+#define isinf _finite
+#endif
+
 yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
