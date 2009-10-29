@@ -1,3 +1,15 @@
+1.0.7
+     * lth fix win32 build (isinf and isnan)
+
+1.0.6
+     * lth fix several compiler warnings
+     * lth fix generation of invalid json from yajl_gen_double
+	(NaN is not JSON)
+     * jstamp support for combining short options in tools
+     * jstamp exit properly on errors from tools
+     * octo test success no longer depends on integer size
+     * max fix configure --prefix 
+	
 1.0.5
      * lth several performance improvements related to function
 	inlinin'
