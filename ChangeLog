@@ -1,3 +1,6 @@
+1.0.8
+     * (Brian Maher) allow client to specify a printing function in generationh
+	
 1.0.7
      * lth fix win32 build (isinf and isnan)
 
