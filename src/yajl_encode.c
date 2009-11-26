@@ -82,14 +82,14 @@ yajl_string_encode2(const yajl_print_t print,
                 break;
         }
         if (escaped != NULL) {
-            print(ctx, str + beg, end - beg);
+            print(ctx, (const char *) (str + beg), end - beg);
             print(ctx, escaped, strlen(escaped));
             beg = ++end;
         } else {
             ++end;
         }
     }
-    print(ctx, str + beg, end - beg);
+    print(ctx, (const char *) (str + beg), end - beg);
 }
 
 static void hexToDigit(unsigned int * val, const unsigned char * hex)
