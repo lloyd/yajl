@@ -1,6 +1,9 @@
 1.0.8
-     * (Brian Maher) allow client to specify a printing function in generationh
-	
+     * Brian Maher - allow client to specify a printing function in
+       generation
+     * lth - add yajl_get_error_offset() giving clients access to the
+       offset into the last provided chunk where an error occured.
+
 1.0.7
      * lth fix win32 build (isinf and isnan)
 
