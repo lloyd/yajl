@@ -131,6 +131,7 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
         yajl_bs_set(hand->stateStack, yajl_state_parse_error);    \
         hand->parseError =                                        \
             "client cancelled parse via callback return value";   \
+        hand->errorOffset = *offset;                              \
         return yajl_status_client_canceled;                       \
     }
 
