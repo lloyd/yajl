@@ -142,6 +142,14 @@ yajl_get_error(yajl_handle hand, int verbose,
     return yajl_render_error_string(hand, jsonText, jsonTextLen, verbose);
 }
 
+unsigned int
+yajl_get_error_offset(yajl_handle hand)
+{
+    if (!hand) return 0;
+    else return hand->errorOffset;
+}
+
+
 void
 yajl_free_error(yajl_handle hand, unsigned char * str)
 {
