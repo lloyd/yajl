@@ -56,7 +56,8 @@ struct yajl_gen_t
     unsigned int pretty;
     const char * indentString;
     yajl_gen_state state[YAJL_MAX_DEPTH];
-    yajl_buf buf;
+    yajl_print_t print;
+    void * ctx; /* yajl_buf */
     /* memory allocation routines */
     yajl_alloc_funcs alloc;
 };
@@ -64,6 +65,15 @@ struct yajl_gen_t
 yajl_gen
 yajl_gen_alloc(const yajl_gen_config * config,
                const yajl_alloc_funcs * afs)
+{
+    return yajl_gen_alloc2(NULL, config, afs, NULL);
+}
+
+yajl_gen
+yajl_gen_alloc2(yajl_print_t callback,
+                const yajl_gen_config * config,
+                const yajl_alloc_funcs * afs,
+                void * ctx)
 {
     yajl_gen g = NULL;
     yajl_alloc_funcs afsBuffer;
@@ -88,7 +98,14 @@ yajl_gen_alloc(const yajl_gen_config * config,
         g->pretty = config->beautify;
         g->indentString = config->indentString ? config->indentString : "  ";
     }
-    g->buf = yajl_buf_alloc(&(g->alloc));
+
+    if (callback) {
+        g->print = callback;
+        g->ctx = ctx;
+    } else {
+        g->print = (yajl_print_t)&yajl_buf_append;
+        g->ctx = yajl_buf_alloc(&(g->alloc));
+    }
 
     return g;
 }
@@ -96,18 +113,18 @@ yajl_gen_alloc(const yajl_gen_config * config,
 void
 yajl_gen_free(yajl_gen g)
 {
-    yajl_buf_free(g->buf);
+    if (g->print == (yajl_print_t)&yajl_buf_append) yajl_buf_free((yajl_buf)g->ctx);
     YA_FREE(&(g->alloc), g);
 }
 
 #define INSERT_SEP \
     if (g->state[g->depth] == yajl_gen_map_key ||               \
         g->state[g->depth] == yajl_gen_in_array) {              \
-        yajl_buf_append(g->buf, ",", 1);                        \
-        if (g->pretty) yajl_buf_append(g->buf, "\n", 1);        \
+        g->print(g->ctx, ",", 1);                               \
+        if (g->pretty) g->print(g->ctx, "\n", 1);               \
     } else if (g->state[g->depth] == yajl_gen_map_val) {        \
-        yajl_buf_append(g->buf, ":", 1);                        \
-        if (g->pretty) yajl_buf_append(g->buf, " ", 1);         \
+        g->print(g->ctx, ":", 1);                               \
+        if (g->pretty) g->print(g->ctx, " ", 1);                \
    } 
 
 #define INSERT_WHITESPACE                                               \
@@ -115,8 +132,8 @@ yajl_gen_free(yajl_gen g)
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
             for (_i=0;_i<g->depth;_i++)                                 \
-                yajl_buf_append(g->buf, g->indentString,                \
-                                strlen(g->indentString));               \
+                g->print(g->ctx, g->indentString,                       \
+                         strlen(g->indentString));                      \
         }                                                               \
     }
 
@@ -158,7 +175,7 @@ yajl_gen_free(yajl_gen g)
 
 #define FINAL_NEWLINE                                        \
     if (g->pretty && g->state[g->depth] == yajl_gen_complete) \
-        yajl_buf_append(g->buf, "\n", 1);        
+        g->print(g->ctx, "\n", 1);        
     
 yajl_gen_status
 yajl_gen_integer(yajl_gen g, long int number)
@@ -166,7 +183,7 @@ yajl_gen_integer(yajl_gen g, long int number)
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%ld", number);
-    yajl_buf_append(g->buf, i, strlen(i));
+    g->print(g->ctx, i, strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -186,7 +203,7 @@ yajl_gen_double(yajl_gen g, double number)
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
     INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%g", number);
-    yajl_buf_append(g->buf, i, strlen(i));
+    g->print(g->ctx, i, strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -196,7 +213,7 @@ yajl_gen_status
 yajl_gen_number(yajl_gen g, const char * s, unsigned int l)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    yajl_buf_append(g->buf, s, l);
+    g->print(g->ctx, s, l);
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -207,9 +224,9 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
                 unsigned int len)
 {
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
-    yajl_buf_append(g->buf, "\"", 1);
-    yajl_string_encode(g->buf, str, len);
-    yajl_buf_append(g->buf, "\"", 1);
+    g->print(g->ctx, "\"", 1);
+    yajl_string_encode2(g->print, g->ctx, str, len);
+    g->print(g->ctx, "\"", 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -219,7 +236,7 @@ yajl_gen_status
 yajl_gen_null(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    yajl_buf_append(g->buf, "null", strlen("null"));
+    g->print(g->ctx, "null", strlen("null"));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -231,7 +248,7 @@ yajl_gen_bool(yajl_gen g, int boolean)
     const char * val = boolean ? "true" : "false";
 
 	ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    yajl_buf_append(g->buf, val, strlen(val));
+    g->print(g->ctx, val, strlen(val));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -244,8 +261,8 @@ yajl_gen_map_open(yajl_gen g)
     INCREMENT_DEPTH; 
     
     g->state[g->depth] = yajl_gen_map_start;
-    yajl_buf_append(g->buf, "{", 1);
-    if (g->pretty) yajl_buf_append(g->buf, "\n", 1);
+    g->print(g->ctx, "{", 1);
+    if (g->pretty) g->print(g->ctx, "\n", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -255,10 +272,10 @@ yajl_gen_map_close(yajl_gen g)
 {
     ENSURE_VALID_STATE; 
     (g->depth)--;
-    if (g->pretty) yajl_buf_append(g->buf, "\n", 1);
+    if (g->pretty) g->print(g->ctx, "\n", 1);
     APPENDED_ATOM;
     INSERT_WHITESPACE;
-    yajl_buf_append(g->buf, "}", 1);
+    g->print(g->ctx, "}", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -269,8 +286,8 @@ yajl_gen_array_open(yajl_gen g)
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     INCREMENT_DEPTH; 
     g->state[g->depth] = yajl_gen_array_start;
-    yajl_buf_append(g->buf, "[", 1);
-    if (g->pretty) yajl_buf_append(g->buf, "\n", 1);
+    g->print(g->ctx, "[", 1);
+    if (g->pretty) g->print(g->ctx, "\n", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -279,11 +296,11 @@ yajl_gen_status
 yajl_gen_array_close(yajl_gen g)
 {
     ENSURE_VALID_STATE;
-    if (g->pretty) yajl_buf_append(g->buf, "\n", 1);
+    if (g->pretty) g->print(g->ctx, "\n", 1);
     (g->depth)--;
     APPENDED_ATOM;
     INSERT_WHITESPACE;
-    yajl_buf_append(g->buf, "]", 1);
+    g->print(g->ctx, "]", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -292,13 +309,14 @@ yajl_gen_status
 yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
                  unsigned int * len)
 {
-    *buf = yajl_buf_data(g->buf);
-    *len = yajl_buf_len(g->buf);
+    if (g->print != (yajl_print_t)&yajl_buf_append) return yajl_gen_no_buf;
+    *buf = yajl_buf_data((yajl_buf)g->ctx);
+    *len = yajl_buf_len((yajl_buf)g->ctx);
     return yajl_gen_status_ok;
 }
 
 void
 yajl_gen_clear(yajl_gen g)
 {
-    yajl_buf_clear(g->buf);
+    if (g->print == (yajl_print_t)&yajl_buf_append) yajl_buf_clear((yajl_buf)g->ctx);
 }

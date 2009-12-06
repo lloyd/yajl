@@ -34,6 +34,12 @@
 #define __YAJL_ENCODE_H__
 
 #include "yajl_buf.h"
+#include "api/yajl_gen.h"
+
+void yajl_string_encode2(yajl_print_t printer,
+                         void * ctx,
+                         const unsigned char * str,
+                         unsigned int length);
 
 void yajl_string_encode(yajl_buf buf, const unsigned char * str,
                         unsigned int length);
