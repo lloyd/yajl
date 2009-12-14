@@ -48,7 +48,7 @@ unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                          unsigned int jsonTextLen, int verbose)
 {
-    unsigned int offset = hand->errorOffset;
+    unsigned int offset = hand->bytesConsumed;
     unsigned char * str;
     const char * errorType = NULL;
     const char * errorText = NULL;
@@ -131,18 +131,21 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
         yajl_bs_set(hand->stateStack, yajl_state_parse_error);    \
         hand->parseError =                                        \
             "client cancelled parse via callback return value";   \
-        hand->errorOffset = *offset;                              \
         return yajl_status_client_canceled;                       \
     }
 
 
 yajl_status
-yajl_do_parse(yajl_handle hand, unsigned int * offset,
+yajl_do_parse(yajl_handle hand, unsigned int offsetStart,
               const unsigned char * jsonText, unsigned int jsonTextLen)
 {
     yajl_tok tok;
     const unsigned char * buf;
     unsigned int bufLen;
+    unsigned int * offset = &(hand->bytesConsumed);
+
+    *offset = offsetStart;
+    
 
   around_again:
     switch (yajl_bs_current(hand->stateStack)) {
@@ -150,7 +153,6 @@ yajl_do_parse(yajl_handle hand, unsigned int * offset,
             return yajl_status_ok;
         case yajl_state_lexical_error:
         case yajl_state_parse_error:            
-            hand->errorOffset = *offset;
             return yajl_status_error;
         case yajl_state_start:
         case yajl_state_map_need_val:
