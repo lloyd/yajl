@@ -71,8 +71,8 @@ struct yajl_handle_t {
 };
 
 yajl_status
-yajl_do_parse(yajl_handle handle, unsigned int offset,
-              const unsigned char * jsonText, unsigned int jsonTextLen);
+yajl_do_parse(yajl_handle handle, const unsigned char * jsonText,
+              unsigned int jsonTextLen);
 
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,

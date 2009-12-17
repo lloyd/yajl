@@ -118,7 +118,7 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
            unsigned int jsonTextLen)
 {
     yajl_status status;
-    status = yajl_do_parse(hand, 0, jsonText, jsonTextLen);
+    status = yajl_do_parse(hand, jsonText, jsonTextLen);
     return status;
 }
 

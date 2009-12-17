@@ -136,15 +136,15 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
 
 
 yajl_status
-yajl_do_parse(yajl_handle hand, unsigned int offsetStart,
-              const unsigned char * jsonText, unsigned int jsonTextLen)
+yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
+              unsigned int jsonTextLen)
 {
     yajl_tok tok;
     const unsigned char * buf;
     unsigned int bufLen;
     unsigned int * offset = &(hand->bytesConsumed);
 
-    *offset = offsetStart;
+    *offset = 0;
     
 
   around_again:
