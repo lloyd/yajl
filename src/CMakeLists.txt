@@ -36,6 +36,11 @@ SET (PUB_HDRS api/yajl_parse.h api/yajl_gen.h api/yajl_common.h)
 # useful when fixing lexer bugs.
 #ADD_DEFINITIONS(-DYAJL_LEXER_DEBUG)
 
+# Ensure defined when building YAJL (as opposed to using it from
+# another project).  Used to ensure correct function export when
+# building win32 DLL.
+ADD_DEFINITIONS(-DYAJL_BUILD)
+
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include/yajl)
@@ -49,6 +54,7 @@ ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
 
 #### setup shared library version number
 SET_TARGET_PROPERTIES(yajl PROPERTIES
+                      DEFINE_SYMBOL YAJL_SHARED
                       SOVERSION ${YAJL_MAJOR}
                       VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
 
