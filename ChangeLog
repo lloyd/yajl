@@ -1,8 +1,13 @@
 1.0.8
+     * Randall E. Barker - move dllexport defnitions so dlls with proper
+	exports can again be generated on windows 
+     * lth - add yajl_get_bytes_consumed() which allows the client to
+	determine the offset as an error, as well as determine how
+	many bytes of an input buffer were consumed.
+     * lth - fixes to keep "error offset" up to date (like when the
+	client callback returns 0)
      * Brian Maher - allow client to specify a printing function in
        generation
-     * lth - add yajl_get_error_offset() giving clients access to the
-       offset into the last provided chunk where an error occured.
 
 1.0.7
      * lth fix win32 build (isinf and isnan)
