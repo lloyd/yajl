@@ -70,7 +70,7 @@ yajl_gen_alloc(const yajl_gen_config * config,
 }
 
 yajl_gen
-yajl_gen_alloc2(yajl_print_t callback,
+yajl_gen_alloc2(const yajl_print_t callback,
                 const yajl_gen_config * config,
                 const yajl_alloc_funcs * afs,
                 void * ctx)

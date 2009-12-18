@@ -36,7 +36,7 @@
 #include "yajl_buf.h"
 #include "api/yajl_gen.h"
 
-void yajl_string_encode2(yajl_print_t printer,
+void yajl_string_encode2(const yajl_print_t printer,
                          void * ctx,
                          const unsigned char * str,
                          unsigned int length);

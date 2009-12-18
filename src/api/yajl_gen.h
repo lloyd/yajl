@@ -114,7 +114,7 @@ extern "C" {
      *
      *  \returns an allocated handle on success, NULL on failure (bad params)
      */
-    yajl_gen YAJL_API yajl_gen_alloc2(yajl_print_t callback,
+    yajl_gen YAJL_API yajl_gen_alloc2(const yajl_print_t callback,
                                       const yajl_gen_config * config,
                                       const yajl_alloc_funcs * allocFuncs,
                                       void * ctx);
