@@ -1,0 +1,170 @@
+.TH "yajl_gen.h" 3 "18 Dec 2009" "Version 1.0.8" "YAJL" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+yajl_gen.h \- 
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <yajl/yajl_common.h>\fP
+.br
+
+.SS "Data Structures"
+
+.in +1c
+.ti -1c
+.RI "struct \fByajl_gen_config\fP"
+.br
+.in -1c
+.SS "Typedefs"
+
+.in +1c
+.ti -1c
+.RI "typedef struct yajl_gen_t * \fByajl_gen\fP"
+.br
+.ti -1c
+.RI "typedef void(* \fByajl_print_t\fP )(void *ctx, const char *str, unsigned int len)"
+.br
+.in -1c
+.SS "Enumerations"
+
+.in +1c
+.ti -1c
+.RI "enum \fByajl_gen_status\fP { \fByajl_gen_status_ok\fP =  0, \fByajl_gen_keys_must_be_strings\fP, \fByajl_max_depth_exceeded\fP, \fByajl_gen_in_error_state\fP, \fByajl_gen_generation_complete\fP, \fByajl_gen_invalid_number\fP, \fByajl_gen_no_buf\fP }"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "\fByajl_gen\fP \fByajl_gen_alloc\fP (const \fByajl_gen_config\fP *config, const \fByajl_alloc_funcs\fP *allocFuncs)"
+.br
+.ti -1c
+.RI "\fByajl_gen\fP \fByajl_gen_alloc2\fP (\fByajl_print_t\fP callback, const \fByajl_gen_config\fP *config, const \fByajl_alloc_funcs\fP *allocFuncs, void *ctx)"
+.br
+.ti -1c
+.RI "void \fByajl_gen_free\fP (\fByajl_gen\fP handle)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_integer\fP (\fByajl_gen\fP hand, long int number)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_double\fP (\fByajl_gen\fP hand, double number)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_number\fP (\fByajl_gen\fP hand, const char *num, unsigned int len)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_string\fP (\fByajl_gen\fP hand, const unsigned char *str, unsigned int len)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_null\fP (\fByajl_gen\fP hand)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_bool\fP (\fByajl_gen\fP hand, int boolean)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_map_open\fP (\fByajl_gen\fP hand)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_map_close\fP (\fByajl_gen\fP hand)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_array_open\fP (\fByajl_gen\fP hand)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_array_close\fP (\fByajl_gen\fP hand)"
+.br
+.ti -1c
+.RI "\fByajl_gen_status\fP \fByajl_gen_get_buf\fP (\fByajl_gen\fP hand, const unsigned char **buf, unsigned int *len)"
+.br
+.ti -1c
+.RI "void \fByajl_gen_clear\fP (\fByajl_gen\fP hand)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+Interface to YAJL's JSON generation facilities. 
+.SH "Typedef Documentation"
+.PP 
+.SS "typedef struct yajl_gen_t* \fByajl_gen\fP"an opaque handle to a generator 
+.SS "typedef void(* \fByajl_print_t\fP)(void *ctx, const char *str, unsigned int len)"a callback used for 'printing' the results. 
+.SH "Enumeration Type Documentation"
+.PP 
+.SS "enum \fByajl_gen_status\fP"generator status codes 
+.PP
+\fBEnumerator: \fP
+.in +1c
+.TP
+\fB\fIyajl_gen_status_ok \fP\fP
+no error 
+.TP
+\fB\fIyajl_gen_keys_must_be_strings \fP\fP
+at a point where a map key is generated, a function other than yajl_gen_string was called 
+.TP
+\fB\fIyajl_max_depth_exceeded \fP\fP
+YAJL's maximum generation depth was exceeded. see YAJL_MAX_DEPTH 
+.TP
+\fB\fIyajl_gen_in_error_state \fP\fP
+A generator function (yajl_gen_XXX) was called while in an error state 
+.TP
+\fB\fIyajl_gen_generation_complete \fP\fP
+A complete JSON document has been generated 
+.TP
+\fB\fIyajl_gen_invalid_number \fP\fP
+yajl_gen_double was passed an invalid floating point value (infinity or NaN). 
+.TP
+\fB\fIyajl_gen_no_buf \fP\fP
+A print callback was passed in, so there is no internal buffer to get from 
+.SH "Function Documentation"
+.PP 
+.SS "\fByajl_gen\fP yajl_gen_alloc (const \fByajl_gen_config\fP * config, const \fByajl_alloc_funcs\fP * allocFuncs)"allocate a generator handle 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIconfig\fP a pointer to a structure containing parameters which configure the behavior of the json generator 
+.br
+\fIallocFuncs\fP an optional pointer to a structure which allows the client to overide the memory allocation used by yajl. May be NULL, in which case malloc/free/realloc will be used.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+an allocated handle on success, NULL on failure (bad params) 
+.RE
+.PP
+
+.SS "\fByajl_gen\fP yajl_gen_alloc2 (\fByajl_print_t\fP callback, const \fByajl_gen_config\fP * config, const \fByajl_alloc_funcs\fP * allocFuncs, void * ctx)"allocate a generator handle that will print to the specified callback rather than storing the results in an internal buffer. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIcallback\fP a pointer to a printer function. May be NULL in which case, the results will be store in an internal buffer. 
+.br
+\fIconfig\fP a pointer to a structure containing parameters which configure the behavior of the json generator. 
+.br
+\fIallocFuncs\fP an optional pointer to a structure which allows the client to overide the memory allocation used by yajl. May be NULL, in which case malloc/free/realloc will be used. 
+.br
+\fIctx\fP a context pointer that will be passed to the printer callback.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+an allocated handle on success, NULL on failure (bad params) 
+.RE
+.PP
+
+.SS "\fByajl_gen_status\fP yajl_gen_array_close (\fByajl_gen\fP hand)"
+.SS "\fByajl_gen_status\fP yajl_gen_array_open (\fByajl_gen\fP hand)"
+.SS "\fByajl_gen_status\fP yajl_gen_bool (\fByajl_gen\fP hand, int boolean)"
+.SS "void yajl_gen_clear (\fByajl_gen\fP hand)"clear yajl's output buffer, but maintain all internal generation state. This function will not 'reset' the generator state, and is intended to enable incremental JSON outputing. 
+.SS "\fByajl_gen_status\fP yajl_gen_double (\fByajl_gen\fP hand, double number)"generate a floating point number. number may not be infinity or NaN, as these have no representation in JSON. In these cases the generator will return 'yajl_gen_invalid_number' 
+.SS "void yajl_gen_free (\fByajl_gen\fP handle)"free a generator handle 
+.SS "\fByajl_gen_status\fP yajl_gen_get_buf (\fByajl_gen\fP hand, const unsigned char ** buf, unsigned int * len)"access the null terminated generator buffer. If incrementally outputing JSON, one should call yajl_gen_clear to clear the buffer. This allows stream generation. 
+.SS "\fByajl_gen_status\fP yajl_gen_integer (\fByajl_gen\fP hand, long int number)"
+.SS "\fByajl_gen_status\fP yajl_gen_map_close (\fByajl_gen\fP hand)"
+.SS "\fByajl_gen_status\fP yajl_gen_map_open (\fByajl_gen\fP hand)"
+.SS "\fByajl_gen_status\fP yajl_gen_null (\fByajl_gen\fP hand)"
+.SS "\fByajl_gen_status\fP yajl_gen_number (\fByajl_gen\fP hand, const char * num, unsigned int len)"
+.SS "\fByajl_gen_status\fP yajl_gen_string (\fByajl_gen\fP hand, const unsigned char * str, unsigned int len)"
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for YAJL from the source code.

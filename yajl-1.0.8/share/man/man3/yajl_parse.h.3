@@ -1,0 +1,142 @@
+.TH "yajl_parse.h" 3 "18 Dec 2009" "Version 1.0.8" "YAJL" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+yajl_parse.h \- 
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <yajl/yajl_common.h>\fP
+.br
+
+.SS "Data Structures"
+
+.in +1c
+.ti -1c
+.RI "struct \fByajl_callbacks\fP"
+.br
+.ti -1c
+.RI "struct \fByajl_parser_config\fP"
+.br
+.in -1c
+.SS "Typedefs"
+
+.in +1c
+.ti -1c
+.RI "typedef struct yajl_handle_t * \fByajl_handle\fP"
+.br
+.in -1c
+.SS "Enumerations"
+
+.in +1c
+.ti -1c
+.RI "enum \fByajl_status\fP { \fByajl_status_ok\fP, \fByajl_status_client_canceled\fP, \fByajl_status_insufficient_data\fP, \fByajl_status_error\fP }"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "const char * \fByajl_status_to_string\fP (\fByajl_status\fP code)"
+.br
+.ti -1c
+.RI "\fByajl_handle\fP \fByajl_alloc\fP (const \fByajl_callbacks\fP *callbacks, const \fByajl_parser_config\fP *config, const \fByajl_alloc_funcs\fP *allocFuncs, void *ctx)"
+.br
+.ti -1c
+.RI "void \fByajl_free\fP (\fByajl_handle\fP handle)"
+.br
+.ti -1c
+.RI "\fByajl_status\fP \fByajl_parse\fP (\fByajl_handle\fP hand, const unsigned char *jsonText, unsigned int jsonTextLength)"
+.br
+.ti -1c
+.RI "\fByajl_status\fP \fByajl_parse_complete\fP (\fByajl_handle\fP hand)"
+.br
+.ti -1c
+.RI "unsigned char * \fByajl_get_error\fP (\fByajl_handle\fP hand, int verbose, const unsigned char *jsonText, unsigned int jsonTextLength)"
+.br
+.ti -1c
+.RI "unsigned int \fByajl_get_bytes_consumed\fP (\fByajl_handle\fP hand)"
+.br
+.ti -1c
+.RI "void \fByajl_free_error\fP (\fByajl_handle\fP hand, unsigned char *str)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+Interface to YAJL's JSON parsing facilities. 
+.SH "Typedef Documentation"
+.PP 
+.SS "typedef struct yajl_handle_t* \fByajl_handle\fP"an opaque handle to a parser 
+.SH "Enumeration Type Documentation"
+.PP 
+.SS "enum \fByajl_status\fP"error codes returned from this interface 
+.PP
+\fBEnumerator: \fP
+.in +1c
+.TP
+\fB\fIyajl_status_ok \fP\fP
+no error was encountered 
+.TP
+\fB\fIyajl_status_client_canceled \fP\fP
+a client callback returned zero, stopping the parse 
+.TP
+\fB\fIyajl_status_insufficient_data \fP\fP
+The parse cannot yet complete because more json input text is required, call yajl_parse with the next buffer of input text. (pertinent only when stream parsing) 
+.TP
+\fB\fIyajl_status_error \fP\fP
+An error occured during the parse. Call yajl_get_error for more information about the encountered error 
+.SH "Function Documentation"
+.PP 
+.SS "\fByajl_handle\fP yajl_alloc (const \fByajl_callbacks\fP * callbacks, const \fByajl_parser_config\fP * config, const \fByajl_alloc_funcs\fP * allocFuncs, void * ctx)"allocate a parser handle 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIcallbacks\fP a yajl callbacks structure specifying the functions to call when different JSON entities are encountered in the input text. May be NULL, which is only useful for validation. 
+.br
+\fIconfig\fP configuration parameters for the parse. 
+.br
+\fIctx\fP a context pointer that will be passed to callbacks. 
+.RE
+.PP
+
+.SS "void yajl_free (\fByajl_handle\fP handle)"free a parser handle 
+.SS "void yajl_free_error (\fByajl_handle\fP hand, unsigned char * str)"free an error returned from yajl_get_error 
+.SS "unsigned int yajl_get_bytes_consumed (\fByajl_handle\fP hand)"get the amount of data consumed from the last chunk passed to YAJL.
+.PP
+In the case of a successful parse this can help you understand if the entire buffer was consumed (which will allow you to handle 'junk at end of input'.
+.PP
+In the event an error is encountered during parsing, this function affords the client a way to get the offset into the most recent chunk where the error occured. 0 will be returned if no error was encountered. 
+.SS "unsigned char* yajl_get_error (\fByajl_handle\fP hand, int verbose, const unsigned char * jsonText, unsigned int jsonTextLength)"get an error string describing the state of the parse.
+.PP
+If verbose is non-zero, the message will include the JSON text where the error occured, along with an arrow pointing to the specific char.
+.PP
+\fBReturns:\fP
+.RS 4
+A dynamically allocated string will be returned which should be freed with yajl_free_error 
+.RE
+.PP
+
+.SS "\fByajl_status\fP yajl_parse (\fByajl_handle\fP hand, const unsigned char * jsonText, unsigned int jsonTextLength)"Parse some json! 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIhand\fP - a handle to the json parser allocated with yajl_alloc 
+.br
+\fIjsonText\fP - a pointer to the UTF8 json text to be parsed 
+.br
+\fIjsonTextLength\fP - the length, in bytes, of input text 
+.RE
+.PP
+
+.SS "\fByajl_status\fP yajl_parse_complete (\fByajl_handle\fP hand)"Parse any remaining buffered json. Since yajl is a stream-based parser, without an explicit end of input, yajl sometimes can't decide if content at the end of the stream is valid or not. For example, if '1' has been fed in, yajl can't know whether another digit is next or some character that would terminate the integer token.
+.PP
+\fBParameters:\fP
+.RS 4
+\fIhand\fP - a handle to the json parser allocated with yajl_alloc 
+.RE
+.PP
+
+.SS "const char* yajl_status_to_string (\fByajl_status\fP code)"attain a human readable, english, string for an error 
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for YAJL from the source code.

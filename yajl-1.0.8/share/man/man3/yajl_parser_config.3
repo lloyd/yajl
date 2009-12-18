@@ -1,0 +1,31 @@
+.TH "yajl_parser_config" 3 "18 Dec 2009" "Version 1.0.8" "YAJL" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+yajl_parser_config \- 
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <yajl_parse.h>\fP
+.SS "Data Fields"
+
+.in +1c
+.ti -1c
+.RI "unsigned int \fBallowComments\fP"
+.br
+.ti -1c
+.RI "unsigned int \fBcheckUTF8\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+configuration structure for the generator 
+.SH "Field Documentation"
+.PP 
+.SS "unsigned int \fByajl_parser_config::allowComments\fP"if nonzero, javascript style comments will be allowed in the json input, both slash star and slash slash 
+.SS "unsigned int \fByajl_parser_config::checkUTF8\fP"if nonzero, invalid UTF8 strings will cause a parse error 
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for YAJL from the source code.

@@ -1,0 +1,39 @@
+.TH "yajl_alloc_funcs" 3 "18 Dec 2009" "Version 1.0.8" "YAJL" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+yajl_alloc_funcs \- 
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <yajl_common.h>\fP
+.SS "Data Fields"
+
+.in +1c
+.ti -1c
+.RI "\fByajl_malloc_func\fP \fBmalloc\fP"
+.br
+.ti -1c
+.RI "\fByajl_realloc_func\fP \fBrealloc\fP"
+.br
+.ti -1c
+.RI "\fByajl_free_func\fP \fBfree\fP"
+.br
+.ti -1c
+.RI "void * \fBctx\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+A structure which can be passed to yajl_*_alloc routines to allow the client to specify memory allocation functions to be used. 
+.SH "Field Documentation"
+.PP 
+.SS "void* \fByajl_alloc_funcs::ctx\fP"a context pointer that will be passed to above allocation routines 
+.SS "\fByajl_free_func\fP \fByajl_alloc_funcs::free\fP"pointer to a function that can free memory allocated using reallocFunction or mallocFunction 
+.SS "\fByajl_malloc_func\fP \fByajl_alloc_funcs::malloc\fP"pointer to a function that can allocate uninitialized memory 
+.SS "\fByajl_realloc_func\fP \fByajl_alloc_funcs::realloc\fP"pointer to a function that can resize memory allocations 
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for YAJL from the source code.
