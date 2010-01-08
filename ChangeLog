@@ -1,3 +1,7 @@
+1.0.9
+     * lth - fix inverted logic causing yajl_gen_double() to always fail on
+	win32 (thanks to Fredrik Kihlander for the report) 
+
 1.0.8
      * Randall E. Barker - move dllexport defnitions so dlls with proper
 	exports can again be generated on windows 
