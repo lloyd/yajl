@@ -5,6 +5,10 @@ if [[ `uname` == *W32* ]] ; then
   DIFF_FLAGS="-wu"
 fi
 
+if [ -z "$testBin" ]; then
+    testBin="$1"
+fi
+
 # find test binary on both platforms.  allow the caller to force a
 # particular test binary (useful for non-cmake build systems).
 if [ -z "$testBin" ]; then

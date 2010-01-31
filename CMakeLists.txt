@@ -30,7 +30,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-PROJECT(YetAnotherJSONParser)
+PROJECT(YetAnotherJSONParser C)
 
 SET (YAJL_MAJOR 1)
 SET (YAJL_MINOR 0)
@@ -78,6 +78,6 @@ INCLUDE(YAJLDoc.cmake)
 
 # a test target
 ADD_CUSTOM_TARGET(test
-                  ./run_tests.sh
+                  ./run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/yajl_test
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
 
