@@ -93,5 +93,6 @@ IF(NOT WIN32)
   # 64-bit systems which use 'lib64'
   INSTALL(TARGETS yajl LIBRARY DESTINATION lib${LIB_SUFFIX})
   INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
-  INSTALL(DIRECTORY api/ DESTINATION include/yajl)
+  INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
+  INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
 ENDIF()
