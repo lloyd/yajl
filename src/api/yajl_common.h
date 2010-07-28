@@ -49,7 +49,11 @@ extern "C" {
 #    define YAJL_API __declspec(dllimport)
 #  endif
 #else
-#  define YAJL_API
+#  if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 303
+#    define YAJL_API __attribute__ ((visibility("default")))
+#  else
+#    define YAJL_API
+#  endif
 #endif 
 
 /** pointer to a malloc function, supporting client overriding memory
