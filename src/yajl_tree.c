@@ -71,6 +71,49 @@ static yajl_value_t *value_alloc (uint8_t type) /* {{{ */
   return (v);
 } /* }}} yajl_value_t *value_alloc */
 
+static void yajl_object_free (yajl_value_t *v)
+{
+  yajl_value_object_t *o;
+  size_t i;
+
+  if ((v == NULL) || (v->type != VALUE_TYPE_OBJECT))
+    return;
+
+  o = &v->data.object;
+
+  for (i = 0; i < o->children_num; i++)
+  {
+    yajl_tree_free (o->keys[i]);
+    o->keys[i] = NULL;
+    yajl_tree_free (o->values[i]);
+    o->values[i] = NULL;
+  }
+
+  free (o->keys);
+  free (o->values);
+  free (v);
+} /* }}} void yajl_object_free */
+
+static void yajl_array_free (yajl_value_t *v)
+{
+  yajl_value_array_t *a;
+  size_t i;
+
+  if ((v == NULL) || (v->type != VALUE_TYPE_ARRAY))
+    return;
+
+  a = &v->data.array;
+
+  for (i = 0; i < a->children_num; i++)
+  {
+    yajl_tree_free (a->children[i]);
+    a->children[i] = NULL;
+  }
+
+  free (a->children);
+  free (v);
+} /* }}} void yajl_array_free */
+
 static int context_push (context_t *ctx, yajl_value_t *v) /* {{{ */
 {
   stack_elem_t *stack;
@@ -370,5 +413,45 @@ yajl_value_t *yajl_tree_parse (const char *input) /* {{{ */
   yajl_free (handle);
   return (ctx.root);
 } /* }}} yajl_value_t *yajl_tree_parse */
+
+void yajl_tree_free (yajl_value_t *v) /* {{{ */
+{
+  if (v == NULL)
+    return;
+
+  if (v->type == VALUE_TYPE_STRING)
+  {
+    yajl_value_string_t *s = &v->data.string;
+
+    free (s->value);
+    free (v);
+
+    return;
+  }
+  else if (v->type == VALUE_TYPE_NUMBER)
+  {
+    yajl_value_number_t *n = &v->data.number;
+
+    free (n->value);
+    free (v);
+
+    return;
+  }
+  else if (v->type == VALUE_TYPE_OBJECT)
+  {
+    yajl_object_free (v);
+    return;
+  }
+  else if (v->type == VALUE_TYPE_ARRAY)
+  {
+    yajl_array_free (v);
+    return;
+  }
+  else /* if (VALUE_TYPE_TRUE or VALUE_TYPE_FALSE or VALUE_TYPE_NULL) */
+  {
+    free (v);
+    return;
+  }
+} /* void yajl_tree_free */
 
 /* vim: set sw=2 sts=2 et fdm=marker : */

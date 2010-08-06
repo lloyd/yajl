@@ -89,6 +89,7 @@ struct yajl_value_s
 };
 
 YAJL_API yajl_value_t *yajl_tree_parse (const char *input);
+YAJL_API void yajl_tree_free (yajl_value_t *v);
 
 #endif /* YAJL_TREE_H */
 /* vim: set sw=2 sts=2 et : */
