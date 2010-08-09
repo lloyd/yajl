@@ -114,6 +114,13 @@ static void yajl_array_free (yajl_value_t *v)
   free (v);
 } /* }}} void yajl_array_free */
 
+/*
+ * Parsing nested objects and arrays is implemented using a stack. When a new
+ * object or array starts (a curly or a square opening bracket is read), an
+ * appropriate value is pushed on the stack. When the end of the object is
+ * reached (an appropriate closing bracket has been read), the value is popped
+ * off the stack and added to the enclosing object using "context_add_value".
+ */
 static int context_push (context_t *ctx, yajl_value_t *v) /* {{{ */
 {
   stack_elem_t *stack;
@@ -205,8 +212,23 @@ static int array_add_value (yajl_value_t *array, /* {{{ */
   return (0);
 } /* }}} int array_add_value */
 
+/* 
+ * Add a value to the value on top of the stack or the "root" member in the
+ * context if the end of the parsing process is reached.
+ */
 static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
 {
+  /*
+   * There are three valid states in which this function may be called:
+   *   - There is no value on the stack => This is the only value. This is the
+   *     last step done when parsing a document. We assign the value to the
+   *     "root" member and return.
+   *   - The value on the stack is an object. In this case store the key on the
+   *     stack or, if the key has already been read, add key and value to the
+   *     object.
+   *   - The value on the stack is an array. In this case simply add the value
+   *     and return.
+   */
   if (ctx->stack == NULL)
   {
     assert (ctx->root == NULL);
@@ -365,6 +387,9 @@ static int handle_null (void *ctx) /* {{{ */
   return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 } /* }}} int handle_null */
 
+/*
+ * Public functions
+ */
 yajl_value_t *yajl_tree_parse (const char *input) /* {{{ */
 {
   static const yajl_callbacks callbacks =
