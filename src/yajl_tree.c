@@ -292,20 +292,35 @@ static int handle_number (void *ctx, /* {{{ */
 {
   yajl_value_t *v;
   yajl_value_number_t *n;
+  char *endptr;
 
   v = value_alloc (VALUE_TYPE_STRING);
   if (v == NULL)
     return (STATUS_ABORT);
   n = &v->data.number;
 
-  n->value = malloc (string_length + 1);
-  if (n->value == NULL)
+  n->value_raw = malloc (string_length + 1);
+  if (n->value_raw == NULL)
   {
     free (v);
     return (STATUS_ABORT);
   }
-  memcpy (n->value, string, string_length);
-  n->value[string_length] = 0;
+  memcpy (n->value_raw, string, string_length);
+  n->value_raw[string_length] = 0;
+
+  n->flags = 0;
+
+  endptr = NULL;
+  errno = 0;
+  n->value_int = (int64_t) strtoll (n->value_raw, &endptr, /* base = */ 10);
+  if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
+    n->flags |= YAJL_NUMBER_INT_VALID;
+
+  endptr = NULL;
+  errno = 0;
+  n->value_double = strtod (n->value_raw, &endptr);
+  if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
+    n->flags |= YAJL_NUMBER_DOUBLE_VALID;
 
   return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 } /* }}} int handle_number */
@@ -457,7 +472,7 @@ void yajl_tree_free (yajl_value_t *v) /* {{{ */
   {
     yajl_value_number_t *n = &v->data.number;
 
-    free (n->value);
+    free (n->value_raw);
     free (v);
 
     return;

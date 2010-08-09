@@ -47,9 +47,14 @@ struct yajl_value_string_s
 };
 typedef struct yajl_value_string_s yajl_value_string_t;
 
+#define YAJL_NUMBER_INT_VALID    1
+#define YAJL_NUMBER_DOUBLE_VALID 2
 struct yajl_value_number_s
 {
-  char *value;
+  char   *value_raw;
+  int64_t value_int;
+  double  value_double;
+  unsigned int flags;
 };
 typedef struct yajl_value_number_s yajl_value_number_t;
 
