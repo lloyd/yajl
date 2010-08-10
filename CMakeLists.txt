@@ -38,10 +38,6 @@ SET (YAJL_MICRO 11)
 
 SET (YAJL_DIST_NAME "yajl-${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO}")
 
-# RPATH handling -- given we statically link, we'll turn off
-# unnec. rpath embedding
-SET(CMAKE_SKIP_RPATH  TRUE)
-
 IF (NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Release")
 ENDIF (NOT CMAKE_BUILD_TYPE)

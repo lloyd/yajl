@@ -60,6 +60,13 @@ SET_TARGET_PROPERTIES(yajl PROPERTIES
                       SOVERSION ${YAJL_MAJOR}
                       VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
 
+#### ensure a .dylib has correct absolute installation paths upon installation
+IF(APPLE)
+  MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
+  SET_TARGET_PROPERTIES(yajl PROPERTIES
+                        INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+ENDIF(APPLE)
+
 #### build up an sdk as a post build step
 
 # create some directories
