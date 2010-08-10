@@ -77,18 +77,18 @@ extern "C" {
      *
      *  Note about handling of numbers:
      *    yajl will only convert numbers that can be represented in a double
-     *    or a long int.  All other numbers will be passed to the client
+     *    or a 64 bit (long long) int.  All other numbers will be passed to the client
      *    in string form using the yajl_number callback.  Furthermore, if
      *    yajl_number is not NULL, it will always be used to return numbers,
      *    that is yajl_integer and yajl_double will be ignored.  If
      *    yajl_number is NULL but one of yajl_integer or yajl_double are
      *    defined, parsing of a number larger than is representable
-     *    in a double or long int will result in a parse error.
+     *    in a double or 64 bit integer will result in a parse error.
      */
     typedef struct {
         int (* yajl_null)(void * ctx);
         int (* yajl_boolean)(void * ctx, int boolVal);
-        int (* yajl_integer)(void * ctx, long integerVal);
+        int (* yajl_integer)(void * ctx, long long integerVal);
         int (* yajl_double)(void * ctx, double doubleVal);
         /** A callback which passes the string representation of the number
          *  back to the client.  Will be used for all numbers when present */

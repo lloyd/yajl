@@ -122,7 +122,7 @@ extern "C" {
     /** free a generator handle */    
     YAJL_API void yajl_gen_free(yajl_gen handle);
 
-    YAJL_API yajl_gen_status yajl_gen_integer(yajl_gen hand, long int number);
+    YAJL_API yajl_gen_status yajl_gen_integer(yajl_gen hand, long long int number);
     /** generate a floating point number.  number may not be infinity or
      *  NaN, as these have no representation in JSON.  In these cases the
      *  generator will return 'yajl_gen_invalid_number' */

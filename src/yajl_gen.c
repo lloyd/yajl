@@ -178,11 +178,11 @@ yajl_gen_free(yajl_gen g)
         g->print(g->ctx, "\n", 1);        
     
 yajl_gen_status
-yajl_gen_integer(yajl_gen g, long int number)
+yajl_gen_integer(yajl_gen g, long long int number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%ld", number);
+    sprintf(i, "%lld", number);
     g->print(g->ctx, i, strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;

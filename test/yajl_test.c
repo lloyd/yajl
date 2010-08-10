@@ -93,9 +93,9 @@ static int test_yajl_boolean(void * ctx, int boolVal)
     return 1;
 }
 
-static int test_yajl_integer(void *ctx, long integerVal)
+static int test_yajl_integer(void *ctx, long long integerVal)
 {
-    printf("integer: %ld\n", integerVal);
+    printf("integer: %lld\n", integerVal);
     return 1;
 }
 
