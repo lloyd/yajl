@@ -51,7 +51,7 @@ static int reformat_boolean(void * ctx, int boolean)
     return 1;
 }
 
-static int reformat_number(void * ctx, const char * s, unsigned int l)
+static int reformat_number(void * ctx, const char * s, size_t l)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_number(g, s, l);
@@ -59,7 +59,7 @@ static int reformat_number(void * ctx, const char * s, unsigned int l)
 }
 
 static int reformat_string(void * ctx, const unsigned char * stringVal,
-                           unsigned int stringLen)
+                           size_t stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_string(g, stringVal, stringLen);
@@ -67,7 +67,7 @@ static int reformat_string(void * ctx, const unsigned char * stringVal,
 }
 
 static int reformat_map_key(void * ctx, const unsigned char * stringVal,
-                            unsigned int stringLen)
+                            size_t stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
     yajl_gen_string(g, stringVal, stringLen);
@@ -201,7 +201,7 @@ main(int argc, char ** argv)
             break;
         } else {
             const unsigned char * buf;
-            unsigned int len;
+            size_t len;
             yajl_gen_get_buf(g, &buf, &len);
             fwrite(buf, 1, len, stdout);
             yajl_gen_clear(g);

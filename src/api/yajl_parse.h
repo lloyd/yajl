@@ -40,6 +40,8 @@
 #ifndef __YAJL_PARSE_H__
 #define __YAJL_PARSE_H__
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif    
@@ -93,16 +95,16 @@ extern "C" {
         /** A callback which passes the string representation of the number
          *  back to the client.  Will be used for all numbers when present */
         int (* yajl_number)(void * ctx, const char * numberVal,
-                            unsigned int numberLen);
+                            size_t numberLen);
 
         /** strings are returned as pointers into the JSON text when,
          * possible, as a result, they are _not_ null padded */
         int (* yajl_string)(void * ctx, const unsigned char * stringVal,
-                            unsigned int stringLen);
+                            size_t stringLen);
 
         int (* yajl_start_map)(void * ctx);
         int (* yajl_map_key)(void * ctx, const unsigned char * key,
-                             unsigned int stringLen);
+                             size_t stringLen);
         int (* yajl_end_map)(void * ctx);        
 
         int (* yajl_start_array)(void * ctx);
@@ -142,7 +144,7 @@ extern "C" {
      */
     YAJL_API yajl_status yajl_parse(yajl_handle hand,
                                     const unsigned char * jsonText,
-                                    unsigned int jsonTextLength);
+                                    size_t jsonTextLength);
 
     /** Parse any remaining buffered json.
      *  Since yajl is a stream-based parser, without an explicit end of
@@ -167,7 +169,7 @@ extern "C" {
      */
     YAJL_API unsigned char * yajl_get_error(yajl_handle hand, int verbose,
                                             const unsigned char * jsonText,
-                                            unsigned int jsonTextLength);
+                                            size_t jsonTextLength);
 
     /**
      * get the amount of data consumed from the last chunk passed to YAJL.
@@ -181,7 +183,7 @@ extern "C" {
      * chunk where the error occured.  0 will be returned if no error
      * was encountered.
      */
-    YAJL_API unsigned int yajl_get_bytes_consumed(yajl_handle hand);
+    YAJL_API size_t yajl_get_bytes_consumed(yajl_handle hand);
 
     /** free an error returned from yajl_get_error */
     YAJL_API void yajl_free_error(yajl_handle hand, unsigned char * str);

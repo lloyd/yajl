@@ -39,13 +39,13 @@
 #include "yajl_alloc.h"
 #include <stdlib.h>
 
-static void * yajl_internal_malloc(void *ctx, unsigned int sz)
+static void * yajl_internal_malloc(void *ctx, size_t sz)
 {
     return malloc(sz);
 }
 
 static void * yajl_internal_realloc(void *ctx, void * previous,
-                                    unsigned int sz)
+                                    size_t sz)
 {
     return realloc(previous, sz);
 }

@@ -42,8 +42,8 @@
 /* memory debugging routines */
 typedef struct 
 {
-    unsigned int numFrees;
-    unsigned int numMallocs;    
+    size_t numFrees;
+    size_t numMallocs;    
     /* XXX: we really need a hash table here with per-allocation
      *      information */ 
 } yajlTestMemoryContext;
@@ -58,14 +58,14 @@ static void yajlTestFree(void * ctx, void * ptr)
     free(ptr);
 }
 
-static void * yajlTestMalloc(void * ctx, unsigned int sz)
+static void * yajlTestMalloc(void * ctx, size_t sz)
 {
     assert(sz != 0);
     TEST_CTX(ctx)->numMallocs++;
     return malloc(sz);
 }
 
-static void * yajlTestRealloc(void * ctx, void * ptr, unsigned int sz)
+static void * yajlTestRealloc(void * ctx, void * ptr, size_t sz)
 {
     if (ptr == NULL) {
         assert(sz != 0);
@@ -106,7 +106,7 @@ static int test_yajl_double(void *ctx, double doubleVal)
 }
 
 static int test_yajl_string(void *ctx, const unsigned char * stringVal,
-                            unsigned int stringLen)
+                            size_t stringLen)
 {
     printf("string: '");
     fwrite(stringVal, 1, stringLen, stdout);
@@ -115,7 +115,7 @@ static int test_yajl_string(void *ctx, const unsigned char * stringVal,
 }
 
 static int test_yajl_map_key(void *ctx, const unsigned char * stringVal,
-                             unsigned int stringLen)
+                             size_t stringLen)
 {
     char * str = (char *) malloc(stringLen + 1);
     str[stringLen] = 0;
@@ -180,7 +180,7 @@ main(int argc, char ** argv)
     yajl_handle hand;
     const char * fileName;
     static unsigned char * fileData = NULL;
-    unsigned int bufSize = BUF_SIZE;
+    size_t bufSize = BUF_SIZE;
     yajl_status stat;
     size_t rd;
     yajl_parser_config cfg = { 0, 1 };
@@ -218,7 +218,7 @@ main(int argc, char ** argv)
 
             bufSize = atoi(argv[i]);
             if (!bufSize) {
-                fprintf(stderr, "%d is an invalid buffer size\n",
+                fprintf(stderr, "%zu is an invalid buffer size\n",
                         bufSize);
             }
         } else {
@@ -232,7 +232,7 @@ main(int argc, char ** argv)
 
     if (fileData == NULL) {
         fprintf(stderr,
-                "failed to allocate read buffer of %u bytes, exiting.",
+                "failed to allocate read buffer of %zu bytes, exiting.",
                 bufSize);
         exit(2);
     }
@@ -285,7 +285,7 @@ main(int argc, char ** argv)
 */
     fflush(stderr);
     fflush(stdout);
-    printf("memory leaks:\t%u\n", memCtx.numMallocs - memCtx.numFrees);    
+    printf("memory leaks:\t%zu\n", memCtx.numMallocs - memCtx.numFrees);    
 
     return 0;
 }

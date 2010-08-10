@@ -45,8 +45,8 @@
 typedef struct yajl_bytestack_t
 {
     unsigned char * stack;
-    unsigned int size;
-    unsigned int used;
+    size_t size;
+    size_t used;
     yajl_alloc_funcs * yaf;
 } yajl_bytestack;
 

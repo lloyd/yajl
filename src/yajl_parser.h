@@ -61,7 +61,7 @@ struct yajl_handle_t {
     /* the number of bytes consumed from the last client buffer,
      * in the case of an error this will be an error offset, in the
      * case of an error this can be used as the error offset */
-    unsigned int bytesConsumed;
+    size_t bytesConsumed;
     /* temporary storage for decoded strings */
     yajl_buf decodeBuf;
     /* a stack of states.  access with yajl_state_XXX routines */
@@ -72,11 +72,11 @@ struct yajl_handle_t {
 
 yajl_status
 yajl_do_parse(yajl_handle handle, const unsigned char * jsonText,
-              unsigned int jsonTextLen);
+              size_t jsonTextLen);
 
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
-                         unsigned int jsonTextLen, int verbose);
+                         size_t jsonTextLen, int verbose);
 
 
 #endif

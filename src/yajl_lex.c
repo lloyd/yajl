@@ -83,8 +83,8 @@ tokToStr(yajl_tok tok)
 
 struct yajl_lexer_t {
     /* the overal line and char offset into the data */
-    unsigned int lineOff;
-    unsigned int charOff;
+    size_t lineOff;
+    size_t charOff;
 
     /* error */
     yajl_lex_error error;
@@ -95,7 +95,7 @@ struct yajl_lexer_t {
 
     /* in the case where we have data in the lexBuf, bufOff holds
      * the current offset into the lexBuf. */
-    unsigned int bufOff;
+    size_t bufOff;
 
     /* are we using the lex buf? */
     unsigned int bufInUse;
@@ -206,7 +206,7 @@ static const char charLookupTable[256] =
 
 static yajl_tok
 yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
-                   unsigned int jsonTextLen, unsigned int * offset,
+                   size_t jsonTextLen, size_t * offset,
                    unsigned char curChar)
 {
     if (curChar <= 0x7f) {
@@ -262,7 +262,7 @@ if (*offset >= jsonTextLen) { \
 
 static yajl_tok
 yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
-                unsigned int jsonTextLen, unsigned int * offset)
+                size_t jsonTextLen, size_t * offset)
 {
     yajl_tok tok = yajl_tok_error;
     int hasEscapes = 0;
@@ -343,7 +343,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
 
 static yajl_tok
 yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
-                unsigned int jsonTextLen, unsigned int * offset)
+                size_t jsonTextLen, size_t * offset)
 {
     /** XXX: numbers are the only entities in json that we must lex
      *       _beyond_ in order to know that they are complete.  There
@@ -430,7 +430,7 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
 static yajl_tok
 yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
-                 unsigned int jsonTextLen, unsigned int * offset)
+                 size_t jsonTextLen, size_t * offset)
 {
     unsigned char c;
 
@@ -471,12 +471,12 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
 
 yajl_tok
 yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
-             unsigned int jsonTextLen, unsigned int * offset,
-             const unsigned char ** outBuf, unsigned int * outLen)
+             size_t jsonTextLen, size_t * offset,
+             const unsigned char ** outBuf, size_t * outLen)
 {
     yajl_tok tok = yajl_tok_error;
     unsigned char c;
-    unsigned int startOffset = *offset;
+    size_t startOffset = *offset;
 
     *outBuf = NULL;
     *outLen = 0;
@@ -706,23 +706,23 @@ yajl_lex_get_error(yajl_lexer lexer)
     return lexer->error;
 }
 
-unsigned int yajl_lex_current_line(yajl_lexer lexer)
+size_t yajl_lex_current_line(yajl_lexer lexer)
 {
     return lexer->lineOff;
 }
 
-unsigned int yajl_lex_current_char(yajl_lexer lexer)
+size_t yajl_lex_current_char(yajl_lexer lexer)
 {
     return lexer->charOff;
 }
 
 yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
-                       unsigned int jsonTextLen, unsigned int offset)
+                       size_t jsonTextLen, size_t offset)
 {
     const unsigned char * outBuf;
-    unsigned int outLen;
-    unsigned int bufLen = yajl_buf_len(lexer->buf);
-    unsigned int bufOff = lexer->bufOff;
+    size_t outLen;
+    size_t bufLen = yajl_buf_len(lexer->buf);
+    size_t bufOff = lexer->bufOff;
     unsigned int bufInUse = lexer->bufInUse;
     yajl_tok tok;
     

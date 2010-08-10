@@ -210,7 +210,7 @@ yajl_gen_double(yajl_gen g, double number)
 }
 
 yajl_gen_status
-yajl_gen_number(yajl_gen g, const char * s, unsigned int l)
+yajl_gen_number(yajl_gen g, const char * s, size_t l)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, s, l);
@@ -221,7 +221,7 @@ yajl_gen_number(yajl_gen g, const char * s, unsigned int l)
 
 yajl_gen_status
 yajl_gen_string(yajl_gen g, const unsigned char * str,
-                unsigned int len)
+                size_t len)
 {
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, "\"", 1);
@@ -307,7 +307,7 @@ yajl_gen_array_close(yajl_gen g)
 
 yajl_gen_status
 yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
-                 unsigned int * len)
+                 size_t * len)
 {
     if (g->print != (yajl_print_t)&yajl_buf_append) return yajl_gen_no_buf;
     *buf = yajl_buf_data((yajl_buf)g->ctx);

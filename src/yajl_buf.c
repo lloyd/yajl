@@ -39,16 +39,16 @@
 #define YAJL_BUF_INIT_SIZE 2048
 
 struct yajl_buf_t {
-    unsigned int len;
-    unsigned int used;
+    size_t len;
+    size_t used;
     unsigned char * data;
     yajl_alloc_funcs * alloc;
 };
 
 static
-void yajl_buf_ensure_available(yajl_buf buf, unsigned int want)
+void yajl_buf_ensure_available(yajl_buf buf, size_t want)
 {
-    unsigned int need;
+    size_t need;
     
     assert(buf != NULL);
 
@@ -84,7 +84,7 @@ void yajl_buf_free(yajl_buf buf)
     YA_FREE(buf->alloc, buf);
 }
 
-void yajl_buf_append(yajl_buf buf, const void * data, unsigned int len)
+void yajl_buf_append(yajl_buf buf, const void * data, size_t len)
 {
     yajl_buf_ensure_available(buf, len);
     if (len > 0) {
@@ -106,13 +106,13 @@ const unsigned char * yajl_buf_data(yajl_buf buf)
     return buf->data;
 }
 
-unsigned int yajl_buf_len(yajl_buf buf)
+size_t yajl_buf_len(yajl_buf buf)
 {
     return buf->used;
 }
 
 void
-yajl_buf_truncate(yajl_buf buf, unsigned int len)
+yajl_buf_truncate(yajl_buf buf, size_t len)
 {
     assert(len <= buf->used);
     buf->used = len;
