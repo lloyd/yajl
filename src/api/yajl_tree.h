@@ -73,13 +73,13 @@ struct yajl_value_array_s
 };
 typedef struct yajl_value_array_s yajl_value_array_t;
 
-#define VALUE_TYPE_STRING 1
-#define VALUE_TYPE_NUMBER 2
-#define VALUE_TYPE_OBJECT 3
-#define VALUE_TYPE_ARRAY  4
-#define VALUE_TYPE_TRUE   5
-#define VALUE_TYPE_FALSE  6
-#define VALUE_TYPE_NULL   7
+#define YAJL_TYPE_STRING 1
+#define YAJL_TYPE_NUMBER 2
+#define YAJL_TYPE_OBJECT 3
+#define YAJL_TYPE_ARRAY  4
+#define YAJL_TYPE_TRUE   5
+#define YAJL_TYPE_FALSE  6
+#define YAJL_TYPE_NULL   7
 
 struct yajl_value_s
 {
@@ -95,6 +95,19 @@ struct yajl_value_s
 
 YAJL_API yajl_value_t *yajl_tree_parse (const char *input);
 YAJL_API void yajl_tree_free (yajl_value_t *v);
+
+#define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_STRING))
+#define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_NUMBER))
+#define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_OBJECT))
+#define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_ARRAY ))
+#define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_TRUE  ))
+#define YAJL_IS_FALSE(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_FALSE ))
+#define YAJL_IS_NULL(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_NULL  ))
+
+#define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? &(v)->data.string : NULL)
+#define YAJL_TO_NUMBER(v) (YAJL_IS_NUMBER(v) ? &(v)->data.number : NULL)
+#define YAJL_TO_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->data.object : NULL)
+#define YAJL_TO_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->data.array  : NULL)
 
 #endif /* YAJL_TREE_H */
 /* vim: set sw=2 sts=2 et : */

@@ -71,15 +71,14 @@ static yajl_value_t *value_alloc (uint8_t type) /* {{{ */
   return (v);
 } /* }}} yajl_value_t *value_alloc */
 
-static void yajl_object_free (yajl_value_t *v)
+static void yajl_object_free (yajl_value_t *v) /* {{{ */
 {
   yajl_value_object_t *o;
   size_t i;
 
-  if ((v == NULL) || (v->type != VALUE_TYPE_OBJECT))
+  o = YAJL_TO_OBJECT (v);
+  if (o == NULL)
     return;
-
-  o = &v->data.object;
 
   for (i = 0; i < o->children_num; i++)
   {
@@ -94,15 +93,14 @@ static void yajl_object_free (yajl_value_t *v)
   free (v);
 } /* }}} void yajl_object_free */
 
-static void yajl_array_free (yajl_value_t *v)
+static void yajl_array_free (yajl_value_t *v) /* {{{ */
 {
   yajl_value_array_t *a;
   size_t i;
 
-  if ((v == NULL) || (v->type != VALUE_TYPE_ARRAY))
+  a = YAJL_TO_ARRAY (v);
+  if (a == NULL)
     return;
-
-  a = &v->data.array;
 
   for (i = 0; i < a->children_num; i++)
   {
@@ -131,8 +129,8 @@ static int context_push (context_t *ctx, yajl_value_t *v) /* {{{ */
   memset (stack, 0, sizeof (*stack));
 
   assert ((ctx->stack == NULL)
-      || (v->type == VALUE_TYPE_OBJECT)
-      || (v->type == VALUE_TYPE_ARRAY));
+      || YAJL_IS_OBJECT (v)
+      || YAJL_IS_ARRAY (v));
 
   stack->value = v;
   stack->next = ctx->stack;
@@ -168,10 +166,13 @@ static int object_add_keyval (yajl_value_t *obj, /* {{{ */
   if ((obj == NULL) || (key == NULL) || (value == NULL))
     return (EINVAL);
 
-  if ((obj->type != VALUE_TYPE_OBJECT) || (key->type != VALUE_TYPE_STRING))
+  if (!YAJL_IS_STRING (key))
     return (EINVAL);
 
-  o = &obj->data.object;
+  o = YAJL_TO_OBJECT (obj);
+  if (o == NULL)
+    return (EINVAL);
+
   tmp = realloc (o->keys, sizeof (*o->keys) * (o->children_num + 1));
   if (tmp == NULL)
     return (ENOMEM);
@@ -198,10 +199,10 @@ static int array_add_value (yajl_value_t *array, /* {{{ */
   if ((array == NULL) || (value == NULL))
     return (EINVAL);
 
-  if (array->type != VALUE_TYPE_ARRAY)
+  a = YAJL_TO_ARRAY (array);
+  if (a == NULL)
     return (EINVAL);
 
-  a = &array->data.array;
   tmp = realloc (a->children, sizeof (*a->children) * (a->children_num + 1));
   if (tmp == NULL)
     return (ENOMEM);
@@ -235,11 +236,11 @@ static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
     ctx->root = v;
     return (0);
   }
-  else if (ctx->stack->value->type == VALUE_TYPE_OBJECT)
+  else if (YAJL_IS_OBJECT (ctx->stack->value))
   {
     if (ctx->stack->key == NULL)
     {
-      if (v->type != VALUE_TYPE_STRING)
+      if (!YAJL_IS_STRING (v))
         return (EINVAL);
 
       ctx->stack->key = v;
@@ -254,7 +255,7 @@ static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
       return (object_add_keyval (ctx->stack->value, key, v));
     }
   }
-  else if (ctx->stack->value->type == VALUE_TYPE_ARRAY)
+  else if (YAJL_IS_ARRAY (ctx->stack->value))
   {
     return (array_add_value (ctx->stack->value, v));
   }
@@ -270,10 +271,10 @@ static int handle_string (void *ctx, /* {{{ */
   yajl_value_t *v;
   yajl_value_string_t *s;
 
-  v = value_alloc (VALUE_TYPE_STRING);
+  v = value_alloc (YAJL_TYPE_STRING);
   if (v == NULL)
     return (STATUS_ABORT);
-  s = &v->data.string;
+  s = YAJL_TO_STRING (v);
 
   s->value = malloc (string_length + 1);
   if (s->value == NULL)
@@ -294,10 +295,10 @@ static int handle_number (void *ctx, /* {{{ */
   yajl_value_number_t *n;
   char *endptr;
 
-  v = value_alloc (VALUE_TYPE_STRING);
+  v = value_alloc (YAJL_TYPE_STRING);
   if (v == NULL)
     return (STATUS_ABORT);
-  n = &v->data.number;
+  n = YAJL_TO_NUMBER (v);
 
   n->value_raw = malloc (string_length + 1);
   if (n->value_raw == NULL)
@@ -330,11 +331,11 @@ static int handle_start_map (void *ctx) /* {{{ */
   yajl_value_t *v;
   yajl_value_object_t *o;
 
-  v = value_alloc (VALUE_TYPE_OBJECT);
+  v = value_alloc (YAJL_TYPE_OBJECT);
   if (v == NULL)
     return (STATUS_ABORT);
 
-  o = &v->data.object;
+  o = YAJL_TO_OBJECT (v);
   o->keys = NULL;
   o->values = NULL;
   o->children_num = 0;
@@ -358,11 +359,11 @@ static int handle_start_array (void *ctx) /* {{{ */
   yajl_value_t *v;
   yajl_value_array_t *a;
 
-  v = value_alloc (VALUE_TYPE_ARRAY);
+  v = value_alloc (YAJL_TYPE_ARRAY);
   if (v == NULL)
     return (STATUS_ABORT);
 
-  a = &v->data.array;
+  a = YAJL_TO_ARRAY (v);
   a->children = NULL;
   a->children_num = 0;
 
@@ -384,7 +385,7 @@ static int handle_boolean (void *ctx, int boolean_value) /* {{{ */
 {
   yajl_value_t *v;
 
-  v = value_alloc (boolean_value ? VALUE_TYPE_TRUE : VALUE_TYPE_FALSE);
+  v = value_alloc (boolean_value ? YAJL_TYPE_TRUE : YAJL_TYPE_FALSE);
   if (v == NULL)
     return (STATUS_ABORT);
 
@@ -395,7 +396,7 @@ static int handle_null (void *ctx) /* {{{ */
 {
   yajl_value_t *v;
 
-  v = value_alloc (VALUE_TYPE_NULL);
+  v = value_alloc (YAJL_TYPE_NULL);
   if (v == NULL)
     return (STATUS_ABORT);
 
@@ -459,35 +460,35 @@ void yajl_tree_free (yajl_value_t *v) /* {{{ */
   if (v == NULL)
     return;
 
-  if (v->type == VALUE_TYPE_STRING)
+  if (YAJL_IS_STRING (v))
   {
-    yajl_value_string_t *s = &v->data.string;
+    yajl_value_string_t *s = YAJL_TO_STRING (v);
 
     free (s->value);
     free (v);
 
     return;
   }
-  else if (v->type == VALUE_TYPE_NUMBER)
+  else if (YAJL_IS_NUMBER (v))
   {
-    yajl_value_number_t *n = &v->data.number;
+    yajl_value_number_t *n = YAJL_TO_NUMBER (v);
 
     free (n->value_raw);
     free (v);
 
     return;
   }
-  else if (v->type == VALUE_TYPE_OBJECT)
+  else if (YAJL_TO_OBJECT (v))
   {
     yajl_object_free (v);
     return;
   }
-  else if (v->type == VALUE_TYPE_ARRAY)
+  else if (YAJL_TO_ARRAY (v))
   {
     yajl_array_free (v);
     return;
   }
-  else /* if (VALUE_TYPE_TRUE or VALUE_TYPE_FALSE or VALUE_TYPE_NULL) */
+  else /* if (YAJL_TYPE_TRUE or YAJL_TYPE_FALSE or YAJL_TYPE_NULL) */
   {
     free (v);
     return;
