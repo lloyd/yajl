@@ -1,9 +1,11 @@
 #!/bin/sh
 
 DIFF_FLAGS="-u"
-if [ `uname` = "*W32*" ] ; then
-  DIFF_FLAGS="-wu"
-fi
+case "$(uname)" in
+  *W32*)
+    DIFF_FLAGS="-wu"
+    ;;
+esac
 
 if [ -z "$testBin" ]; then
     testBin="$1"
