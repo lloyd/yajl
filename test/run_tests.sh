@@ -1,9 +1,13 @@
 #!/bin/sh
 
+ECHO=`which echo`
+
 DIFF_FLAGS="-u"
-if [ `uname` = "*W32*" ] ; then
-  DIFF_FLAGS="-wu"
-fi
+case "$(uname)" in
+  *W32*)
+    DIFF_FLAGS="-wu"
+    ;;
+esac
 
 if [ -z "$testBin" ]; then
     testBin="$1"
@@ -16,13 +20,13 @@ if [ -z "$testBin" ]; then
 	if [ ! -x $testBin ] ; then
 	  testBin="../build/test/yajl_test"
 	  if [  ! -x $testBin ] ; then
-	    echo "cannot execute test binary: '$testBin'"  
+	    ${ECHO} "cannot execute test binary: '$testBin'"  
 	    exit 1;
 	  fi
 	fi
 fi
 
-echo "using test binary: $testBin"
+${ECHO} "using test binary: $testBin"
 
 testsSucceeded=0
 testsTotal=0 
@@ -36,11 +40,11 @@ for file in cases/*.json ; do
       allowComments=""
     ;;
   esac
-  echo -n " test case: '$file': "
+  ${ECHO} -n " test case: '$file': "
   iter=1
   success="success"
 
-  echo "$testBin $allowComments -b $iter < $file > ${file}.test "
+  ${ECHO} "$testBin $allowComments -b $iter < $file > ${file}.test "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while [ $iter -lt 32  ] && [ $success = "success" ] ; do
     $testBin $allowComments -b $iter < $file > ${file}.test  2>&1
@@ -55,11 +59,11 @@ for file in cases/*.json ; do
     rm ${file}.test
   done
 
-  echo $success
+  ${ECHO} $success
   : $(( testsTotal += 1 ))
 done
 
-echo $testsSucceeded/$testsTotal tests successful
+${ECHO} $testsSucceeded/$testsTotal tests successful
 
 if [ $testsSucceeded != $testsTotal ] ; then
   exit 1
