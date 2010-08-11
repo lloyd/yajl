@@ -30,6 +30,7 @@ ADD_DEFINITIONS(-DYAJL_BUILD)
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include/yajl)
+SET (shareDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/share/pkgconfig)
 
 # set the output path for libraries
 SET(LIBRARY_OUTPUT_PATH ${libDir})
@@ -58,7 +59,9 @@ FILE(MAKE_DIRECTORY ${libDir})
 FILE(MAKE_DIRECTORY ${incDir})
 
 # generate build-time source
+SET(dollar $)
 CONFIGURE_FILE(api/yajl_version.h.cmake ${incDir}/yajl_version.h)
+CONFIGURE_FILE(yajl.pc.cmake ${shareDir}/yajl.pc)
 
 # copy public headers to output directory
 FOREACH (header ${PUB_HDRS})
@@ -79,4 +82,5 @@ IF(NOT WIN32)
   INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
   INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
   INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
+  INSTALL(FILES ${shareDir}/yajl.pc DESTINATION share/pkgconfig)
 ENDIF()
