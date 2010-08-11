@@ -1,5 +1,5 @@
 prefix=${CMAKE_INSTALL_PREFIX}
-libdir=${dollar}{prefix}/lib
+libdir=${dollar}{prefix}/lib${LIB_SUFFIX}
 includedir=${dollar}{prefix}/include/yajl
 
 Name: Yet Another JSON Library
