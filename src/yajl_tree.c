@@ -102,13 +102,13 @@ static void yajl_array_free (yajl_value_t *v) /* {{{ */
   if (a == NULL)
     return;
 
-  for (i = 0; i < a->children_num; i++)
+  for (i = 0; i < a->values_num; i++)
   {
-    yajl_tree_free (a->children[i]);
-    a->children[i] = NULL;
+    yajl_tree_free (a->values[i]);
+    a->values[i] = NULL;
   }
 
-  free (a->children);
+  free (a->values);
   free (v);
 } /* }}} void yajl_array_free */
 
@@ -203,12 +203,12 @@ static int array_add_value (yajl_value_t *array, /* {{{ */
   if (a == NULL)
     return (EINVAL);
 
-  tmp = realloc (a->children, sizeof (*a->children) * (a->children_num + 1));
+  tmp = realloc (a->values, sizeof (*a->values) * (a->values_num + 1));
   if (tmp == NULL)
     return (ENOMEM);
-  a->children = tmp;
-  a->children[a->children_num] = value;
-  a->children_num++;
+  a->values = tmp;
+  a->values[a->values_num] = value;
+  a->values_num++;
 
   return (0);
 } /* }}} int array_add_value */
@@ -364,8 +364,8 @@ static int handle_start_array (void *ctx) /* {{{ */
     return (STATUS_ABORT);
 
   a = YAJL_TO_ARRAY (v);
-  a->children = NULL;
-  a->children_num = 0;
+  a->values = NULL;
+  a->values_num = 0;
 
   return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 } /* }}} int handle_start_array */

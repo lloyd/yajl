@@ -101,9 +101,9 @@ typedef struct yajl_value_object_s yajl_value_object_t;
 struct yajl_value_array_s
 {
   /** Array of elements in the JSON array. */
-  yajl_value_t **children;
+  yajl_value_t **values;
   /** Number of elements in the JSON array. */
-  size_t children_num;
+  size_t values_num;
 };
 typedef struct yajl_value_array_s yajl_value_array_t;
 
