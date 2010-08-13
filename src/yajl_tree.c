@@ -31,6 +31,7 @@
  */ 
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
@@ -54,8 +55,16 @@ struct context_s
 {
   stack_elem_t *stack;
   yajl_value_t *root;
+  char *errbuf;
+  size_t errbuf_size;
 };
 typedef struct context_s context_t;
+
+#define RETURN_ERROR(ctx,retval,...) do {                      \
+  if ((ctx)->errbuf != NULL)                                   \
+    snprintf ((ctx)->errbuf, (ctx)->errbuf_size, __VA_ARGS__); \
+  return (retval);                                             \
+} while (0)                                                    \
 
 static yajl_value_t *value_alloc (uint8_t type) /* {{{ */
 {
@@ -125,7 +134,7 @@ static int context_push (context_t *ctx, yajl_value_t *v) /* {{{ */
 
   stack = malloc (sizeof (*stack));
   if (stack == NULL)
-    return (ENOMEM);
+    RETURN_ERROR (ctx, ENOMEM, "Out of memory");
   memset (stack, 0, sizeof (*stack));
 
   assert ((ctx->stack == NULL)
@@ -145,7 +154,8 @@ static yajl_value_t *context_pop (context_t *ctx) /* {{{ */
   yajl_value_t *v;
 
   if (ctx->stack == NULL)
-    return (NULL);
+    RETURN_ERROR (ctx, NULL, "context_pop: "
+        "Bottom of stack reached prematurely");
 
   stack = ctx->stack;
   ctx->stack = stack->next;
@@ -157,30 +167,33 @@ static yajl_value_t *context_pop (context_t *ctx) /* {{{ */
   return (v);
 } /* }}} yajl_value_t *context_pop */
 
-static int object_add_keyval (yajl_value_t *obj, /* {{{ */
-    yajl_value_t *key, yajl_value_t *value)
+static int object_add_keyval (context_t *ctx, /* {{{ */
+    yajl_value_t *obj, yajl_value_t *key, yajl_value_t *value)
 {
   yajl_value_object_t *o;
   yajl_value_t **tmp;
 
-  if ((obj == NULL) || (key == NULL) || (value == NULL))
-    return (EINVAL);
+  /* We're checking for NULL in "context_add_value" or its callers. */
+  assert (ctx != NULL);
+  assert (obj != NULL);
+  assert (key != NULL);
+  assert (value != NULL);
 
-  if (!YAJL_IS_STRING (key))
-    return (EINVAL);
+  /* We're assuring that the key is a string in "context_add_value". */
+  assert (YAJL_IS_STRING (key));
 
+  /* We're assuring that "obj" is an object in "context_add_value". */
   o = YAJL_TO_OBJECT (obj);
-  if (o == NULL)
-    return (EINVAL);
+  assert (o != NULL);
 
   tmp = realloc (o->keys, sizeof (*o->keys) * (o->children_num + 1));
   if (tmp == NULL)
-    return (ENOMEM);
+    RETURN_ERROR (ctx, ENOMEM, "Out of memory");
   o->keys = tmp;
 
   tmp = realloc (o->values, sizeof (*o->values) * (o->children_num + 1));
   if (tmp == NULL)
-    return (ENOMEM);
+    RETURN_ERROR (ctx, ENOMEM, "Out of memory");
   o->values = tmp;
 
   o->keys[o->children_num] = key;
@@ -190,22 +203,25 @@ static int object_add_keyval (yajl_value_t *obj, /* {{{ */
   return (0);
 } /* }}} int object_add_keyval */
 
-static int array_add_value (yajl_value_t *array, /* {{{ */
-    yajl_value_t *value)
+static int array_add_value (context_t *ctx, /* {{{ */
+    yajl_value_t *array, yajl_value_t *value)
 {
   yajl_value_array_t *a;
   yajl_value_t **tmp;
 
-  if ((array == NULL) || (value == NULL))
-    return (EINVAL);
+  /* We're checking for NULL pointers in "context_add_value" or its
+   * callers. */
+  assert (ctx != NULL);
+  assert (array != NULL);
+  assert (value != NULL);
 
+  /* "context_add_value" will only call us with array values. */
   a = YAJL_TO_ARRAY (array);
-  if (a == NULL)
-    return (EINVAL);
+  assert (a != NULL);
 
   tmp = realloc (a->values, sizeof (*a->values) * (a->values_num + 1));
   if (tmp == NULL)
-    return (ENOMEM);
+    RETURN_ERROR (ctx, ENOMEM, "Out of memory");
   a->values = tmp;
   a->values[a->values_num] = value;
   a->values_num++;
@@ -219,6 +235,10 @@ static int array_add_value (yajl_value_t *array, /* {{{ */
  */
 static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
 {
+  /* We're checking for NULL values in all the calling functions. */
+  assert (ctx != NULL);
+  assert (v != NULL);
+
   /*
    * There are three valid states in which this function may be called:
    *   - There is no value on the stack => This is the only value. This is the
@@ -241,7 +261,9 @@ static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
     if (ctx->stack->key == NULL)
     {
       if (!YAJL_IS_STRING (v))
-        return (EINVAL);
+        RETURN_ERROR (ctx, EINVAL, "context_add_value: "
+            "Object key is not a string (%#04"PRIx8")",
+            v->type);
 
       ctx->stack->key = v;
       return (0);
@@ -252,16 +274,18 @@ static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
 
       key = ctx->stack->key;
       ctx->stack->key = NULL;
-      return (object_add_keyval (ctx->stack->value, key, v));
+      return (object_add_keyval (ctx, ctx->stack->value, key, v));
     }
   }
   else if (YAJL_IS_ARRAY (ctx->stack->value))
   {
-    return (array_add_value (ctx->stack->value, v));
+    return (array_add_value (ctx, ctx->stack->value, v));
   }
   else
   {
-    return (EINVAL);
+    RETURN_ERROR (ctx, EINVAL, "context_add_value: Cannot add value to "
+        "a value of type %#04"PRIx8" (not a composite type)",
+        ctx->stack->value->type);
   }
 } /* }}} int context_add_value */
 
@@ -273,14 +297,14 @@ static int handle_string (void *ctx, /* {{{ */
 
   v = value_alloc (YAJL_TYPE_STRING);
   if (v == NULL)
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
   s = YAJL_TO_STRING (v);
 
   s->value = malloc (string_length + 1);
   if (s->value == NULL)
   {
     free (v);
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
   }
   memcpy (s->value, string, string_length);
   s->value[string_length] = 0;
@@ -297,14 +321,14 @@ static int handle_number (void *ctx, /* {{{ */
 
   v = value_alloc (YAJL_TYPE_STRING);
   if (v == NULL)
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
   n = YAJL_TO_NUMBER (v);
 
   n->value_raw = malloc (string_length + 1);
   if (n->value_raw == NULL)
   {
     free (v);
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
   }
   memcpy (n->value_raw, string, string_length);
   n->value_raw[string_length] = 0;
@@ -333,7 +357,7 @@ static int handle_start_map (void *ctx) /* {{{ */
 
   v = value_alloc (YAJL_TYPE_OBJECT);
   if (v == NULL)
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
   o = YAJL_TO_OBJECT (v);
   o->keys = NULL;
@@ -361,7 +385,7 @@ static int handle_start_array (void *ctx) /* {{{ */
 
   v = value_alloc (YAJL_TYPE_ARRAY);
   if (v == NULL)
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
   a = YAJL_TO_ARRAY (v);
   a->values = NULL;
@@ -387,7 +411,7 @@ static int handle_boolean (void *ctx, int boolean_value) /* {{{ */
 
   v = value_alloc (boolean_value ? YAJL_TYPE_TRUE : YAJL_TYPE_FALSE);
   if (v == NULL)
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
   return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 } /* }}} int handle_boolean */
@@ -398,7 +422,7 @@ static int handle_null (void *ctx) /* {{{ */
 
   v = value_alloc (YAJL_TYPE_NULL);
   if (v == NULL)
-    return (STATUS_ABORT);
+    RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
   return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 } /* }}} int handle_null */
@@ -406,7 +430,8 @@ static int handle_null (void *ctx) /* {{{ */
 /*
  * Public functions
  */
-yajl_value_t *yajl_tree_parse (const char *input) /* {{{ */
+yajl_value_t *yajl_tree_parse (const char *input, /* {{{ */
+    char *error_buffer, size_t error_buffer_size)
 {
   static const yajl_callbacks callbacks =
   {
@@ -431,12 +456,17 @@ yajl_value_t *yajl_tree_parse (const char *input) /* {{{ */
 
   context_t ctx =
   {
-    /* key   = */ NULL,
-    /* stack = */ NULL
+    /* key         = */ NULL,
+    /* stack       = */ NULL,
+    /* errbuf      = */ error_buffer,
+    /* errbuf_size = */ error_buffer_size
   };
 
   yajl_handle handle;
   yajl_status status;
+
+  if (error_buffer != NULL)
+    memset (error_buffer, 0, error_buffer_size);
 
   handle = yajl_alloc (&callbacks, &parser_config,
       /* alloc funcs = */ NULL, &ctx);
