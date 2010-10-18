@@ -44,6 +44,31 @@
 #include <assert.h>
 #include <math.h>
 
+#define MAX_VALUE_TO_MULTIPLY ((LLONG_MAX / 10) + (LLONG_MAX % 10))
+
+ /* same semantics as strtol */
+static long long
+yajl_parse_integer(const unsigned char *number, unsigned int length) 
+{
+    long long ret  = 0;
+    long sign = 1;
+    const unsigned char *pos = number;
+    if (*pos == '-') { pos++; sign = -1; }
+    if (*pos == '+') { pos++; }
+
+    while (pos < number + length) {
+
+        if ( ret > MAX_VALUE_TO_MULTIPLY ) {
+            errno = ERANGE;
+            return sign == 1 ? LLONG_MAX : LLONG_MIN;
+        }
+        ret *= 10;
+        ret += (*pos++ - '0');
+    }
+
+    return sign * ret;
+}
+
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                          size_t jsonTextLen, int verbose)
@@ -74,6 +99,7 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
             memneeded += strlen(errorText);            
         }
         str = (unsigned char *) YA_MALLOC(&(hand->alloc), memneeded + 2);
+        if (!str) return NULL;
         str[0] = 0;
         strcat((char *) str, errorType);
         strcat((char *) str, " error");    
@@ -114,10 +140,12 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                 YA_MALLOC(&(hand->alloc), (unsigned int)(strlen((char *) str) +
                                                          strlen((char *) text) +
                                                          strlen(arrow) + 1));
-            newStr[0] = 0;
-            strcat((char *) newStr, (char *) str);
-            strcat((char *) newStr, text);
-            strcat((char *) newStr, arrow);    
+            if (newStr) {
+                newStr[0] = 0;
+                strcat((char *) newStr, (char *) str);
+                strcat((char *) newStr, text);
+                strcat((char *) newStr, arrow);
+            }
             YA_FREE(&(hand->alloc), str);
             str = (unsigned char *) newStr;
         }
@@ -258,29 +286,14 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     stateToPush = yajl_state_array_start;
                     break;
                 case yajl_tok_integer:
-                    /*
-                     * note.  strtol does not respect the length of
-                     * the lexical token.  in a corner case where the
-                     * lexed number is a integer with a trailing zero,
-                     * immediately followed by the end of buffer,
-                     * sscanf could run off into oblivion and cause a
-                     * crash.  for this reason we copy the integer
-                     * (and doubles), into our parse buffer (the same
-                     * one used for unescaping strings), before
-                     * calling strtol.  yajl_buf ensures null padding,
-                     * so we're safe.
-                     */
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
                             _CC_CHK(hand->callbacks->yajl_number(
                                         hand->ctx,(const char *) buf, bufLen));
                         } else if (hand->callbacks->yajl_integer) {
                             long long int i = 0;
-                            yajl_buf_clear(hand->decodeBuf);
-                            yajl_buf_append(hand->decodeBuf, buf, bufLen);
-                            buf = yajl_buf_data(hand->decodeBuf);
-                            i = strtoll((const char *) buf, NULL, 10);
-                            if ((i == LONG_MIN || i == LONG_MAX) &&
+                            i = yajl_parse_integer(buf, bufLen);
+                            if ((i == LLONG_MIN || i == LLONG_MAX) &&
                                 errno == ERANGE)
                             {
                                 yajl_bs_set(hand->stateStack,
