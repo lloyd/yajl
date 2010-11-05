@@ -60,6 +60,13 @@ SET_TARGET_PROPERTIES(yajl PROPERTIES
                       SOVERSION ${YAJL_MAJOR}
                       VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
 
+#### ensure a .dylib has correct absolute installation paths upon installation
+IF(APPLE)
+  MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
+  SET_TARGET_PROPERTIES(yajl PROPERTIES
+                        INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+ENDIF(APPLE)
+
 #### build up an sdk as a post build step
 
 # create some directories
@@ -86,5 +93,6 @@ IF(NOT WIN32)
   # 64-bit systems which use 'lib64'
   INSTALL(TARGETS yajl LIBRARY DESTINATION lib${LIB_SUFFIX})
   INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
-  INSTALL(DIRECTORY api/ DESTINATION include/yajl)
+  INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
+  INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
 ENDIF()
