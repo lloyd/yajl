@@ -23,8 +23,19 @@ libyail_la_SOURCES = src/yajl.c \
 		     src/yajl_encode.h \
 		     src/yajl_alloc.h
 
+bin_PROGRAMS = json_reformat \
+	       json_verify
+
+json_reformat_SOURCES = reformatter/json_reformat.c
+
+json_reformat_LDADD = libyail.la
+
+json_verify_SOURCES = verify/json_verify.c
+
+json_verify_LDADD = libyail.la
+
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = pkgconfig/yail.pc
+pkgconfig_DATA = pkgconfig/yajl.pc
 
 BUILT_SOURCES = $(top_srcdir)/.version
 $(top_srcdir)/.version:
