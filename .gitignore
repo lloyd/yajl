@@ -17,4 +17,6 @@ config.*
 libtool
 src/api/yajl_version.h
 stamp-h1
-
+configure
+json_reformat
+json_verify
