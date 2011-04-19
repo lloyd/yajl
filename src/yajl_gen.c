@@ -97,11 +97,11 @@ yajl_gen_alloc2(const yajl_print_t callback,
     memcpy((void *) &(g->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
 
     if (config) {
-        char *indent = config->indentString;
+        const char *indent = config->indentString;
         g->pretty = config->beautify;
         g->indentString = config->indentString;
         if (indent) {
-          for (indent; *indent; indent++) {
+          for (; *indent; indent++) {
             if (*indent != '\n'
                 && *indent != '\v'
                 && *indent != '\f'
@@ -151,14 +151,15 @@ yajl_gen_free(yajl_gen g)
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
             for (_i=0;_i<g->depth;_i++)                                 \
-                g->print(g->ctx, g->indentString,                       \
-                         strlen(g->indentString));                      \
+                g->print(g->ctx,                                        \
+                         g->indentString,                               \
+                         (unsigned int)strlen(g->indentString));        \
         }                                                               \
     }
 
 #define ENSURE_NOT_KEY \
     if (g->state[g->depth] == yajl_gen_map_key ||       \
-        g->state[g->depth] == yajl_gen_map_start)  {    \   
+        g->state[g->depth] == yajl_gen_map_start)  {    \
         return yajl_gen_keys_must_be_strings;           \
     }                                                   \
 
@@ -206,7 +207,7 @@ yajl_gen_integer(yajl_gen g, long int number)
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%ld", number);
-    g->print(g->ctx, i, strlen(i));
+    g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -226,7 +227,7 @@ yajl_gen_double(yajl_gen g, double number)
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
     INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%.20g", number);
-    g->print(g->ctx, i, strlen(i));
+    g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -271,7 +272,7 @@ yajl_gen_bool(yajl_gen g, int boolean)
     const char * val = boolean ? "true" : "false";
 
 	ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    g->print(g->ctx, val, strlen(val));
+    g->print(g->ctx, val, (unsigned int)strlen(val));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
