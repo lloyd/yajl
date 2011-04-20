@@ -32,7 +32,7 @@
 
  /* same semantics as strtol */
 static long long
-yajl_parse_integer(const unsigned char *number, unsigned int length) 
+yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
     long long ret  = 0;
     long sign = 1;
@@ -62,7 +62,7 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
     const char * errorType = NULL;
     const char * errorText = NULL;
     char text[72];
-    const char * arrow = "                     (right here) ------^\n";    
+    const char * arrow = "                     (right here) ------^\n";
 
     if (yajl_bs_current(hand->stateStack) == yajl_state_parse_error) {
         errorType = "parse";
@@ -79,19 +79,19 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
         memneeded += strlen(errorType);
         memneeded += strlen(" error");
         if (errorText != NULL) {
-            memneeded += strlen(": ");            
-            memneeded += strlen(errorText);            
+            memneeded += strlen(": ");
+            memneeded += strlen(errorText);
         }
         str = (unsigned char *) YA_MALLOC(&(hand->alloc), memneeded + 2);
         if (!str) return NULL;
         str[0] = 0;
         strcat((char *) str, errorType);
-        strcat((char *) str, " error");    
+        strcat((char *) str, " error");
         if (errorText != NULL) {
-            strcat((char *) str, ": ");            
-            strcat((char *) str, errorText);            
+            strcat((char *) str, ": ");
+            strcat((char *) str, errorText);
         }
-        strcat((char *) str, "\n");    
+        strcat((char *) str, "\n");
     }
 
     /* now we append as many spaces as needed to make sure the error
@@ -103,7 +103,7 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
         spacesNeeded = (offset < 30 ? 40 - offset : 10);
         start = (offset >= 30 ? offset - 30 : 0);
         end = (offset + 30 > jsonTextLen ? jsonTextLen : offset + 30);
-    
+
         for (i=0;i<spacesNeeded;i++) text[i] = ' ';
 
         for (;start < end;start++, i++) {
@@ -148,31 +148,29 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
 
 
 yajl_status
-yajl_do_finish(yajl_handle hand) {
-  
-  yajl_status stat;
-  stat = yajl_do_parse(hand,(const unsigned char *)" ",1);
+yajl_do_finish(yajl_handle hand)
+{
+    yajl_status stat;
+    stat = yajl_do_parse(hand,(const unsigned char *)" ",1);
 
-  if (stat != yajl_status_ok) return stat;
-  //  fprintf(stderr,"%d\n",hand->flags);
+    if (stat != yajl_status_ok) return stat;
 
-  switch(yajl_bs_current(hand->stateStack)) 
+    switch(yajl_bs_current(hand->stateStack))
     {
-    case yajl_state_parse_error: 
-    case yajl_state_lexical_error: 
-      return yajl_status_error;
-    case yajl_state_got_value:
-      return yajl_status_ok;
-    default:
-      if (!(hand->flags & allow_partial_values)) 
-      {
-        yajl_bs_set(hand->stateStack, yajl_state_parse_error);
-        hand->parseError = "premature EOF";
-        return yajl_status_error;
-      }
-    return yajl_status_ok;
-  }
-
+        case yajl_state_parse_error:
+        case yajl_state_lexical_error:
+            return yajl_status_error;
+        case yajl_state_got_value:
+            return yajl_status_ok;
+        default:
+            if (!(hand->flags & allow_partial_values))
+            {
+                yajl_bs_set(hand->stateStack, yajl_state_parse_error);
+                hand->parseError = "premature EOF";
+                return yajl_status_error;
+            }
+            return yajl_status_ok;
+    }
 }
 
 yajl_status
@@ -206,7 +204,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
           }
           return yajl_status_ok;
         case yajl_state_lexical_error:
-        case yajl_state_parse_error:            
+        case yajl_state_parse_error:
             return yajl_status_error;
         case yajl_state_start:
         case yajl_state_got_value:
@@ -246,13 +244,13 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                                     yajl_buf_len(hand->decodeBuf)));
                     }
                     break;
-                case yajl_tok_bool: 
+                case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_boolean) {
                         _CC_CHK(hand->callbacks->yajl_boolean(hand->ctx,
                                                               *buf == 't'));
                     }
                     break;
-                case yajl_tok_null: 
+                case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_null) {
                         _CC_CHK(hand->callbacks->yajl_null(hand->ctx));
                     }
@@ -331,13 +329,13 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                             _CC_CHK(hand->callbacks->yajl_end_array(hand->ctx));
                         }
                         yajl_bs_pop(hand->stateStack);
-                        goto around_again;                        
+                        goto around_again;
                     }
                     /* intentional fall-through */
                 }
-                case yajl_tok_colon: 
-                case yajl_tok_comma: 
-                case yajl_tok_right_bracket:                
+                case yajl_tok_colon:
+                case yajl_tok_comma:
+                case yajl_tok_right_bracket:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =
                         "unallowed token at this point in JSON text";
@@ -354,7 +352,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
                 } else if (s == yajl_state_map_need_val) {
                     yajl_bs_set(hand->stateStack, yajl_state_map_got_val);
-                } else { 
+                } else {
                     yajl_bs_set(hand->stateStack, yajl_state_array_got_val);
                 }
             }
@@ -364,7 +362,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
 
             goto around_again;
         }
-        case yajl_state_map_start: 
+        case yajl_state_map_start:
         case yajl_state_map_need_key: {
             /* only difference between these two states is that in
              * start '}' is valid, whereas in need_key, we've parsed
@@ -400,7 +398,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                             _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
                         }
                         yajl_bs_pop(hand->stateStack);
-                        goto around_again;                        
+                        goto around_again;
                     }
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
@@ -415,7 +413,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             switch (tok) {
                 case yajl_tok_colon:
                     yajl_bs_set(hand->stateStack, yajl_state_map_need_val);
-                    goto around_again;                    
+                    goto around_again;
                 case yajl_tok_eof:
                     return yajl_status_ok;
                 case yajl_tok_error:
@@ -437,10 +435,10 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
                     }
                     yajl_bs_pop(hand->stateStack);
-                    goto around_again;                        
+                    goto around_again;
                 case yajl_tok_comma:
                     yajl_bs_set(hand->stateStack, yajl_state_map_need_key);
-                    goto around_again;                    
+                    goto around_again;
                 case yajl_tok_eof:
                     return yajl_status_ok;
                 case yajl_tok_error:
@@ -448,8 +446,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     goto around_again;
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
-                    hand->parseError = "after key and value, inside map, " 
-                                       "I expect ',' or '}'"; 
+                    hand->parseError = "after key and value, inside map, "
+                                       "I expect ',' or '}'";
                     /* try to restore error offset */
                     if (*offset >= bufLen) *offset -= bufLen;
                     else *offset = 0;
@@ -465,10 +463,10 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         _CC_CHK(hand->callbacks->yajl_end_array(hand->ctx));
                     }
                     yajl_bs_pop(hand->stateStack);
-                    goto around_again;                        
+                    goto around_again;
                 case yajl_tok_comma:
                     yajl_bs_set(hand->stateStack, yajl_state_array_need_val);
-                    goto around_again;                    
+                    goto around_again;
                 case yajl_tok_eof:
                     return yajl_status_ok;
                 case yajl_tok_error:
@@ -482,7 +480,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             }
         }
     }
-    
+
     abort();
     return yajl_status_error;
 }

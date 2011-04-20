@@ -68,15 +68,15 @@ main(int argc, char ** argv)
     if (a < argc) {
         usage(argv[0]);
     }
-    
+
     /* allocate a parser */
     hand = yajl_alloc(NULL, &cfg, NULL, NULL);
-        
+
 	while (!done) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
 
         retval = 0;
-        
+
         if (rd == 0) {
             if (!feof(stdin)) {
                 if (!quiet) {
@@ -88,7 +88,7 @@ main(int argc, char ** argv)
             done = 1;
         }
         fileData[rd] = 0;
-        
+
         if (done)
             /* parse any remaining buffered data */
             stat = yajl_parse_complete(hand);
@@ -108,7 +108,7 @@ main(int argc, char ** argv)
             break;
         }
     }
-    
+
     yajl_free(hand);
 
     if (!quiet) {
