@@ -50,7 +50,8 @@ typedef enum {
     yajl_state_map_need_key,
     yajl_state_array_start,
     yajl_state_array_got_val,
-    yajl_state_array_need_val
+    yajl_state_array_need_val,
+    yajl_state_got_value,
 } yajl_state;
 
 struct yajl_handle_t {
@@ -68,11 +69,20 @@ struct yajl_handle_t {
     yajl_bytestack stateStack;
     /* memory allocation routines */
     yajl_alloc_funcs alloc;
+    /* bitfield */
+    unsigned int flags;
 };
+
+#define allow_trailing_garbage   0x01
+#define allow_multiple_values    0x02
+#define allow_partial_values     0x04
 
 yajl_status
 yajl_do_parse(yajl_handle handle, const unsigned char * jsonText,
               size_t jsonTextLen);
+
+yajl_status
+yajl_do_finish(yajl_handle handle);
 
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,

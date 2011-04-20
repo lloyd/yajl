@@ -16,7 +16,7 @@
  *  3. Neither the name of Lloyd Hilaiel nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
- * 
+ * b
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -97,11 +97,31 @@ yajl_alloc(const yajl_callbacks * callbacks,
     hand->lexer = yajl_lex_alloc(&(hand->alloc), allowComments, validateUTF8);
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
+    hand->flags	    = allow_trailing_garbage | allow_partial_values;
     yajl_bs_init(hand->stateStack, &(hand->alloc));
 
     yajl_bs_push(hand->stateStack, yajl_state_start);    
 
     return hand;
+}
+
+
+void 
+yajl_forbid_trailing_garbage(yajl_handle h) 
+{
+     h->flags &= ~allow_trailing_garbage;
+}
+
+void 
+yajl_allow_multiple_values(yajl_handle h) 
+{
+     h->flags |= allow_multiple_values;
+}
+
+void 
+yajl_forbid_partial_values(yajl_handle h) 
+{
+     h->flags &= ~allow_partial_values;
 }
 
 void
@@ -122,6 +142,7 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
     return status;
 }
 
+
 yajl_status
 yajl_parse_complete(yajl_handle hand)
 {
@@ -131,7 +152,7 @@ yajl_parse_complete(yajl_handle hand)
      * A very simple approach to this is to inject whitespace to terminate
      * any number in the lex buffer.
      */
-    return yajl_parse(hand, (const unsigned char *)" ", 1);
+  return yajl_do_finish(hand);
 }
 
 unsigned char *

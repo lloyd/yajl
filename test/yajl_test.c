@@ -184,8 +184,8 @@ main(int argc, char ** argv)
     yajl_status stat;
     size_t rd;
     yajl_parser_config cfg = { 0, 1 };
-    int i, j, done;
-
+    int i, j;
+    int multiple = 0 ,trailing = 0, partial = 0;
     /* memory allocation debugging: allocate a structure which collects
      * statistics */
     yajlTestMemoryContext memCtx = { 0,0 };
@@ -221,6 +221,12 @@ main(int argc, char ** argv)
                 fprintf(stderr, "%zu is an invalid buffer size\n",
                         bufSize);
             }
+        } else if (!strcmp("-m", argv[i])) {
+            multiple = 1; partial = 1;
+        } else if (!strcmp("-g", argv[i])) {
+            trailing = 1;
+        } else if (!strcmp("-p", argv[i])) {
+            partial = 1;
         } else {
             fprintf(stderr, "invalid command line option: '%s'\n",
                     argv[i]);
@@ -241,37 +247,34 @@ main(int argc, char ** argv)
 
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, &cfg, &allocFuncs, NULL);
+    if (trailing) yajl_forbid_trailing_garbage(hand);
+    if (multiple) yajl_allow_multiple_values(hand);
+    if (partial)  yajl_forbid_partial_values(hand);
 
-    done = 0;
-	while (!done) {
+    for (;;) {
         rd = fread((void *) fileData, 1, bufSize, stdin);
         
         if (rd == 0) {
             if (!feof(stdin)) {
                 fprintf(stderr, "error reading from '%s'\n", fileName);
-                break;
             }
-            done = 1;
-        }
-
-        if (done)
-            /* parse any remaining buffered data */
-            stat = yajl_parse_complete(hand);
-        else
-            /* read file data, pass to parser */
-            stat = yajl_parse(hand, fileData, rd);
-        
-        if (stat != yajl_status_insufficient_data &&
-            stat != yajl_status_ok)
-        {
-            unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
-            fflush(stdout);
-            fprintf(stderr, "%s", (char *) str);
-            yajl_free_error(hand, str);
             break;
         }
-    } 
+            /* read file data, pass to parser */
+        stat = yajl_parse(hand, fileData, rd);
+        
+        if (stat != yajl_status_ok) break;
+    }
 
+    stat = yajl_parse_complete(hand);
+    if (stat != yajl_status_ok)  
+    {
+        unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
+        fflush(stdout);
+        fprintf(stderr, "%s", (char *) str);
+        yajl_free_error(hand, str);
+    }
+        
     yajl_free(hand);
     free(fileData);
 

@@ -136,6 +136,34 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
 
 
 yajl_status
+yajl_do_finish(yajl_handle hand) {
+  
+  yajl_status stat;
+  stat = yajl_do_parse(hand,(const unsigned char *)" ",1);
+
+  if (stat != yajl_status_ok) return stat;
+  //  fprintf(stderr,"%d\n",hand->flags);
+
+  switch(yajl_bs_current(hand->stateStack)) 
+    {
+    case yajl_state_parse_error: 
+    case yajl_state_lexical_error: 
+      return yajl_status_error;
+    case yajl_state_got_value:
+      return yajl_status_ok;
+    default:
+      if (!(hand->flags & allow_partial_values)) 
+      {
+        yajl_bs_set(hand->stateStack, yajl_state_parse_error);
+        hand->parseError = "premature EOF";
+        return yajl_status_error;
+      }
+    return yajl_status_ok;
+  }
+
+}
+
+yajl_status
 yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
               size_t jsonTextLen)
 {
@@ -145,25 +173,41 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
     size_t * offset = &(hand->bytesConsumed);
 
     *offset = 0;
-    
 
   around_again:
     switch (yajl_bs_current(hand->stateStack)) {
         case yajl_state_parse_complete:
-            return yajl_status_ok;
+          if (hand->flags & allow_multiple_values) {
+            yajl_bs_set(hand->stateStack, yajl_state_got_value);
+            goto around_again;
+          }
+          if (!(hand->flags & allow_trailing_garbage)) {
+            if (*offset != jsonTextLen) {
+              tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
+                                 offset, &buf, &bufLen);
+              if (tok != yajl_tok_eof) {
+                yajl_bs_set(hand->stateStack, yajl_state_parse_error);
+                hand->parseError = "trailing garbage";
+              }
+              goto around_again;
+            }
+          }
+          return yajl_status_ok;
         case yajl_state_lexical_error:
         case yajl_state_parse_error:            
             return yajl_status_error;
         case yajl_state_start:
+        case yajl_state_got_value:
         case yajl_state_map_need_val:
         case yajl_state_array_need_val:
-        case yajl_state_array_start: {
+        case yajl_state_array_start:  {
             /* for arrays and maps, we advance the state for this
              * depth, then push the state of the next depth.
              * If an error occurs during the parsing of the nesting
              * enitity, the state at this level will not matter.
              * a state that needs pushing will be anything other
              * than state_start */
+
             yajl_state stateToPush = yajl_state_start;
 
             tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
@@ -171,7 +215,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
 
             switch (tok) {
                 case yajl_tok_eof:
-                    return yajl_status_insufficient_data;
+                    return yajl_status_ok;
                 case yajl_tok_error:
                     yajl_bs_set(hand->stateStack, yajl_state_lexical_error);
                     goto around_again;
@@ -309,7 +353,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             /* got a value.  transition depends on the state we're in. */
             {
                 yajl_state s = yajl_bs_current(hand->stateStack);
-                if (s == yajl_state_start) {
+                if (s == yajl_state_start || s == yajl_state_got_value) {
                     yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
                 } else if (s == yajl_state_map_need_val) {
                     yajl_bs_set(hand->stateStack, yajl_state_map_got_val);
@@ -332,7 +376,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                                offset, &buf, &bufLen);
             switch (tok) {
                 case yajl_tok_eof:
-                    return yajl_status_insufficient_data;
+                    return yajl_status_ok;
                 case yajl_tok_error:
                     yajl_bs_set(hand->stateStack, yajl_state_lexical_error);
                     goto around_again;
@@ -376,7 +420,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     yajl_bs_set(hand->stateStack, yajl_state_map_need_val);
                     goto around_again;                    
                 case yajl_tok_eof:
-                    return yajl_status_insufficient_data;
+                    return yajl_status_ok;
                 case yajl_tok_error:
                     yajl_bs_set(hand->stateStack, yajl_state_lexical_error);
                     goto around_again;
@@ -401,7 +445,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     yajl_bs_set(hand->stateStack, yajl_state_map_need_key);
                     goto around_again;                    
                 case yajl_tok_eof:
-                    return yajl_status_insufficient_data;
+                    return yajl_status_ok;
                 case yajl_tok_error:
                     yajl_bs_set(hand->stateStack, yajl_state_lexical_error);
                     goto around_again;
@@ -429,7 +473,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     yajl_bs_set(hand->stateStack, yajl_state_array_need_val);
                     goto around_again;                    
                 case yajl_tok_eof:
-                    return yajl_status_insufficient_data;
+                    return yajl_status_ok;
                 case yajl_tok_error:
                     yajl_bs_set(hand->stateStack, yajl_state_lexical_error);
                     goto around_again;

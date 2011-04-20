@@ -51,9 +51,7 @@ extern "C" {
         yajl_status_ok,
         /** a client callback returned zero, stopping the parse */
         yajl_status_client_canceled,
-        /** The parse cannot yet complete because more json input text
-         *  is required, call yajl_parse with the next buffer of input text.
-         *  (pertinent only when stream parsing) */
+        /** not returned. here for cmpatability */
         yajl_status_insufficient_data,
         /** An error occured during the parse.  Call yajl_get_error for
          *  more information about the encountered error */
@@ -133,6 +131,27 @@ extern "C" {
                                     const yajl_parser_config * config,
                                     const yajl_alloc_funcs * allocFuncs,
                                     void * ctx);
+
+
+   /**
+    *  Forbid trailing garbage from following a JSON document.
+    *  Whitespace is not considered garbage.
+    */
+    YAJL_API void yajl_forbid_trailing_garbage(yajl_handle h);
+
+   /** 
+    *  Allow multiple values to be parsed by a single handle.
+    *  The entire text must be valid JSON, and values can be seperated
+    *  by any kind of whitespace.
+    */
+    YAJL_API void yajl_allow_multiple_values(yajl_handle h);
+
+   /**
+    *  Setting this flag causes the handle to enter an error 
+    *  state if yajl_parse_complete is called in the middle of 
+    *  a value.
+    */
+    YAJL_API void yajl_forbid_partial_values(yajl_handle h);
 
     /** free a parser handle */    
     YAJL_API void yajl_free(yajl_handle handle);
