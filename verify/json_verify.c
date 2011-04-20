@@ -32,7 +32,7 @@ usage(const char * progname)
     exit(1);
 }
 
-int 
+int
 main(int argc, char ** argv)
 {
     yajl_status stat;
@@ -114,6 +114,6 @@ main(int argc, char ** argv)
     if (!quiet) {
         printf("JSON is %s\n", retval ? "invalid" : "valid");
     }
-    
+
     return retval;
 }

@@ -24,12 +24,12 @@
 #include <assert.h>
 
 /* memory debugging routines */
-typedef struct 
+typedef struct
 {
     size_t numFrees;
-    size_t numMallocs;    
+    size_t numMallocs;
     /* XXX: we really need a hash table here with per-allocation
-     *      information */ 
+     *      information */
 } yajlTestMemoryContext;
 
 /* cast void * into context */
@@ -53,9 +53,9 @@ static void * yajlTestRealloc(void * ctx, void * ptr, size_t sz)
 {
     if (ptr == NULL) {
         assert(sz != 0);
-        TEST_CTX(ctx)->numMallocs++;        
+        TEST_CTX(ctx)->numMallocs++;
     } else if (sz == 0) {
-        TEST_CTX(ctx)->numFrees++;                
+        TEST_CTX(ctx)->numFrees++;
     }
 
     return realloc(ptr, sz);
@@ -94,7 +94,7 @@ static int test_yajl_string(void *ctx, const unsigned char * stringVal,
 {
     printf("string: '");
     fwrite(stringVal, 1, stringLen, stdout);
-    printf("'\n");    
+    printf("'\n");
     return 1;
 }
 
@@ -151,14 +151,20 @@ static yajl_callbacks callbacks = {
 static void usage(const char * progname)
 {
     fprintf(stderr,
-            "usage:  %s [options] <filename>\n"
+            "usage:  %s [options]\n"
+            "Parse input from stdin as JSON and ouput parsing details "
+                                                          "to stdout\n"
+            "   -b  set the read buffer size\n"
             "   -c  allow comments\n"
-            "   -b  set the read buffer size\n",
+            "   -g  forbid *g*arbage after valid JSON text\n"
+            "   -m  allows the parser to consume multiple JSON values\n"
+            "       from a single string separated by whitespace\n"
+            "   -p  partial JSON documents should be considered invalid\n",
             progname);
     exit(1);
 }
 
-int 
+int
 main(int argc, char ** argv)
 {
     yajl_handle hand;
@@ -205,10 +211,10 @@ main(int argc, char ** argv)
                 fprintf(stderr, "%zu is an invalid buffer size\n",
                         bufSize);
             }
-        } else if (!strcmp("-m", argv[i])) {
-            multiple = 1; partial = 1;
         } else if (!strcmp("-g", argv[i])) {
             trailing = 1;
+        } else if (!strcmp("-m", argv[i])) {
+            multiple = 1; partial = 1;
         } else if (!strcmp("-p", argv[i])) {
             partial = 1;
         } else {
@@ -237,28 +243,28 @@ main(int argc, char ** argv)
 
     for (;;) {
         rd = fread((void *) fileData, 1, bufSize, stdin);
-        
+
         if (rd == 0) {
             if (!feof(stdin)) {
                 fprintf(stderr, "error reading from '%s'\n", fileName);
             }
             break;
         }
-            /* read file data, pass to parser */
+        /* read file data, now pass to parser */
         stat = yajl_parse(hand, fileData, rd);
-        
+
         if (stat != yajl_status_ok) break;
     }
 
     stat = yajl_parse_complete(hand);
-    if (stat != yajl_status_ok)  
+    if (stat != yajl_status_ok)
     {
         unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
         fflush(stdout);
         fprintf(stderr, "%s", (char *) str);
         yajl_free_error(hand, str);
     }
-        
+
     yajl_free(hand);
     free(fileData);
 
@@ -272,7 +278,7 @@ main(int argc, char ** argv)
 */
     fflush(stderr);
     fflush(stdout);
-    printf("memory leaks:\t%zu\n", memCtx.numMallocs - memCtx.numFrees);    
+    printf("memory leaks:\t%zu\n", memCtx.numMallocs - memCtx.numFrees);
 
     return 0;
 }

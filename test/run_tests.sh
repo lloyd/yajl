@@ -35,6 +35,7 @@ for file in cases/*.json ; do
   allowComments="-c"
   forbidGarbage=""
   allowMultiple=""
+  noPartials=""
 
   # if the filename starts with dc_, we disallow comments for this test
   case $(basename $file) in
@@ -46,16 +47,19 @@ for file in cases/*.json ; do
      ;;
     am_*)
      allowMultiple="-m";
+     ;;
+    np_*)
+     noPartials="-p";
     ;;
   esac
   ${ECHO} -n " test case: '$file': "
   iter=1
   success="success"
 
-  ${ECHO} "$testBin $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test "
+  ${ECHO} "$testBin $noPartials $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while [ $iter -lt 32  ] && [ $success = "success" ] ; do
-    $testBin $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
+    $testBin $noPartials $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
     diff ${DIFF_FLAGS} ${file}.gold ${file}.test
     if [ $? -eq 0 ] ; then
       if [ $iter -eq 31 ] ; then : $(( testsSucceeded += 1)) ; fi

@@ -187,22 +187,22 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
   around_again:
     switch (yajl_bs_current(hand->stateStack)) {
         case yajl_state_parse_complete:
-          if (hand->flags & allow_multiple_values) {
-            yajl_bs_set(hand->stateStack, yajl_state_got_value);
-            goto around_again;
-          }
-          if (!(hand->flags & allow_trailing_garbage)) {
-            if (*offset != jsonTextLen) {
-              tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
-                                 offset, &buf, &bufLen);
-              if (tok != yajl_tok_eof) {
-                yajl_bs_set(hand->stateStack, yajl_state_parse_error);
-                hand->parseError = "trailing garbage";
-              }
-              goto around_again;
+            if (hand->flags & allow_multiple_values) {
+                yajl_bs_set(hand->stateStack, yajl_state_got_value);
+                goto around_again;
             }
-          }
-          return yajl_status_ok;
+            if (!(hand->flags & allow_trailing_garbage)) {
+                if (*offset != jsonTextLen) {
+                    tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
+                                       offset, &buf, &bufLen);
+                    if (tok != yajl_tok_eof) {
+                        yajl_bs_set(hand->stateStack, yajl_state_parse_error);
+                        hand->parseError = "trailing garbage";
+                    }
+                    goto around_again;
+                }
+            }
+            return yajl_status_ok;
         case yajl_state_lexical_error:
         case yajl_state_parse_error:
             return yajl_status_error;

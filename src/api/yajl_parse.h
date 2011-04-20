@@ -28,7 +28,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif    
+#endif
     /** error codes returned from this interface */
     typedef enum {
         /** no error was encountered */
@@ -87,12 +87,12 @@ extern "C" {
         int (* yajl_start_map)(void * ctx);
         int (* yajl_map_key)(void * ctx, const unsigned char * key,
                              size_t stringLen);
-        int (* yajl_end_map)(void * ctx);        
+        int (* yajl_end_map)(void * ctx);
 
         int (* yajl_start_array)(void * ctx);
-        int (* yajl_end_array)(void * ctx);        
+        int (* yajl_end_array)(void * ctx);
     } yajl_callbacks;
-    
+
     /** configuration structure for the generator */
     typedef struct {
         /** if nonzero, javascript style comments will be allowed in
@@ -117,27 +117,27 @@ extern "C" {
                                     void * ctx);
 
 
-   /**
-    *  Forbid trailing garbage from following a JSON document.
-    *  Whitespace is not considered garbage.
-    */
+    /**
+     *  Forbid trailing garbage from following a JSON document.
+     *  Whitespace is not considered garbage.
+     */
     YAJL_API void yajl_forbid_trailing_garbage(yajl_handle h);
 
-   /** 
-    *  Allow multiple values to be parsed by a single handle.
-    *  The entire text must be valid JSON, and values can be seperated
-    *  by any kind of whitespace.
-    */
+    /**
+     *  Allow multiple values to be parsed by a single handle.
+     *  The entire text must be valid JSON, and values can be seperated
+     *  by any kind of whitespace.
+     */
     YAJL_API void yajl_allow_multiple_values(yajl_handle h);
 
-   /**
-    *  Setting this flag causes the handle to enter an error 
-    *  state if yajl_parse_complete is called in the middle of 
-    *  a value.
-    */
+    /**
+     *  Setting this flag causes the handle to enter an error
+     *  state if yajl_parse_complete is called in the middle of
+     *  a value.
+     */
     YAJL_API void yajl_forbid_partial_values(yajl_handle h);
 
-    /** free a parser handle */    
+    /** free a parser handle */
     YAJL_API void yajl_free(yajl_handle handle);
 
     /** Parse some json!
@@ -159,7 +159,7 @@ extern "C" {
      *  \param hand - a handle to the json parser allocated with yajl_alloc
      */
     YAJL_API yajl_status yajl_parse_complete(yajl_handle hand);
-    
+
     /** get an error string describing the state of the
      *  parse.
      *
@@ -168,7 +168,7 @@ extern "C" {
      *  the specific char.
      *
      *  \returns A dynamically allocated string will be returned which should
-     *  be freed with yajl_free_error 
+     *  be freed with yajl_free_error
      */
     YAJL_API unsigned char * yajl_get_error(yajl_handle hand, int verbose,
                                             const unsigned char * jsonText,
@@ -179,8 +179,8 @@ extern "C" {
      *
      * In the case of a successful parse this can help you understand if
      * the entire buffer was consumed (which will allow you to handle
-     * "junk at end of input". 
-     * 
+     * "junk at end of input").
+     *
      * In the event an error is encountered during parsing, this function
      * affords the client a way to get the offset into the most recent
      * chunk where the error occured.  0 will be returned if no error
@@ -193,6 +193,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif    
+#endif
 
 #endif
