@@ -29,11 +29,11 @@ fi
 ${ECHO} "using test binary: $testBin"
 
 testsSucceeded=0
-testsTotal=0 
+testsTotal=0
 
 for file in cases/*.json ; do
   allowComments="-c"
-  allowGarbage=""
+  forbidGarbage=""
   allowMultiple=""
 
   # if the filename starts with dc_, we disallow comments for this test
@@ -41,8 +41,8 @@ for file in cases/*.json ; do
     dc_*)
       allowComments=""
     ;;
-    ag_*)
-      allowGarbage="-g" 
+    fg_*)
+      forbidGarbage="-g"
      ;;
     am_*)
      allowMultiple="-m";
@@ -52,10 +52,10 @@ for file in cases/*.json ; do
   iter=1
   success="success"
 
-  ${ECHO} "$testBin $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test "
+  ${ECHO} "$testBin $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while [ $iter -lt 32  ] && [ $success = "success" ] ; do
-    $testBin $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
+    $testBin $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
     diff ${DIFF_FLAGS} ${file}.gold ${file}.test
     if [ $? -eq 0 ] ; then
       if [ $iter -eq 31 ] ; then : $(( testsSucceeded += 1)) ; fi
