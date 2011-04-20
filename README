@@ -21,9 +21,10 @@ of the more important aspects of YAJL.
 
 ## YAJL is Free.
 
-BSD licensing means you can use it in open source and commercial products
-alike.  My request beyond the licensing is that if you find bugs drop
-me a email, or better yet, fork me on git and fix it!
+Permissive licensing means you can use it in open source and
+commercial products alike without any fees.  My request beyond the
+licensing is that if you find bugs drop me a email, or better yet,
+fork and fix.
 
 Porting YAJL should be trivial, the implementation is ANSI C.  If you
 port to new systems I'd love to hear of it and integrate your patches.

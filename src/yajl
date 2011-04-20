@@ -1,11 +1,11 @@
 /*!
-    \mainpage Yet Another JSON Library (YAJL)       
+    \mainpage Yet Another JSON Library (YAJL)
     \author Lloyd Hilaiel
     \date 2010
 
 Yet Another JSON Library (YAJL) is a small event-driven (SAX-style)
 JSON parser written in ANSI C, and a small validating JSON
-generator. YAJL is released under the BSD license.
+generator. YAJL is released under the ISC license.
 
 \section features Features
 
@@ -19,7 +19,7 @@ generator. YAJL is released under the BSD license.
 \section usage Usage
 
 The following code sample is a complete JSON "reformating" program.  It
-demonstrates how to perform stream parsing and generation.  
+demonstrates how to perform stream parsing and generation.
 
 \code
 #include <yajl/yajl_parse.h>
