@@ -119,13 +119,18 @@ main(int argc, char ** argv)
     yajl_handle hand;
     static unsigned char fileData[65536];
     /* generator config */
-    yajl_gen_config conf = { 1, "  " };
-	yajl_gen g;
+    yajl_gen g;
     yajl_status stat;
     size_t rd;
-    /* allow comments */
-    yajl_parser_config cfg = { 1, 1 };
-    int retval = 0, done = 0;
+    int retval = 0;
+
+    g = yajl_gen_alloc(NULL);
+    yajl_gen_config(g, yajl_gen_beautify, 1);
+
+    /* ok.  open file.  let's read and parse */
+    hand = yajl_alloc(&callbacks, NULL, (void *) g);
+    /* and let's allow comments by default */
+    yajl_config(hand, yajl_allow_comments, 1);
 
     /* check arguments.*/
     int a = 1;
@@ -134,10 +139,10 @@ main(int argc, char ** argv)
         for ( i=1; i < strlen(argv[a]); i++) {
             switch (argv[a][i]) {
                 case 'm':
-                    conf.beautify = 0;
+                    yajl_gen_config(g, yajl_gen_beautify, 0);
                     break;
                 case 'u':
-                    cfg.checkUTF8 = 0;
+                    yajl_config(hand, yajl_dont_validate_strings, 1);
                     break;
                 default:
                     fprintf(stderr, "unrecognized option: '%c'\n\n", argv[a][i]);
@@ -149,41 +154,26 @@ main(int argc, char ** argv)
     if (a < argc) {
         usage(argv[0]);
     }
-    
-    g = yajl_gen_alloc(&conf, NULL);
 
-    /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, &cfg, NULL, (void *) g);
-        
-	while (!done) {
+
+
+	for (;;) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
-        
+
         if (rd == 0) {
             if (!feof(stdin)) {
                 fprintf(stderr, "error on file read.\n");
                 retval = 1;
-                break;
             }
-            done = 1;
+            break;
         }
         fileData[rd] = 0;
-        
-        if (done)
-            /* parse any remaining buffered data */
-            stat = yajl_parse_complete(hand);
-        else
-            /* read file data, pass to parser */
-            stat = yajl_parse(hand, fileData, rd);
 
-        if (stat != yajl_status_ok &&
-            stat != yajl_status_insufficient_data)
+        stat = yajl_parse(hand, fileData, rd);
+
+        if (stat != yajl_status_ok) break;
+
         {
-            unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
-            fprintf(stderr, "%s", (const char *) str);
-            yajl_free_error(hand, str);
-            retval = 1;
-            break;
-        } else {
             const unsigned char * buf;
             size_t len;
             yajl_gen_get_buf(g, &buf, &len);
@@ -192,8 +182,17 @@ main(int argc, char ** argv)
         }
     }
 
+    stat = yajl_parse_complete(hand);
+
+    if (stat != yajl_status_ok) {
+        unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+        fprintf(stderr, "%s", (const char *) str);
+        yajl_free_error(hand, str);
+        retval = 1;
+    }
+
     yajl_gen_free(g);
     yajl_free(hand);
-    
+
     return retval;
 }

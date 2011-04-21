@@ -14,6 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "api/yajl_parse.h"
 #include "yajl_lex.h"
 #include "yajl_parser.h"
 #include "yajl_encode.h"
@@ -161,9 +162,10 @@ yajl_do_finish(yajl_handle hand)
         case yajl_state_lexical_error:
             return yajl_status_error;
         case yajl_state_got_value:
+        case yajl_state_parse_complete:
             return yajl_status_ok;
         default:
-            if (!(hand->flags & allow_partial_values))
+            if (!(hand->flags & yajl_allow_partial_values))
             {
                 yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                 hand->parseError = "premature EOF";
@@ -187,11 +189,11 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
   around_again:
     switch (yajl_bs_current(hand->stateStack)) {
         case yajl_state_parse_complete:
-            if (hand->flags & allow_multiple_values) {
+            if (hand->flags & yajl_allow_multiple_values) {
                 yajl_bs_set(hand->stateStack, yajl_state_got_value);
                 goto around_again;
             }
-            if (!(hand->flags & allow_trailing_garbage)) {
+            if (!(hand->flags & yajl_allow_trailing_garbage)) {
                 if (*offset != jsonTextLen) {
                     tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
                                        offset, &buf, &bufLen);

@@ -35,8 +35,6 @@ extern "C" {
         yajl_status_ok,
         /** a client callback returned zero, stopping the parse */
         yajl_status_client_canceled,
-        /** not returned. here for cmpatability */
-        yajl_status_insufficient_data,
         /** An error occured during the parse.  Call yajl_get_error for
          *  more information about the encountered error */
         yajl_status_error
@@ -93,49 +91,74 @@ extern "C" {
         int (* yajl_end_array)(void * ctx);
     } yajl_callbacks;
 
-    /** configuration structure for the generator */
-    typedef struct {
-        /** if nonzero, javascript style comments will be allowed in
-         *  the json input, both slash star and slash slash */
-        unsigned int allowComments;
-        /** if nonzero, invalid UTF8 strings will cause a parse
-         *  error */
-        unsigned int checkUTF8;
-    } yajl_parser_config;
-
     /** allocate a parser handle
      *  \param callbacks  a yajl callbacks structure specifying the
      *                    functions to call when different JSON entities
      *                    are encountered in the input text.  May be NULL,
      *                    which is only useful for validation.
-     *  \param config     configuration parameters for the parse.
+     *  \param afs        memory allocation functions, may be NULL for to use
+     *                    C runtime library routines (malloc and friends) 
      *  \param ctx        a context pointer that will be passed to callbacks.
      */
     YAJL_API yajl_handle yajl_alloc(const yajl_callbacks * callbacks,
-                                    const yajl_parser_config * config,
-                                    const yajl_alloc_funcs * allocFuncs,
+                                    yajl_alloc_funcs * afs,
                                     void * ctx);
 
 
-    /**
-     *  Forbid trailing garbage from following a JSON document.
-     *  Whitespace is not considered garbage.
-     */
-    YAJL_API void yajl_forbid_trailing_garbage(yajl_handle h);
+    /** configuration parameters for the parser, these may be passed to
+     *  yajl_config() along with option specific argument(s).  In general,
+     *  all configuration parameters default to *off*. */
+    typedef enum {
+        /** Ignore javascript style comments present in
+         *  JSON input.  Non-standard, but rather fun
+         *  arguments: toggled off with integer zero, on otherwise.
+         *
+         *  example:
+         *    yajl_config(h, yajl_allow_comments, 1); // turn comment support on
+         */
+        yajl_allow_comments = 0x01,
+        /**
+         * When set the parser will verify that all strings in JSON input are
+         * valid UTF8 and will emit a parse error if this is not so.  When set,
+         * this option makes parsing slightly more expensive (~10%) (XXX: get real numbers)
+         *
+         * example:
+         *   yajl_config(h, yajl_dont_validate_strings, 1); // disable utf8 checking
+         */
+        yajl_dont_validate_strings     = 0x02,
+        /**
+         * By default, upon calls to yajl_parse_complete(), yajl will
+         * ensure the entire input text was consumed and will raise an error
+         * otherwise.  Enabling this flag will cause yajl to disable this
+         * check.  This can be useful when parsing json out of a that contains more
+         * than a single JSON document.
+         */
+        yajl_allow_trailing_garbage = 0x04,
+        /**
+         * Allow multiple values to be parsed by a single handle.  The
+         * entire text must be valid JSON, and values can be seperated
+         * by any kind of whitespace.  This flag will change the
+         * behavior of the parser, and cause it continue parsing after
+         * a value is parsed, rather than transitioning into a
+         * complete state.  This option can be useful when parsing multiple
+         * values from an input stream.
+         */
+        yajl_allow_multiple_values = 0x08,
+        /**
+         * When yajl_parse_complete() is called the parser will
+         * check that the top level value was completely consumed.  I.E.,
+         * if called whilst in the middle of parsing a value
+         * yajl will enter an error state (premature EOF).  Setting this
+         * flag suppresses that check and the corresponding error.
+         */
+        yajl_allow_partial_values = 0x10
+    } yajl_option;
 
-    /**
-     *  Allow multiple values to be parsed by a single handle.
-     *  The entire text must be valid JSON, and values can be seperated
-     *  by any kind of whitespace.
+    /** allow the modification of parser options subsequent to handle
+     *  allocation (via yajl_alloc)
+     *  \returns zero in case of errors, non-zero otherwise
      */
-    YAJL_API void yajl_allow_multiple_values(yajl_handle h);
-
-    /**
-     *  Setting this flag causes the handle to enter an error
-     *  state if yajl_parse_complete is called in the middle of
-     *  a value.
-     */
-    YAJL_API void yajl_forbid_partial_values(yajl_handle h);
+    YAJL_API int yajl_config(yajl_handle h, yajl_option opt, ...);
 
     /** free a parser handle */
     YAJL_API void yajl_free(yajl_handle handle);

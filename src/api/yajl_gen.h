@@ -60,15 +60,35 @@ extern "C" {
                                  const char * str,
                                  size_t len);
 
-    /** configuration structure for the generator */
-    typedef struct {
+    /** configuration parameters for the parser, these may be passed to
+     *  yajl_gen_config() along with option specific argument(s).  In general,
+     *  all configuration parameters default to *off*. */
+    typedef enum {
         /** generate indented (beautiful) output */
-        unsigned int beautify;
-        /** an opportunity to define an indent string.  such as \\t or
-         *  some number of spaces.  default is four spaces '    '.  This
-         *  member is only relevant when beautify is true */
-        const char * indentString;
-    } yajl_gen_config;
+        yajl_gen_beautify = 0x01,
+        /**
+         * Set an indent string which is used when yajl_gen_beautify
+         * is enabled.  Maybe something like \\t or some number of
+         * spaces.  The default is four spaces ' '.
+         */
+        yajl_gen_indent_string = 0x02,
+        /**
+         * Set a function and context argument that should be used to
+         * output generated json.  the function should conform to the
+         * yajl_print_t prototype while the context argument is a
+         * void * of your choosing.
+         *
+         * example:
+         *   yajl_gen_config(g, yajl_gen_print_callback, myFunc, myVoidPtr);
+         */
+        yajl_gen_print_callback = 0x04
+    } yajl_gen_option;
+
+    /** allow the modification of generator options subsequent to handle
+     *  allocation (via yajl_alloc)
+     *  \returns zero in case of errors, non-zero otherwise
+     */
+    YAJL_API int yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...);
 
     /** allocate a generator handle
      *  \param config a pointer to a structure containing parameters which
@@ -80,30 +100,7 @@ extern "C" {
      *
      *  \returns an allocated handle on success, NULL on failure (bad params)
      */
-    YAJL_API yajl_gen yajl_gen_alloc(const yajl_gen_config * config,
-                                     const yajl_alloc_funcs * allocFuncs);
-
-    /** allocate a generator handle that will print to the specified
-     *  callback rather than storing the results in an internal buffer.
-     *  \param callback   a pointer to a printer function.  May be NULL
-     *                    in which case, the results will be store in an
-     *                    internal buffer.
-     *  \param config     a pointer to a structure containing parameters
-     *                    which configure the behavior of the json
-     *                    generator.
-     *  \param allocFuncs an optional pointer to a structure which allows
-     *                    the client to overide the memory allocation
-     *                    used by yajl.  May be NULL, in which case
-     *                    malloc/free/realloc will be used.
-     *  \param ctx        a context pointer that will be passed to the
-     *                    printer callback.
-     *
-     *  \returns an allocated handle on success, NULL on failure (bad params)
-     */
-    YAJL_API yajl_gen yajl_gen_alloc2(const yajl_print_t callback,
-                                      const yajl_gen_config * config,
-                                      const yajl_alloc_funcs * allocFuncs,
-                                      void * ctx);
+    YAJL_API yajl_gen yajl_gen_alloc(const yajl_alloc_funcs * allocFuncs);
 
     /** free a generator handle */    
     YAJL_API void yajl_gen_free(yajl_gen handle);

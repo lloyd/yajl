@@ -28,47 +28,54 @@ fi
 
 ${ECHO} "using test binary: $testBin"
 
+testBinShort=`basename $testBin`
+
 testsSucceeded=0
 testsTotal=0
 
 for file in cases/*.json ; do
-  allowComments="-c"
-  forbidGarbage=""
+  allowComments=""
+  allowGarbage=""
   allowMultiple=""
-  noPartials=""
+  allowPartials=""
 
   # if the filename starts with dc_, we disallow comments for this test
   case $(basename $file) in
-    dc_*)
-      allowComments=""
+    ac_*)
+      allowComments="-c "
     ;;
-    fg_*)
-      forbidGarbage="-g"
+    ag_*)
+      allowGarbage="-g "
      ;;
     am_*)
-     allowMultiple="-m";
+     allowMultiple="-m ";
      ;;
-    np_*)
-     noPartials="-p";
+    ap_*)
+     allowPartials="-p ";
     ;;
   esac
-  ${ECHO} -n " test case: '$file': "
-  iter=1
-  success="success"
+  fileShort=`basename $file`
+  testName=`echo $fileShort | sed -e 's/\.json$//'`
 
-  ${ECHO} "$testBin $noPartials $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test "
+  ${ECHO} -n " test ($testName): "
+  iter=1
+  success="SUCCESS"
+
+  ${ECHO} -n "$testBinShort $allowPartials$allowComments$allowGarbage$allowMultiple-b $iter < $fileShort > ${fileShort}.test : "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
-  while [ $iter -lt 32  ] && [ $success = "success" ] ; do
-    $testBin $noPartials $allowComments $forbidGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
-    diff ${DIFF_FLAGS} ${file}.gold ${file}.test
+  while [ $iter -lt 32  ] && [ $success = "SUCCESS" ] ; do
+    $testBin $allowPartials $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
+    diff ${DIFF_FLAGS} ${file}.gold ${file}.test > ${file}.out
     if [ $? -eq 0 ] ; then
       if [ $iter -eq 31 ] ; then : $(( testsSucceeded += 1)) ; fi
-    else 
+    else
       success="FAILURE"
       iter=32
+      ${ECHO}
+      cat ${file}.out
     fi
     : $(( iter += 1 ))
-    rm ${file}.test
+    rm ${file}.test ${file}.out
   done
 
   ${ECHO} $success

@@ -57,10 +57,6 @@ struct yajl_handle_t {
     unsigned int flags;
 };
 
-#define allow_trailing_garbage   0x01
-#define allow_multiple_values    0x02
-#define allow_partial_values     0x04
-
 yajl_status
 yajl_do_parse(yajl_handle handle, const unsigned char * jsonText,
               size_t jsonTextLen);

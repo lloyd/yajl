@@ -156,10 +156,10 @@ static void usage(const char * progname)
                                                           "to stdout\n"
             "   -b  set the read buffer size\n"
             "   -c  allow comments\n"
-            "   -g  forbid *g*arbage after valid JSON text\n"
+            "   -g  allow *g*arbage after valid JSON text\n"
             "   -m  allows the parser to consume multiple JSON values\n"
             "       from a single string separated by whitespace\n"
-            "   -p  partial JSON documents should be considered invalid\n",
+            "   -p  partial JSON documents should not cause errors\n",
             progname);
     exit(1);
 }
@@ -173,9 +173,8 @@ main(int argc, char ** argv)
     size_t bufSize = BUF_SIZE;
     yajl_status stat;
     size_t rd;
-    yajl_parser_config cfg = { 0, 1 };
     int i, j;
-    int multiple = 0 ,trailing = 0, partial = 0;
+
     /* memory allocation debugging: allocate a structure which collects
      * statistics */
     yajlTestMemoryContext memCtx = { 0,0 };
@@ -191,10 +190,13 @@ main(int argc, char ** argv)
 
     allocFuncs.ctx = (void *) &memCtx;
 
+    /* allocate the parser */
+    hand = yajl_alloc(&callbacks, &allocFuncs, NULL);
+
     /* check arguments.  We expect exactly one! */
     for (i=1;i<argc;i++) {
         if (!strcmp("-c", argv[i])) {
-            cfg.allowComments = 1;
+            yajl_config(hand, yajl_allow_comments, 1);
         } else if (!strcmp("-b", argv[i])) {
             if (++i >= argc) usage(argv[0]);
 
@@ -212,11 +214,11 @@ main(int argc, char ** argv)
                         bufSize);
             }
         } else if (!strcmp("-g", argv[i])) {
-            trailing = 1;
+            yajl_config(hand, yajl_allow_trailing_garbage, 1);
         } else if (!strcmp("-m", argv[i])) {
-            multiple = 1; partial = 1;
+            yajl_config(hand, yajl_allow_multiple_values, 1);
         } else if (!strcmp("-p", argv[i])) {
-            partial = 1;
+            yajl_config(hand, yajl_allow_partial_values, 1);
         } else {
             fprintf(stderr, "invalid command line option: '%s'\n",
                     argv[i]);
@@ -230,16 +232,11 @@ main(int argc, char ** argv)
         fprintf(stderr,
                 "failed to allocate read buffer of %zu bytes, exiting.",
                 bufSize);
+        yajl_free(hand);
         exit(2);
     }
 
     fileName = argv[argc-1];
-
-    /* ok.  open file.  let's read and parse */
-    hand = yajl_alloc(&callbacks, &cfg, &allocFuncs, NULL);
-    if (trailing) yajl_forbid_trailing_garbage(hand);
-    if (multiple) yajl_allow_multiple_values(hand);
-    if (partial)  yajl_forbid_partial_values(hand);
 
     for (;;) {
         rd = fread((void *) fileData, 1, bufSize, stdin);

@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
 
 const char *
@@ -34,9 +35,6 @@ yajl_status_to_string(yajl_status stat)
         case yajl_status_client_canceled:
             statStr = "client canceled parse";
             break;
-        case yajl_status_insufficient_data:
-            statStr = "eof was met before the parse could complete";
-            break;
         case yajl_status_error:
             statStr = "parse error";
             break;
@@ -46,12 +44,9 @@ yajl_status_to_string(yajl_status stat)
 
 yajl_handle
 yajl_alloc(const yajl_callbacks * callbacks,
-           const yajl_parser_config * config,
-           const yajl_alloc_funcs * afs,
+           yajl_alloc_funcs * afs,
            void * ctx)
 {
-    unsigned int allowComments = 0;
-    unsigned int validateUTF8 = 0;
     yajl_handle hand = NULL;
     yajl_alloc_funcs afsBuffer;
     
@@ -71,41 +66,40 @@ yajl_alloc(const yajl_callbacks * callbacks,
     /* copy in pointers to allocation routines */
     memcpy((void *) &(hand->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
 
-    if (config != NULL) {
-        allowComments = config->allowComments;
-        validateUTF8 = config->checkUTF8;
-    }
-
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = yajl_lex_alloc(&(hand->alloc), allowComments, validateUTF8);
+    hand->lexer = NULL; 
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
-    hand->flags	    = allow_trailing_garbage | allow_partial_values;
+    hand->flags	    = 0;
     yajl_bs_init(hand->stateStack, &(hand->alloc));
-
     yajl_bs_push(hand->stateStack, yajl_state_start);    
 
     return hand;
 }
 
-
-void 
-yajl_forbid_trailing_garbage(yajl_handle h) 
+int
+yajl_config(yajl_handle h, yajl_option opt, ...)
 {
-     h->flags &= ~allow_trailing_garbage;
-}
+    int rv = 1;
+    va_list ap;
+    va_start(ap, opt);
 
-void 
-yajl_allow_multiple_values(yajl_handle h) 
-{
-     h->flags |= allow_multiple_values;
-}
+    switch(opt) {
+        case yajl_allow_comments:
+        case yajl_dont_validate_strings:
+        case yajl_allow_trailing_garbage:
+        case yajl_allow_multiple_values:
+        case yajl_allow_partial_values:
+            if (va_arg(ap, int)) h->flags |= opt;
+            else h->flags &= ~opt;
+            break;
+        default:
+            rv = 0;
+    }
+    va_end(ap);
 
-void 
-yajl_forbid_partial_values(yajl_handle h) 
-{
-     h->flags &= ~allow_partial_values;
+    return rv;
 }
 
 void
@@ -113,7 +107,10 @@ yajl_free(yajl_handle handle)
 {
     yajl_bs_free(handle->stateStack);
     yajl_buf_free(handle->decodeBuf);
-    yajl_lex_free(handle->lexer);
+    if (handle->lexer) {
+        yajl_lex_free(handle->lexer);
+        handle->lexer = NULL;
+    }
     YA_FREE(&(handle->alloc), handle);
 }
 
@@ -122,6 +119,14 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
            size_t jsonTextLen)
 {
     yajl_status status;
+
+    // lazy allocate the lexer
+    if (hand->lexer == NULL) {
+        hand->lexer = yajl_lex_alloc(&(hand->alloc),
+                                     hand->flags & yajl_allow_comments,
+                                     !(hand->flags & yajl_dont_validate_strings));
+    }
+
     status = yajl_do_parse(hand, jsonText, jsonTextLen);
     return status;
 }
@@ -130,13 +135,7 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
 yajl_status
 yajl_parse_complete(yajl_handle hand)
 {
-    /* The particular case we want to handle is a trailing number.
-     * Further input consisting of digits could cause our interpretation
-     * of the number to change (buffered "1" but "2" comes in).
-     * A very simple approach to this is to inject whitespace to terminate
-     * any number in the lex buffer.
-     */
-  return yajl_do_finish(hand);
+    return yajl_do_finish(hand);
 }
 
 unsigned char *
