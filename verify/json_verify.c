@@ -43,7 +43,7 @@ main(int argc, char ** argv)
     int retval = 0;
     int allowComments = 0;
     int checkUTF8 = 1;
-    
+
     /* check arguments.*/
     int a = 1;
     while ((a < argc) && (argv[a][0] == '-') && (strlen(argv[a]) > 1)) {
@@ -98,8 +98,8 @@ main(int argc, char ** argv)
     }
 
     /* parse any remaining buffered data */
-    stat = yajl_parse_complete(hand);
-        
+    stat = yajl_complete_parse(hand);
+
     if (stat != yajl_status_ok)
     {
         if (!quiet) {

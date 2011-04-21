@@ -127,7 +127,7 @@ extern "C" {
          */
         yajl_dont_validate_strings     = 0x02,
         /**
-         * By default, upon calls to yajl_parse_complete(), yajl will
+         * By default, upon calls to yajl_complete_parse(), yajl will
          * ensure the entire input text was consumed and will raise an error
          * otherwise.  Enabling this flag will cause yajl to disable this
          * check.  This can be useful when parsing json out of a that contains more
@@ -145,7 +145,7 @@ extern "C" {
          */
         yajl_allow_multiple_values = 0x08,
         /**
-         * When yajl_parse_complete() is called the parser will
+         * When yajl_complete_parse() is called the parser will
          * check that the top level value was completely consumed.  I.E.,
          * if called whilst in the middle of parsing a value
          * yajl will enter an error state (premature EOF).  Setting this
@@ -181,7 +181,7 @@ extern "C" {
      *
      *  \param hand - a handle to the json parser allocated with yajl_alloc
      */
-    YAJL_API yajl_status yajl_parse_complete(yajl_handle hand);
+    YAJL_API yajl_status yajl_complete_parse(yajl_handle hand);
 
     /** get an error string describing the state of the
      *  parse.

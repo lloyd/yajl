@@ -133,7 +133,7 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
 
 
 yajl_status
-yajl_parse_complete(yajl_handle hand)
+yajl_complete_parse(yajl_handle hand)
 {
     return yajl_do_finish(hand);
 }

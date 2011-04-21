@@ -253,7 +253,7 @@ main(int argc, char ** argv)
         if (stat != yajl_status_ok) break;
     }
 
-    stat = yajl_parse_complete(hand);
+    stat = yajl_complete_parse(hand);
     if (stat != yajl_status_ok)
     {
         unsigned char * str = yajl_get_error(hand, 0, fileData, rd);

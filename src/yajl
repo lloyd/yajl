@@ -167,7 +167,7 @@ main(int argc, char ** argv)
         
         if (done)
             /* parse any remaining buffered data */
-            stat = yajl_parse_complete(hand);
+            stat = yajl_complete_parse(hand);
         else
             /* read file data, pass to parser */
             stat = yajl_parse(hand, fileData, rd);
