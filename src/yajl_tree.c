@@ -449,7 +449,7 @@ yajl_val yajl_tree_parse (const char *input,
     if (status != yajl_status_ok) {
         if (error_buffer != NULL && error_buffer_size > 0) {
             snprintf(
-                error_buffer, error_buffer_size,
+                error_buffer, error_buffer_size, "%s",
                 (char *) yajl_get_error(handle, 1,
                                         (const unsigned char *) input,
                                         strlen(input)));
