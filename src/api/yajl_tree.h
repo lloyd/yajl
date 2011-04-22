@@ -31,15 +31,14 @@
 
 #include <yajl/yajl_common.h>
 
-/* Forward declaration, because "yajl_value_object_t" and "yajl_value_array_t"
- * contain "yajl_value_t" and "yajl_value_t" can be an object or an array. */
-struct yajl_value_s;
-typedef struct yajl_value_s yajl_value_t;
+/* Forward declaration, because "yajl_val_object_t" and "yajl_val_array"
+ * contain "yajl_val" and "yajl_val" can be an object or an array. */
+typedef struct yajl_val_s * yajl_val;
 
 #define YAJL_NUMBER_INT_VALID    0x01
 #define YAJL_NUMBER_DOUBLE_VALID 0x02
 /** Structure describing a JSON number. */
-struct yajl_value_number_s
+typedef struct yajl_val_number_s
 {
     /** Holds the raw value of the number, in string form. */
     char   *value_raw;
@@ -50,38 +49,35 @@ struct yajl_value_number_s
     /** Signals whether the \em value_int and \em value_double members are
      * valid. See \c YAJL_NUMBER_INT_VALID and \c YAJL_NUMBER_DOUBLE_VALID. */
     unsigned int flags;
-};
-typedef struct yajl_value_number_s yajl_value_number_t;
+} yajl_val_number;
 
 /**
  * Structure describing a JSON object.
  *
- * \sa yajl_value_array_s
+ * \sa yajl_val_array_s
  */
-struct yajl_value_object_s
+typedef struct yajl_val_object_s
 {
     /** Array of keys in the JSON object. */
-    yajl_value_t **keys;
+    yajl_val *keys;
     /** Array of values in the JSON object. */
-    yajl_value_t **values;
+    yajl_val *values;
     /** Number of key-value-pairs in the JSON object. */
-    size_t children_num;
-};
-typedef struct yajl_value_object_s yajl_value_object_t;
+    size_t len;
+} yajl_val_object;
 
 /**
  * Structure describing a JSON array.
  *
- * \sa yajl_value_object_s
+ * \sa yajl_val_object_s
  */
-struct yajl_value_array_s
+typedef struct yajl_val_array_s
 {
     /** Array of elements in the JSON array. */
-    yajl_value_t **values;
+    yajl_val *values;
     /** Number of elements in the JSON array. */
-    size_t values_num;
-};
-typedef struct yajl_value_array_s yajl_value_array_t;
+    size_t len;
+} yajl_val_array;
 
 #define YAJL_TYPE_STRING 1
 #define YAJL_TYPE_NUMBER 2
@@ -99,10 +95,10 @@ typedef struct yajl_value_array_s yajl_value_array_t;
  * the "YAJL_IS_*" and "YAJL_TO_*" macros below to check for the correct type
  * and cast the struct.
  *
- * \sa yajl_value_string_t, yajl_value_number_t, yajl_value_object_t,
- * yajl_value_array_t
+ * \sa yajl_val_string, yajl_val_number, yajl_val_object,
+ * yajl_val_array
  */
-struct yajl_value_s
+struct yajl_val_s
 {
     /** Type of the value contained. Use the "YAJL_IS_*" macors to check for a
      * specific type. */
@@ -112,9 +108,9 @@ struct yajl_value_s
     union
     {
         char * string;
-        yajl_value_number_t number;
-        yajl_value_object_t object;
-        yajl_value_array_t  array;
+        yajl_val_number number;
+        yajl_val_object object;
+        yajl_val_array  array;
     } data;
 };
 
@@ -140,8 +136,8 @@ struct yajl_value_s
  * null terminated message describing the error in more detail is stored in
  * \em error_buffer if it is not \c NULL.
  */
-YAJL_API yajl_value_t *yajl_tree_parse (const char *input,
-                                        char *error_buffer, size_t error_buffer_size);
+YAJL_API yajl_val yajl_tree_parse (const char *input,
+                                   char *error_buffer, size_t error_buffer_size);
 
 /**
  * Free a parse tree.
@@ -151,68 +147,26 @@ YAJL_API yajl_value_t *yajl_tree_parse (const char *input,
  * \param v Pointer to a JSON value returned by "yajl_tree_parse". Passing NULL
  * is valid and results in a no-op.
  */
-YAJL_API void yajl_tree_free (yajl_value_t *v);
+YAJL_API void yajl_tree_free (yajl_val v);
 
 /**
  * Access a nested value.
  */
-YAJL_API yajl_value_t * yajl_tree_get(yajl_value_t * parent,
-                                      const char ** path,
-                                      int type);
+YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, int type);
 
-/**
- * Checks if value is a string.
- *
- * Returns true if the value is a string, false otherwise.
- */
+/* Various convenience macros to check the type of a `yajl_val` */
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_STRING))
-
-/**
- * Checks if value is a number.
- *
- * Returns true if the value is a number, false otherwise.
- */
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_NUMBER))
-
-/**
- * Checks if value is an object.
- *
- * Returns true if the value is a object, false otherwise.
- */
 #define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_OBJECT))
-
-/**
- * Checks if value is an array.
- *
- * Returns true if the value is a array, false otherwise.
- */
 #define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_ARRAY ))
-
-/**
- * Checks if value is true.
- *
- * Returns true if the value is a boolean and true, false otherwise.
- */
 #define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_TRUE  ))
-
-/**
- * Checks if value is false.
- *
- * Returns true if the value is a boolean and false, false otherwise.
- */
 #define YAJL_IS_FALSE(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_FALSE ))
-
-/**
- * Checks if value is null.
- *
- * Returns true if the value is null, false otherwise.
- */
 #define YAJL_IS_NULL(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_NULL  ))
 
 /**
  * Convert value to string.
  *
- * Returns a pointer to a yajl_value_string_t or NULL if the value is not a
+ * Returns a pointer to a yajl_val_string or NULL if the value is not a
  * string.
  */
 #define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string : NULL)
@@ -220,7 +174,7 @@ YAJL_API yajl_value_t * yajl_tree_get(yajl_value_t * parent,
 /**
  * Convert value to number.
  *
- * Returns a pointer to a yajl_value_number_t or NULL if the value is not a
+ * Returns a pointer to a yajl_val_number or NULL if the value is not a
  * number.
  */
 #define YAJL_TO_NUMBER(v) (YAJL_IS_NUMBER(v) ? &(v)->data.number : NULL)
@@ -228,7 +182,7 @@ YAJL_API yajl_value_t * yajl_tree_get(yajl_value_t * parent,
 /**
  * Convert value to object.
  *
- * Returns a pointer to a yajl_value_object_t or NULL if the value is not an
+ * Returns a pointer to a yajl_val_object or NULL if the value is not an
  * object.
  */
 #define YAJL_TO_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->data.object : NULL)
@@ -236,10 +190,9 @@ YAJL_API yajl_value_t * yajl_tree_get(yajl_value_t * parent,
 /**
  * Convert value to array.
  *
- * Returns a pointer to a yajl_value_array_t or NULL if the value is not an
+ * Returns a pointer to a yajl_val_array or NULL if the value is not an
  * array.
  */
 #define YAJL_TO_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->data.array  : NULL)
 
 #endif /* YAJL_TREE_H */
-/* vim: set sw=2 sts=2 et : */

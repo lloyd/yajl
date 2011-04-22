@@ -25,7 +25,7 @@ int
 main(void)
 {
     size_t rd;
-    yajl_value_t * node;
+    yajl_val node;
     char errbuf[1024];
 
     /* null plug buffers */
@@ -59,7 +59,7 @@ main(void)
     /* now extract a nested value from the config file */
     {
         const char * path[] = { "Logging", "timeFormat", (const char *) 0 };
-        yajl_value_t * v = yajl_tree_get(node, path, YAJL_TYPE_STRING);
+        yajl_val v = yajl_tree_get(node, path, YAJL_TYPE_STRING);
         if (v) printf("Logging/timeFomat: %s\n", YAJL_TO_STRING(v));
         else   printf("no such node: %s/%s\n", path[0], path[1]);
     }

@@ -30,15 +30,15 @@ struct stack_elem_s;
 typedef struct stack_elem_s stack_elem_t;
 struct stack_elem_s
 {
-    yajl_value_t *key;
-    yajl_value_t *value;
+    yajl_val key;
+    yajl_val value;
     stack_elem_t *next;
 };
 
 struct context_s
 {
     stack_elem_t *stack;
-    yajl_value_t *root;
+    yajl_val root;
     char *errbuf;
     size_t errbuf_size;
 };
@@ -50,9 +50,9 @@ typedef struct context_s context_t;
         return (retval);                                                \
     } while (0)                                                         \
 
-static yajl_value_t *value_alloc (uint8_t type)
+static yajl_val value_alloc (uint8_t type)
 {
-    yajl_value_t *v;
+    yajl_val v;
 
     v = malloc (sizeof (*v));
     if (v == NULL) return (NULL);
@@ -62,15 +62,15 @@ static yajl_value_t *value_alloc (uint8_t type)
     return (v);
 }
 
-static void yajl_object_free (yajl_value_t *v)
+static void yajl_object_free (yajl_val v)
 {
-    yajl_value_object_t *o;
+    yajl_val_object *o;
     size_t i;
 
     o = YAJL_TO_OBJECT (v);
     if (o == NULL) return;
 
-    for (i = 0; i < o->children_num; i++)
+    for (i = 0; i < o->len; i++)
     {
         yajl_tree_free (o->keys[i]);
         o->keys[i] = NULL;
@@ -83,15 +83,15 @@ static void yajl_object_free (yajl_value_t *v)
     free (v);
 }
 
-static void yajl_array_free (yajl_value_t *v)
+static void yajl_array_free (yajl_val v)
 {
-    yajl_value_array_t *a;
+    yajl_val_array *a;
     size_t i;
 
     a = YAJL_TO_ARRAY (v);
     if (a == NULL) return;
 
-    for (i = 0; i < a->values_num; i++)
+    for (i = 0; i < a->len; i++)
     {
         yajl_tree_free (a->values[i]);
         a->values[i] = NULL;
@@ -108,7 +108,7 @@ static void yajl_array_free (yajl_value_t *v)
  * reached (an appropriate closing bracket has been read), the value is popped
  * off the stack and added to the enclosing object using "context_add_value".
  */
-static int context_push (context_t *ctx, yajl_value_t *v)
+static int context_push(context_t *ctx, yajl_val v)
 {
     stack_elem_t *stack;
 
@@ -128,10 +128,10 @@ static int context_push (context_t *ctx, yajl_value_t *v)
     return (0);
 }
 
-static yajl_value_t *context_pop (context_t *ctx)
+static yajl_val context_pop(context_t *ctx)
 {
     stack_elem_t *stack;
-    yajl_value_t *v;
+    yajl_val v;
 
     if (ctx->stack == NULL)
         RETURN_ERROR (ctx, NULL, "context_pop: "
@@ -147,11 +147,11 @@ static yajl_value_t *context_pop (context_t *ctx)
     return (v);
 }
 
-static int object_add_keyval (context_t *ctx,
-                              yajl_value_t *obj, yajl_value_t *key, yajl_value_t *value)
+static int object_add_keyval(context_t *ctx,
+                             yajl_val obj, yajl_val key, yajl_val value)
 {
-    yajl_value_object_t *o;
-    yajl_value_t **tmp;
+    yajl_val_object *o;
+    yajl_val *tmp;
 
     /* We're checking for NULL in "context_add_value" or its callers. */
     assert (ctx != NULL);
@@ -166,28 +166,28 @@ static int object_add_keyval (context_t *ctx,
     o = YAJL_TO_OBJECT (obj);
     assert (o != NULL);
 
-    tmp = realloc (o->keys, sizeof (*o->keys) * (o->children_num + 1));
+    tmp = realloc (o->keys, sizeof (*o->keys) * (o->len + 1));
     if (tmp == NULL)
         RETURN_ERROR (ctx, ENOMEM, "Out of memory");
     o->keys = tmp;
 
-    tmp = realloc (o->values, sizeof (*o->values) * (o->children_num + 1));
+    tmp = realloc (o->values, sizeof (*o->values) * (o->len + 1));
     if (tmp == NULL)
         RETURN_ERROR (ctx, ENOMEM, "Out of memory");
     o->values = tmp;
 
-    o->keys[o->children_num] = key;
-    o->values[o->children_num] = value;
-    o->children_num++;
+    o->keys[o->len] = key;
+    o->values[o->len] = value;
+    o->len++;
 
     return (0);
 }
 
 static int array_add_value (context_t *ctx,
-                            yajl_value_t *array, yajl_value_t *value)
+                            yajl_val array, yajl_val value)
 {
-    yajl_value_array_t *a;
-    yajl_value_t **tmp;
+    yajl_val_array *a;
+    yajl_val *tmp;
 
     /* We're checking for NULL pointers in "context_add_value" or its
      * callers. */
@@ -199,12 +199,12 @@ static int array_add_value (context_t *ctx,
     a = YAJL_TO_ARRAY (array);
     assert (a != NULL);
 
-    tmp = realloc (a->values, sizeof (*a->values) * (a->values_num + 1));
+    tmp = realloc (a->values, sizeof (*a->values) * (a->len + 1));
     if (tmp == NULL)
         RETURN_ERROR (ctx, ENOMEM, "Out of memory");
     a->values = tmp;
-    a->values[a->values_num] = value;
-    a->values_num++;
+    a->values[a->len] = value;
+    a->len++;
 
     return (0);
 }
@@ -213,7 +213,7 @@ static int array_add_value (context_t *ctx,
  * Add a value to the value on top of the stack or the "root" member in the
  * context if the end of the parsing process is reached.
  */
-static int context_add_value (context_t *ctx, yajl_value_t *v)
+static int context_add_value (context_t *ctx, yajl_val v)
 {
     /* We're checking for NULL values in all the calling functions. */
     assert (ctx != NULL);
@@ -250,7 +250,7 @@ static int context_add_value (context_t *ctx, yajl_value_t *v)
         }
         else /* if (ctx->key != NULL) */
         {
-            yajl_value_t *key;
+            yajl_val key;
 
             key = ctx->stack->key;
             ctx->stack->key = NULL;
@@ -272,7 +272,7 @@ static int context_add_value (context_t *ctx, yajl_value_t *v)
 static int handle_string (void *ctx,
                           const unsigned char *string, size_t string_length)
 {
-    yajl_value_t *v;
+    yajl_val v;
 
     v = value_alloc (YAJL_TYPE_STRING);
     if (v == NULL)
@@ -292,8 +292,8 @@ static int handle_string (void *ctx,
 
 static int handle_number (void *ctx, const char *string, size_t string_length)
 {
-    yajl_value_t *v;
-    yajl_value_number_t *n;
+    yajl_val v;
+    yajl_val_number *n;
     char *endptr;
 
     v = value_alloc (YAJL_TYPE_NUMBER);
@@ -329,8 +329,8 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
 
 static int handle_start_map (void *ctx)
 {
-    yajl_value_t *v;
-    yajl_value_object_t *o;
+    yajl_val v;
+    yajl_val_object *o;
 
     v = value_alloc (YAJL_TYPE_OBJECT);
     if (v == NULL)
@@ -339,14 +339,14 @@ static int handle_start_map (void *ctx)
     o = YAJL_TO_OBJECT (v);
     o->keys = NULL;
     o->values = NULL;
-    o->children_num = 0;
+    o->len = 0;
 
     return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
 
 static int handle_end_map (void *ctx)
 {
-    yajl_value_t *v;
+    yajl_val v;
 
     v = context_pop (ctx);
     if (v == NULL)
@@ -357,8 +357,8 @@ static int handle_end_map (void *ctx)
 
 static int handle_start_array (void *ctx)
 {
-    yajl_value_t *v;
-    yajl_value_array_t *a;
+    yajl_val v;
+    yajl_val_array *a;
 
     v = value_alloc (YAJL_TYPE_ARRAY);
     if (v == NULL)
@@ -366,14 +366,14 @@ static int handle_start_array (void *ctx)
 
     a = YAJL_TO_ARRAY (v);
     a->values = NULL;
-    a->values_num = 0;
+    a->len = 0;
 
     return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
 
 static int handle_end_array (void *ctx)
 {
-    yajl_value_t *v;
+    yajl_val v;
 
     v = context_pop (ctx);
     if (v == NULL)
@@ -384,7 +384,7 @@ static int handle_end_array (void *ctx)
 
 static int handle_boolean (void *ctx, int boolean_value)
 {
-    yajl_value_t *v;
+    yajl_val v;
 
     v = value_alloc (boolean_value ? YAJL_TYPE_TRUE : YAJL_TYPE_FALSE);
     if (v == NULL)
@@ -395,7 +395,7 @@ static int handle_boolean (void *ctx, int boolean_value)
 
 static int handle_null (void *ctx)
 {
-    yajl_value_t *v;
+    yajl_val v;
 
     v = value_alloc (YAJL_TYPE_NULL);
     if (v == NULL)
@@ -407,8 +407,8 @@ static int handle_null (void *ctx)
 /*
  * Public functions
  */
-yajl_value_t *yajl_tree_parse (const char *input,
-                               char *error_buffer, size_t error_buffer_size)
+yajl_val yajl_tree_parse (const char *input,
+                          char *error_buffer, size_t error_buffer_size)
 {
     static const yajl_callbacks callbacks =
         {
@@ -442,9 +442,9 @@ yajl_value_t *yajl_tree_parse (const char *input,
     handle = yajl_alloc (&callbacks, NULL, &ctx);
     yajl_config(handle, yajl_allow_comments, 1);
 
-    status = yajl_parse (handle,
-                         (unsigned char *) input,
-                         strlen (input));
+    status = yajl_parse(handle,
+                        (unsigned char *) input,
+                        strlen (input));
     status = yajl_complete_parse (handle);
     if (status != yajl_status_ok) {
         if (error_buffer != NULL && error_buffer_size > 0) {
@@ -462,53 +462,51 @@ yajl_value_t *yajl_tree_parse (const char *input,
     return (ctx.root);
 }
 
-yajl_value_t * yajl_tree_get(yajl_value_t * n,
-                             const char ** path,
-                             int type)
+yajl_val yajl_tree_get(yajl_val n, const char ** path, int type)
 {
     if (!path) return NULL;
     while (n && *path) {
         unsigned int i;
 
         if (n->type != YAJL_TYPE_OBJECT) return NULL;
-        for (i = 0; i < n->data.object.children_num; i++) {
+        for (i = 0; i < n->data.object.len; i++) {
             if (!strcmp(*path, n->data.object.keys[i]->data.string)) {
                 n = n->data.object.values[i];
                 break;
             }
         }
-        if (i == n->data.object.children_num) return NULL;
+        if (i == n->data.object.len) return NULL;
         path++;
     }
     return n;
 }
 
-void yajl_tree_free (yajl_value_t *v)
+void yajl_tree_free (yajl_val v)
 {
     if (v == NULL) return;
 
-    if (YAJL_IS_STRING (v))
+    if (YAJL_IS_STRING(v))
     {
-        free (v->data.string);
-        free (v);
+        free(v->data.string);
+        free(v);
     }
-    else if (YAJL_IS_NUMBER (v))
+    else if (YAJL_IS_NUMBER(v))
     {
-        yajl_value_number_t *n = YAJL_TO_NUMBER (v);
+        yajl_val_number *n = YAJL_TO_NUMBER(v);
 
-        free (n->value_raw);
-        free (v);
+        free(n->value_raw);
+        free(v);
     }
-    else if (YAJL_TO_OBJECT (v))
+    else if (YAJL_TO_OBJECT(v))
     {
-        yajl_object_free (v);
+        yajl_object_free(v);
     }
-    else if (YAJL_TO_ARRAY (v))
+    else if (YAJL_TO_ARRAY(v))
     {
-        yajl_array_free (v);
+        yajl_array_free(v);
     }
     else /* if (YAJL_TYPE_TRUE or YAJL_TYPE_FALSE or YAJL_TYPE_NULL) */
     {
-        free (v);
+        free(v);
     }
 }
