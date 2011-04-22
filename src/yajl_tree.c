@@ -39,6 +39,8 @@
 #include "api/yajl_tree.h"
 #include "api/yajl_parse.h"
 
+#define YAJL_TO_STRING2(v) (YAJL_IS_STRING(v) ? &(v)->data.string : NULL)
+
 #define STATUS_CONTINUE 1
 #define STATUS_ABORT    0
 
@@ -290,7 +292,7 @@ static int context_add_value (context_t *ctx, yajl_value_t *v) /* {{{ */
 } /* }}} int context_add_value */
 
 static int handle_string (void *ctx, /* {{{ */
-    const unsigned char *string, unsigned int string_length)
+    const unsigned char *string, size_t string_length)
 {
   yajl_value_t *v;
   yajl_value_string_t *s;
@@ -298,7 +300,7 @@ static int handle_string (void *ctx, /* {{{ */
   v = value_alloc (YAJL_TYPE_STRING);
   if (v == NULL)
     RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
-  s = YAJL_TO_STRING (v);
+  s = YAJL_TO_STRING2 (v);
 
   s->value = malloc (string_length + 1);
   if (s->value == NULL)
@@ -313,13 +315,13 @@ static int handle_string (void *ctx, /* {{{ */
 } /* }}} int handle_string */
 
 static int handle_number (void *ctx, /* {{{ */
-    const char *string, unsigned int string_length)
+    const char *string, size_t string_length)
 {
   yajl_value_t *v;
   yajl_value_number_t *n;
   char *endptr;
 
-  v = value_alloc (YAJL_TYPE_STRING);
+  v = value_alloc (YAJL_TYPE_NUMBER);
   if (v == NULL)
     RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
   n = YAJL_TO_NUMBER (v);
@@ -448,12 +450,6 @@ yajl_value_t *yajl_tree_parse (const char *input, /* {{{ */
     /* end array   = */ handle_end_array
   };
 
-  yajl_parser_config parser_config =
-  {
-    /* allowComments = */ 1,
-    /* checkUTF8     = */ 0
-  };
-
   context_t ctx =
   {
     /* key         = */ NULL,
@@ -468,22 +464,49 @@ yajl_value_t *yajl_tree_parse (const char *input, /* {{{ */
   if (error_buffer != NULL)
     memset (error_buffer, 0, error_buffer_size);
 
-  handle = yajl_alloc (&callbacks, &parser_config,
-      /* alloc funcs = */ NULL, &ctx);
+  handle = yajl_alloc (&callbacks, NULL, &ctx);
+  yajl_config(handle, yajl_allow_comments, 1);
 
   status = yajl_parse (handle,
-      (unsigned char *) input,
-      (unsigned int) strlen (input));
-  if (status != yajl_status_ok)
-    return (NULL);
-
-  status = yajl_parse_complete (handle);
-  if (status != yajl_status_ok)
-    return (NULL);
+                       (unsigned char *) input,
+                       strlen (input));
+  status = yajl_complete_parse (handle);
+  if (status != yajl_status_ok) {
+      if (error_buffer != NULL && error_buffer_size > 0) {
+          snprintf(
+              error_buffer, error_buffer_size,
+              (char *) yajl_get_error(handle, 1,
+                                      (const unsigned char *) input,
+                                      strlen(input)));
+      }
+      yajl_free (handle);
+      return NULL;
+  }
 
   yajl_free (handle);
   return (ctx.root);
 } /* }}} yajl_value_t *yajl_tree_parse */
+
+yajl_value_t * yajl_tree_get(yajl_value_t * n,
+                             const char ** path,
+                             int type)
+{
+    if (!path) return NULL;
+    while (n && *path) {
+        unsigned int i;
+
+        if (n->type != YAJL_TYPE_OBJECT) return NULL;
+        for (i = 0; i < n->data.object.children_num; i++) {
+            if (!strcmp(*path, n->data.object.keys[i]->data.string.value)) {
+                n = n->data.object.values[i];
+                break;
+            }
+        }
+        if (i == n->data.object.children_num) return NULL;
+        path++;
+    }
+    return n;
+}
 
 void yajl_tree_free (yajl_value_t *v) /* {{{ */
 {
@@ -492,7 +515,7 @@ void yajl_tree_free (yajl_value_t *v) /* {{{ */
 
   if (YAJL_IS_STRING (v))
   {
-    yajl_value_string_t *s = YAJL_TO_STRING (v);
+    yajl_value_string_t *s = YAJL_TO_STRING2 (v);
 
     free (s->value);
     free (v);
@@ -524,5 +547,3 @@ void yajl_tree_free (yajl_value_t *v) /* {{{ */
     return;
   }
 } /* void yajl_tree_free */
-
-/* vim: set sw=2 sts=2 et fdm=marker : */

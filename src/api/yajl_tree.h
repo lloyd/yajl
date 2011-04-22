@@ -178,6 +178,13 @@ YAJL_API yajl_value_t *yajl_tree_parse (const char *input,
 YAJL_API void yajl_tree_free (yajl_value_t *v);
 
 /**
+ * Access a nested value.
+ */
+YAJL_API yajl_value_t * yajl_tree_get(yajl_value_t * parent,
+                                      const char ** path,
+                                      int type);
+
+/**
  * Checks if value is a string.
  *
  * Returns true if the value is a string, false otherwise.
@@ -232,7 +239,7 @@ YAJL_API void yajl_tree_free (yajl_value_t *v);
  * Returns a pointer to a yajl_value_string_t or NULL if the value is not a
  * string.
  */
-#define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? &(v)->data.string : NULL)
+#define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string.value : NULL)
 
 /**
  * Convert value to number.
