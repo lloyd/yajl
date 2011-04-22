@@ -45,7 +45,7 @@ typedef struct yajl_bytestack_t
 
 /* initialize a bytestack */
 #define yajl_bs_free(obs)                 \
-    if ((obs).stack) (obs).yaf->free((obs).yaf->ctx, (obs).stack);   
+    if ((obs).stack) (obs).yaf->free((obs).yaf->ctx, (obs).stack);
 
 #define yajl_bs_current(obs)               \
     (assert((obs).used > 0), (obs).stack[(obs).used - 1])
@@ -58,12 +58,12 @@ typedef struct yajl_bytestack_t
     }                                                   \
     (obs).stack[((obs).used)++] = (byte);               \
 }
-    
+
 /* removes the top item of the stack, returns nothing */
 #define yajl_bs_pop(obs) { ((obs).used)--; }
 
 #define yajl_bs_set(obs, byte)                          \
-    (obs).stack[((obs).used) - 1] = (byte);             
-    
+    (obs).stack[((obs).used) - 1] = (byte);
+
 
 #endif

@@ -41,15 +41,15 @@ typedef struct yajl_value_s yajl_value_t;
 /** Structure describing a JSON number. */
 struct yajl_value_number_s
 {
-  /** Holds the raw value of the number, in string form. */
-  char   *value_raw;
-  /** Holds the integer value of the number, if possible. */
-  int64_t value_int;
-  /** Holds the double value of the number, if possible. */
-  double  value_double;
-  /** Signals whether the \em value_int and \em value_double members are
-   * valid. See \c YAJL_NUMBER_INT_VALID and \c YAJL_NUMBER_DOUBLE_VALID. */
-  unsigned int flags;
+    /** Holds the raw value of the number, in string form. */
+    char   *value_raw;
+    /** Holds the integer value of the number, if possible. */
+    int64_t value_int;
+    /** Holds the double value of the number, if possible. */
+    double  value_double;
+    /** Signals whether the \em value_int and \em value_double members are
+     * valid. See \c YAJL_NUMBER_INT_VALID and \c YAJL_NUMBER_DOUBLE_VALID. */
+    unsigned int flags;
 };
 typedef struct yajl_value_number_s yajl_value_number_t;
 
@@ -60,12 +60,12 @@ typedef struct yajl_value_number_s yajl_value_number_t;
  */
 struct yajl_value_object_s
 {
-  /** Array of keys in the JSON object. */
-  yajl_value_t **keys;
-  /** Array of values in the JSON object. */
-  yajl_value_t **values;
-  /** Number of key-value-pairs in the JSON object. */
-  size_t children_num;
+    /** Array of keys in the JSON object. */
+    yajl_value_t **keys;
+    /** Array of values in the JSON object. */
+    yajl_value_t **values;
+    /** Number of key-value-pairs in the JSON object. */
+    size_t children_num;
 };
 typedef struct yajl_value_object_s yajl_value_object_t;
 
@@ -76,10 +76,10 @@ typedef struct yajl_value_object_s yajl_value_object_t;
  */
 struct yajl_value_array_s
 {
-  /** Array of elements in the JSON array. */
-  yajl_value_t **values;
-  /** Number of elements in the JSON array. */
-  size_t values_num;
+    /** Array of elements in the JSON array. */
+    yajl_value_t **values;
+    /** Number of elements in the JSON array. */
+    size_t values_num;
 };
 typedef struct yajl_value_array_s yajl_value_array_t;
 
@@ -104,18 +104,18 @@ typedef struct yajl_value_array_s yajl_value_array_t;
  */
 struct yajl_value_s
 {
-  /** Type of the value contained. Use the "YAJL_IS_*" macors to check for a
-   * specific type. */
-  uint8_t type;
-  /** Type-specific data. Use the "YAJL_TO_*" macros to access these
-   * members. */
-  union
-  {
-    char * string;
-    yajl_value_number_t number;
-    yajl_value_object_t object;
-    yajl_value_array_t  array;
-  } data;
+    /** Type of the value contained. Use the "YAJL_IS_*" macors to check for a
+     * specific type. */
+    uint8_t type;
+    /** Type-specific data. Use the "YAJL_TO_*" macros to access these
+     * members. */
+    union
+    {
+        char * string;
+        yajl_value_number_t number;
+        yajl_value_object_t object;
+        yajl_value_array_t  array;
+    } data;
 };
 
 /**
@@ -141,7 +141,7 @@ struct yajl_value_s
  * \em error_buffer if it is not \c NULL.
  */
 YAJL_API yajl_value_t *yajl_tree_parse (const char *input,
-    char *error_buffer, size_t error_buffer_size);
+                                        char *error_buffer, size_t error_buffer_size);
 
 /**
  * Free a parse tree.
