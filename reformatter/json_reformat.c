@@ -24,67 +24,58 @@
 static int reformat_null(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_null(g);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_null(g);
 }
 
 static int reformat_boolean(void * ctx, int boolean)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_bool(g, boolean);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_bool(g, boolean);
 }
 
 static int reformat_number(void * ctx, const char * s, size_t l)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_number(g, s, l);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_number(g, s, l);
 }
 
 static int reformat_string(void * ctx, const unsigned char * stringVal,
                            size_t stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_string(g, stringVal, stringLen);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_string(g, stringVal, stringLen);
 }
 
 static int reformat_map_key(void * ctx, const unsigned char * stringVal,
                             size_t stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_string(g, stringVal, stringLen);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_string(g, stringVal, stringLen);
 }
 
 static int reformat_start_map(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_map_open(g);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_map_open(g);
 }
 
 
 static int reformat_end_map(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_map_close(g);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_map_close(g);
 }
 
 static int reformat_start_array(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_array_open(g);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_array_open(g);
 }
 
 static int reformat_end_array(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    yajl_gen_array_close(g);
-    return 1;
+    return yajl_gen_status_ok == yajl_gen_array_close(g);
 }
 
 static yajl_callbacks callbacks = {
@@ -126,6 +117,7 @@ main(int argc, char ** argv)
 
     g = yajl_gen_alloc(NULL);
     yajl_gen_config(g, yajl_gen_beautify, 1);
+    yajl_gen_config(g, yajl_gen_validate_utf8, 1);
 
     /* ok.  open file.  let's read and parse */
     hand = yajl_alloc(&callbacks, NULL, (void *) g);
@@ -145,7 +137,8 @@ main(int argc, char ** argv)
                     yajl_config(hand, yajl_dont_validate_strings, 1);
                     break;
                 default:
-                    fprintf(stderr, "unrecognized option: '%c'\n\n", argv[a][i]);
+                    fprintf(stderr, "unrecognized option: '%c'\n\n",
+                            argv[a][i]);
                     usage(argv[0]);
             }
         }
@@ -156,8 +149,7 @@ main(int argc, char ** argv)
     }
 
 
-
-	for (;;) {
+    for (;;) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
 
         if (rd == 0) {

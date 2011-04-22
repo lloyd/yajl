@@ -56,6 +56,7 @@ yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
 
     switch(opt) {
         case yajl_gen_beautify:
+        case yajl_gen_validate_utf8:
             if (va_arg(ap, int)) g->flags |= opt;
             else g->flags &= ~opt;
             break;
@@ -241,6 +242,14 @@ yajl_gen_status
 yajl_gen_string(yajl_gen g, const unsigned char * str,
                 size_t len)
 {
+    // if validation is enabled, check that the string is valid utf8
+    // XXX: This checking could be done a little faster, in the same pass as
+    // the string encoding
+    if (g->flags & yajl_gen_validate_utf8) {
+        if (!yajl_string_validate_utf8(str, len)) {
+            return yajl_gen_invalid_string;
+        }
+    }
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, "\"", 1);
     yajl_string_encode2(g->print, g->ctx, str, len);

@@ -49,7 +49,11 @@ extern "C" {
         yajl_gen_invalid_number,
         /** A print callback was passed in, so there is no internal
          * buffer to get from */
-        yajl_gen_no_buf
+        yajl_gen_no_buf,
+        /** returned from yajl_gen_string() when the yajl_gen_validate_utf8
+         *  option is enabled and an invalid was passed by client code.
+         */
+        yajl_gen_invalid_string
     } yajl_gen_status;
 
     /** an opaque handle to a generator */
@@ -81,7 +85,13 @@ extern "C" {
          * example:
          *   yajl_gen_config(g, yajl_gen_print_callback, myFunc, myVoidPtr);
          */
-        yajl_gen_print_callback = 0x04
+        yajl_gen_print_callback = 0x04,
+        /**
+         * Normally the generator does not validate that strings you
+         * pass to it via yajl_gen_string() are valid UTF8.  Enabling
+         * this option will cause it to do so.
+         */
+        yajl_gen_validate_utf8 = 0x08
     } yajl_gen_option;
 
     /** allow the modification of generator options subsequent to handle

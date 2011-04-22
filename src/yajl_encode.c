@@ -177,3 +177,45 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
     }
     yajl_buf_append(buf, str + beg, end - beg);
 }
+
+#define ADV_PTR s++; if (!(len--)) return 0;
+
+int yajl_string_validate_utf8(const unsigned char * s, size_t len)
+{
+    if (!len) return 1;
+    if (!s) return 0;
+    
+    while (len--) {
+        /* single byte */
+        if (*s <= 0x7f) {
+            /* noop */
+        }
+        /* two byte */ 
+        else if ((*s >> 5) == 0x6) {
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+        }
+        /* three byte */
+        else if ((*s >> 4) == 0x0e) {
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+        }
+        /* four byte */        
+        else if ((*s >> 3) == 0x1e) {
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+        } else {
+            return 0;
+        }
+        
+        s++;
+    }
+    
+    return 1;
+}
