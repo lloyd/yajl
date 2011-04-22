@@ -41,11 +41,11 @@ typedef struct yajl_val_s * yajl_val;
 typedef struct yajl_val_number_s
 {
     /** Holds the raw value of the number, in string form. */
-    char   *value_raw;
+    char   *r;
     /** Holds the integer value of the number, if possible. */
-    int64_t value_int;
+    long long i;
     /** Holds the double value of the number, if possible. */
-    double  value_double;
+    double  d;
     /** Signals whether the \em value_int and \em value_double members are
      * valid. See \c YAJL_NUMBER_INT_VALID and \c YAJL_NUMBER_DOUBLE_VALID. */
     unsigned int flags;
@@ -157,42 +157,34 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, int type);
 /* Various convenience macros to check the type of a `yajl_val` */
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_STRING))
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_NUMBER))
+#define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->data.flags & YAJL_NUMBER_INT_VALID))
+#define YAJL_IS_DOUBLE(v) (YAJL_IS_NUMBER(v) && ((v)->data.flags & YAJL_NUMBER_DOUBLE_VALID))
 #define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_OBJECT))
 #define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_ARRAY ))
 #define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_TRUE  ))
 #define YAJL_IS_FALSE(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_FALSE ))
 #define YAJL_IS_NULL(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_NULL  ))
 
-/**
- * Convert value to string.
- *
- * Returns a pointer to a yajl_val_string or NULL if the value is not a
- * string.
- */
-#define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string : NULL)
+/** Given a yajl_val_string return a ptr to the bare string it contains,
+ *  or NULL if the value is not a string. */
+#define YAJL_GET_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string : NULL)
 
-/**
- * Convert value to number.
- *
- * Returns a pointer to a yajl_val_number or NULL if the value is not a
- * number.
- */
-#define YAJL_TO_NUMBER(v) (YAJL_IS_NUMBER(v) ? &(v)->data.number : NULL)
+/** Get the string representation of a number.  You should check type first,
+ *  perhaps using YAJL_IS_NUMBER */
+#define YAJL_GET_NUMBER(v) ((v)->data.number.r)
 
-/**
- * Convert value to object.
- *
- * Returns a pointer to a yajl_val_object or NULL if the value is not an
- * object.
- */
-#define YAJL_TO_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->data.object : NULL)
+/** Get the double representation of a number.  You should check type first,
+ *  perhaps using YAJL_IS_DOUBLE */
+#define YAJL_GET_DOUBLE(v) ((v)->data.number.d)
 
-/**
- * Convert value to array.
- *
- * Returns a pointer to a yajl_val_array or NULL if the value is not an
- * array.
- */
-#define YAJL_TO_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->data.array  : NULL)
+/** Get the 64bit (long long) integer representation of a number.  You should
+ *  check type first, perhaps using YAJL_IS_INTEGER */
+#define YAJL_GET_INTEGER(v) ((v)->data.number.i)
+
+/** Get a pointer to a yajl_val_object or NULL if the value is not an object. */
+#define YAJL_GET_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->data.object : NULL)
+
+/** Get a pointer to a yajl_val_array or NULL if the value is not an object. */
+#define YAJL_GET_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->data.array  : NULL)
 
 #endif /* YAJL_TREE_H */

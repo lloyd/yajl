@@ -60,7 +60,7 @@ main(void)
     {
         const char * path[] = { "Logging", "timeFormat", (const char *) 0 };
         yajl_val v = yajl_tree_get(node, path, YAJL_TYPE_STRING);
-        if (v) printf("Logging/timeFomat: %s\n", YAJL_TO_STRING(v));
+        if (v) printf("Logging/timeFomat: %s\n", YAJL_GET_STRING(v));
         else   printf("no such node: %s/%s\n", path[0], path[1]);
     }
 

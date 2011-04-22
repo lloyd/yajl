@@ -67,7 +67,7 @@ static void yajl_object_free (yajl_val v)
     yajl_val_object *o;
     size_t i;
 
-    o = YAJL_TO_OBJECT (v);
+    o = YAJL_GET_OBJECT(v);
     if (o == NULL) return;
 
     for (i = 0; i < o->len; i++)
@@ -88,7 +88,7 @@ static void yajl_array_free (yajl_val v)
     yajl_val_array *a;
     size_t i;
 
-    a = YAJL_TO_ARRAY (v);
+    a = YAJL_GET_ARRAY (v);
     if (a == NULL) return;
 
     for (i = 0; i < a->len; i++)
@@ -161,7 +161,7 @@ static int object_add_keyval(context_t *ctx,
     assert (value != NULL);
 
     /* We're assuring that "obj" is an object in "context_add_value". */
-    o = YAJL_TO_OBJECT (obj);
+    o = YAJL_GET_OBJECT (obj);
     assert (o != NULL);
 
     tmpk = realloc (o->keys, sizeof (*o->keys) * (o->len + 1));
@@ -194,7 +194,7 @@ static int array_add_value (context_t *ctx,
     assert (value != NULL);
 
     /* "context_add_value" will only call us with array values. */
-    a = YAJL_TO_ARRAY (array);
+    a = YAJL_GET_ARRAY (array);
     assert (a != NULL);
 
     tmp = realloc (a->values, sizeof (*a->values) * (a->len + 1));
@@ -299,28 +299,28 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
     v = value_alloc (YAJL_TYPE_NUMBER);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
-    n = YAJL_TO_NUMBER (v);
+    n = &(v->data.number);
 
-    n->value_raw = malloc (string_length + 1);
-    if (n->value_raw == NULL)
+    n->r = malloc (string_length + 1);
+    if (n->r == NULL)
     {
         free (v);
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
     }
-    memcpy (n->value_raw, string, string_length);
-    n->value_raw[string_length] = 0;
+    memcpy (n->r, string, string_length);
+    n->r[string_length] = 0;
 
     n->flags = 0;
 
     endptr = NULL;
     errno = 0;
-    n->value_int = (int64_t) strtoll (n->value_raw, &endptr, /* base = */ 10);
+    n->i = (int64_t) strtoll (n->r, &endptr, /* base = */ 10);
     if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
         n->flags |= YAJL_NUMBER_INT_VALID;
 
     endptr = NULL;
     errno = 0;
-    n->value_double = strtod (n->value_raw, &endptr);
+    n->d = strtod (n->r, &endptr);
     if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
         n->flags |= YAJL_NUMBER_DOUBLE_VALID;
 
@@ -336,7 +336,7 @@ static int handle_start_map (void *ctx)
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    o = YAJL_TO_OBJECT (v);
+    o = YAJL_GET_OBJECT (v);
     o->keys = NULL;
     o->values = NULL;
     o->len = 0;
@@ -364,7 +364,7 @@ static int handle_start_array (void *ctx)
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    a = YAJL_TO_ARRAY (v);
+    a = YAJL_GET_ARRAY (v);
     a->values = NULL;
     a->len = 0;
 
@@ -492,16 +492,14 @@ void yajl_tree_free (yajl_val v)
     }
     else if (YAJL_IS_NUMBER(v))
     {
-        yajl_val_number *n = YAJL_TO_NUMBER(v);
-
-        free(n->value_raw);
+        free(v->data.number.r);
         free(v);
     }
-    else if (YAJL_TO_OBJECT(v))
+    else if (YAJL_GET_OBJECT(v))
     {
         yajl_object_free(v);
     }
-    else if (YAJL_TO_ARRAY(v))
+    else if (YAJL_GET_ARRAY(v))
     {
         yajl_array_free(v);
     }
