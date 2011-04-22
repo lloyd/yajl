@@ -41,8 +41,9 @@ main(int argc, char ** argv)
     static unsigned char fileData[65536];
     int quiet = 0;
     int retval = 0;
-    int allowComments = 0;
-    int checkUTF8 = 1;
+
+    /* allocate a parser */
+    hand = yajl_alloc(NULL, NULL, NULL);
 
     /* check arguments.*/
     int a = 1;
@@ -54,10 +55,10 @@ main(int argc, char ** argv)
                     quiet = 1;
                     break;
                 case 'c':
-                    allowComments = 1;
+                    yajl_config(hand, yajl_allow_comments, 1);
                     break;
                 case 'u':
-                    checkUTF8 = 0;
+                    yajl_config(hand, yajl_dont_validate_strings, 1);
                     break;
                 default:
                     fprintf(stderr, "unrecognized option: '%c'\n\n", argv[a][i]);
@@ -69,11 +70,6 @@ main(int argc, char ** argv)
     if (a < argc) {
         usage(argv[0]);
     }
-
-    /* allocate a parser */
-    hand = yajl_alloc(NULL, NULL, NULL);
-    yajl_config(hand, yajl_allow_comments, allowComments);
-    yajl_config(hand, yajl_dont_validate_strings, !checkUTF8);
 
     for (;;) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
