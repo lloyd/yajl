@@ -36,14 +36,6 @@
 struct yajl_value_s;
 typedef struct yajl_value_s yajl_value_t;
 
-/** Structure describing a JSON string. */
-struct yajl_value_string_s
-{
-  /** Null terminated string. */
-  char *value;
-};
-typedef struct yajl_value_string_s yajl_value_string_t;
-
 #define YAJL_NUMBER_INT_VALID    0x01
 #define YAJL_NUMBER_DOUBLE_VALID 0x02
 /** Structure describing a JSON number. */
@@ -119,7 +111,7 @@ struct yajl_value_s
    * members. */
   union
   {
-    yajl_value_string_t string;
+    char * string;
     yajl_value_number_t number;
     yajl_value_object_t object;
     yajl_value_array_t  array;
@@ -223,7 +215,7 @@ YAJL_API yajl_value_t * yajl_tree_get(yajl_value_t * parent,
  * Returns a pointer to a yajl_value_string_t or NULL if the value is not a
  * string.
  */
-#define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string.value : NULL)
+#define YAJL_TO_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string : NULL)
 
 /**
  * Convert value to number.
