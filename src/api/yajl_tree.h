@@ -59,7 +59,7 @@ typedef struct yajl_val_number_s
 typedef struct yajl_val_object_s
 {
     /** Array of keys in the JSON object. */
-    yajl_val *keys;
+    const char **keys;
     /** Array of values in the JSON object. */
     yajl_val *values;
     /** Number of key-value-pairs in the JSON object. */

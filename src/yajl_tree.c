@@ -30,7 +30,7 @@ struct stack_elem_s;
 typedef struct stack_elem_s stack_elem_t;
 struct stack_elem_s
 {
-    yajl_val key;
+    char * key;
     yajl_val value;
     stack_elem_t *next;
 };
@@ -72,7 +72,7 @@ static void yajl_object_free (yajl_val v)
 
     for (i = 0; i < o->len; i++)
     {
-        yajl_tree_free (o->keys[i]);
+        free((char *) o->keys[i]);
         o->keys[i] = NULL;
         yajl_tree_free (o->values[i]);
         o->values[i] = NULL;
@@ -148,10 +148,11 @@ static yajl_val context_pop(context_t *ctx)
 }
 
 static int object_add_keyval(context_t *ctx,
-                             yajl_val obj, yajl_val key, yajl_val value)
+                             yajl_val obj, char *key, yajl_val value)
 {
     yajl_val_object *o;
-    yajl_val *tmp;
+    const char **tmpk;
+    yajl_val *tmpv;
 
     /* We're checking for NULL in "context_add_value" or its callers. */
     assert (ctx != NULL);
@@ -159,22 +160,19 @@ static int object_add_keyval(context_t *ctx,
     assert (key != NULL);
     assert (value != NULL);
 
-    /* We're assuring that the key is a string in "context_add_value". */
-    assert (YAJL_IS_STRING (key));
-
     /* We're assuring that "obj" is an object in "context_add_value". */
     o = YAJL_TO_OBJECT (obj);
     assert (o != NULL);
 
-    tmp = realloc (o->keys, sizeof (*o->keys) * (o->len + 1));
-    if (tmp == NULL)
+    tmpk = realloc (o->keys, sizeof (*o->keys) * (o->len + 1));
+    if (tmpk == NULL)
         RETURN_ERROR (ctx, ENOMEM, "Out of memory");
-    o->keys = tmp;
+    o->keys = tmpk;
 
-    tmp = realloc (o->values, sizeof (*o->values) * (o->len + 1));
-    if (tmp == NULL)
+    tmpv = realloc (o->values, sizeof (*o->values) * (o->len + 1));
+    if (tmpv == NULL)
         RETURN_ERROR (ctx, ENOMEM, "Out of memory");
-    o->values = tmp;
+    o->values = tmpv;
 
     o->keys[o->len] = key;
     o->values[o->len] = value;
@@ -245,12 +243,14 @@ static int context_add_value (context_t *ctx, yajl_val v)
                               "Object key is not a string (%#04"PRIx8")",
                               v->type);
 
-            ctx->stack->key = v;
+            ctx->stack->key = v->data.string;
+            v->data.string = NULL;
+            free(v);
             return (0);
         }
         else /* if (ctx->key != NULL) */
         {
-            yajl_val key;
+            char * key;
 
             key = ctx->stack->key;
             ctx->stack->key = NULL;
@@ -470,7 +470,7 @@ yajl_val yajl_tree_get(yajl_val n, const char ** path, int type)
 
         if (n->type != YAJL_TYPE_OBJECT) return NULL;
         for (i = 0; i < n->data.object.len; i++) {
-            if (!strcmp(*path, n->data.object.keys[i]->data.string)) {
+            if (!strcmp(*path, n->data.object.keys[i])) {
                 n = n->data.object.values[i];
                 break;
             }
