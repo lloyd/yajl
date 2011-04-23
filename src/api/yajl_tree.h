@@ -26,9 +26,6 @@
 #ifndef YAJL_TREE_H
 #define YAJL_TREE_H 1
 
-#include <stdint.h>
-#include <inttypes.h>
-
 #include <yajl/yajl_common.h>
 
 /* Forward declaration, because "yajl_val_object_t" and "yajl_val_array"
@@ -105,7 +102,7 @@ struct yajl_val_s
 {
     /** Type of the value contained. Use the "YAJL_IS_*" macors to check for a
      * specific type. */
-    uint8_t type;
+    yajl_type type;
     /** Type-specific data. Use the "YAJL_TO_*" macros to access these
      * members. */
     union

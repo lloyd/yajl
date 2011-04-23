@@ -19,6 +19,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include "api/yajl_tree.h"
 #include "api/yajl_parse.h"
@@ -50,7 +51,7 @@ typedef struct context_s context_t;
         return (retval);                                                \
     } while (0)                                                         \
 
-static yajl_val value_alloc (uint8_t type)
+static yajl_val value_alloc (yajl_type type)
 {
     yajl_val v;
 
