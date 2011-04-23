@@ -274,7 +274,7 @@ static int handle_string (void *ctx,
 {
     yajl_val v;
 
-    v = value_alloc (YAJL_TYPE_STRING);
+    v = value_alloc (yajl_t_string);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
@@ -296,7 +296,7 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
     yajl_val_number *n;
     char *endptr;
 
-    v = value_alloc (YAJL_TYPE_NUMBER);
+    v = value_alloc (yajl_t_number);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
     n = &(v->data.number);
@@ -332,7 +332,7 @@ static int handle_start_map (void *ctx)
     yajl_val v;
     yajl_val_object *o;
 
-    v = value_alloc (YAJL_TYPE_OBJECT);
+    v = value_alloc (yajl_t_object);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
@@ -360,7 +360,7 @@ static int handle_start_array (void *ctx)
     yajl_val v;
     yajl_val_array *a;
 
-    v = value_alloc (YAJL_TYPE_ARRAY);
+    v = value_alloc (yajl_t_array);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
@@ -386,7 +386,7 @@ static int handle_boolean (void *ctx, int boolean_value)
 {
     yajl_val v;
 
-    v = value_alloc (boolean_value ? YAJL_TYPE_TRUE : YAJL_TYPE_FALSE);
+    v = value_alloc (boolean_value ? yajl_t_true : yajl_t_false);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
@@ -397,7 +397,7 @@ static int handle_null (void *ctx)
 {
     yajl_val v;
 
-    v = value_alloc (YAJL_TYPE_NULL);
+    v = value_alloc (yajl_t_null);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
@@ -462,13 +462,13 @@ yajl_val yajl_tree_parse (const char *input,
     return (ctx.root);
 }
 
-yajl_val yajl_tree_get(yajl_val n, const char ** path, int type)
+yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
 {
     if (!path) return NULL;
     while (n && *path) {
         unsigned int i;
 
-        if (n->type != YAJL_TYPE_OBJECT) return NULL;
+        if (n->type != yajl_t_object) return NULL;
         for (i = 0; i < n->data.object.len; i++) {
             if (!strcmp(*path, n->data.object.keys[i])) {
                 n = n->data.object.values[i];
@@ -478,6 +478,7 @@ yajl_val yajl_tree_get(yajl_val n, const char ** path, int type)
         if (i == n->data.object.len) return NULL;
         path++;
     }
+    if (n && type != yajl_t_any && type != n->type) n = NULL;
     return n;
 }
 
@@ -503,7 +504,7 @@ void yajl_tree_free (yajl_val v)
     {
         yajl_array_free(v);
     }
-    else /* if (YAJL_TYPE_TRUE or YAJL_TYPE_FALSE or YAJL_TYPE_NULL) */
+    else /* if (yajl_t_true or yajl_t_false or yajl_t_null) */
     {
         free(v);
     }

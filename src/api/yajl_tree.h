@@ -79,13 +79,16 @@ typedef struct yajl_val_array_s
     size_t len;
 } yajl_val_array;
 
-#define YAJL_TYPE_STRING 1
-#define YAJL_TYPE_NUMBER 2
-#define YAJL_TYPE_OBJECT 3
-#define YAJL_TYPE_ARRAY  4
-#define YAJL_TYPE_TRUE   5
-#define YAJL_TYPE_FALSE  6
-#define YAJL_TYPE_NULL   7
+typedef enum {
+    yajl_t_string = 1,
+    yajl_t_number = 2,
+    yajl_t_object = 3,
+    yajl_t_array = 4,
+    yajl_t_true = 5,
+    yajl_t_false = 6,
+    yajl_t_null = 7,
+    yajl_t_any = 8
+} yajl_type;
 
 /**
  * Struct describing a general JSON value.
@@ -152,18 +155,18 @@ YAJL_API void yajl_tree_free (yajl_val v);
 /**
  * Access a nested value.
  */
-YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, int type);
+YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type type);
 
 /* Various convenience macros to check the type of a `yajl_val` */
-#define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_STRING))
-#define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_NUMBER))
+#define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == yajl_t_string))
+#define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == yajl_t_number))
 #define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->data.flags & YAJL_NUMBER_INT_VALID))
 #define YAJL_IS_DOUBLE(v) (YAJL_IS_NUMBER(v) && ((v)->data.flags & YAJL_NUMBER_DOUBLE_VALID))
-#define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == YAJL_TYPE_OBJECT))
-#define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_ARRAY ))
-#define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_TRUE  ))
-#define YAJL_IS_FALSE(v)  (((v) != NULL) && ((v)->type == YAJL_TYPE_FALSE ))
-#define YAJL_IS_NULL(v)   (((v) != NULL) && ((v)->type == YAJL_TYPE_NULL  ))
+#define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == yajl_t_object))
+#define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == yajl_t_array ))
+#define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == yajl_t_true  ))
+#define YAJL_IS_FALSE(v)  (((v) != NULL) && ((v)->type == yajl_t_false ))
+#define YAJL_IS_NULL(v)   (((v) != NULL) && ((v)->type == yajl_t_null  ))
 
 /** Given a yajl_val_string return a ptr to the bare string it contains,
  *  or NULL if the value is not a string. */
