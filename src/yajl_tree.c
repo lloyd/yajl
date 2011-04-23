@@ -65,41 +65,37 @@ static yajl_val value_alloc (yajl_type type)
 
 static void yajl_object_free (yajl_val v)
 {
-    yajl_val_object *o;
     size_t i;
 
-    o = YAJL_GET_OBJECT(v);
-    if (o == NULL) return;
+    if (!YAJL_IS_OBJECT(v)) return;
 
-    for (i = 0; i < o->len; i++)
+    for (i = 0; i < v->u.object.len; i++)
     {
-        free((char *) o->keys[i]);
-        o->keys[i] = NULL;
-        yajl_tree_free (o->values[i]);
-        o->values[i] = NULL;
+        free((char *) v->u.object.keys[i]);
+        v->u.object.keys[i] = NULL;
+        yajl_tree_free (v->u.object.values[i]);
+        v->u.object.values[i] = NULL;
     }
 
-    free (o->keys);
-    free (o->values);
-    free (v);
+    free(v->u.object.keys);
+    free(v->u.object.values);
+    free(v);
 }
 
 static void yajl_array_free (yajl_val v)
 {
-    yajl_val_array *a;
     size_t i;
 
-    a = YAJL_GET_ARRAY (v);
-    if (a == NULL) return;
+    if (!YAJL_IS_ARRAY(v)) return;
 
-    for (i = 0; i < a->len; i++)
+    for (i = 0; i < v->u.array.len; i++)
     {
-        yajl_tree_free (a->values[i]);
-        a->values[i] = NULL;
+        yajl_tree_free (v->u.array.values[i]);
+        v->u.array.values[i] = NULL;
     }
 
-    free (a->values);
-    free (v);
+    free(v->u.array.values);
+    free(v);
 }
 
 /*
@@ -151,7 +147,6 @@ static yajl_val context_pop(context_t *ctx)
 static int object_add_keyval(context_t *ctx,
                              yajl_val obj, char *key, yajl_val value)
 {
-    yajl_val_object *o;
     const char **tmpk;
     yajl_val *tmpv;
 
@@ -162,22 +157,21 @@ static int object_add_keyval(context_t *ctx,
     assert (value != NULL);
 
     /* We're assuring that "obj" is an object in "context_add_value". */
-    o = YAJL_GET_OBJECT (obj);
-    assert (o != NULL);
+    assert(YAJL_IS_OBJECT(o));
 
-    tmpk = realloc (o->keys, sizeof (*o->keys) * (o->len + 1));
+    tmpk = realloc(obj->u.object.keys, sizeof(*(obj->u.object.keys)) * (obj->u.object.len + 1));
     if (tmpk == NULL)
-        RETURN_ERROR (ctx, ENOMEM, "Out of memory");
-    o->keys = tmpk;
+        RETURN_ERROR(ctx, ENOMEM, "Out of memory");
+    obj->u.object.keys = tmpk;
 
-    tmpv = realloc (o->values, sizeof (*o->values) * (o->len + 1));
+    tmpv = realloc(obj->u.object.values, sizeof (*obj->u.object.values) * (obj->u.object.len + 1));
     if (tmpv == NULL)
-        RETURN_ERROR (ctx, ENOMEM, "Out of memory");
-    o->values = tmpv;
+        RETURN_ERROR(ctx, ENOMEM, "Out of memory");
+    obj->u.object.values = tmpv;
 
-    o->keys[o->len] = key;
-    o->values[o->len] = value;
-    o->len++;
+    obj->u.object.keys[obj->u.object.len] = key;
+    obj->u.object.values[obj->u.object.len] = value;
+    obj->u.object.len++;
 
     return (0);
 }
@@ -185,7 +179,6 @@ static int object_add_keyval(context_t *ctx,
 static int array_add_value (context_t *ctx,
                             yajl_val array, yajl_val value)
 {
-    yajl_val_array *a;
     yajl_val *tmp;
 
     /* We're checking for NULL pointers in "context_add_value" or its
@@ -195,17 +188,17 @@ static int array_add_value (context_t *ctx,
     assert (value != NULL);
 
     /* "context_add_value" will only call us with array values. */
-    a = YAJL_GET_ARRAY (array);
-    assert (a != NULL);
-
-    tmp = realloc (a->values, sizeof (*a->values) * (a->len + 1));
+    assert(YAJL_IS_ARRAY(array));
+    
+    tmp = realloc(array->u.array.values,
+                  sizeof(*(array->u.array.values)) * (array->u.array.len + 1));
     if (tmp == NULL)
-        RETURN_ERROR (ctx, ENOMEM, "Out of memory");
-    a->values = tmp;
-    a->values[a->len] = value;
-    a->len++;
+        RETURN_ERROR(ctx, ENOMEM, "Out of memory");
+    array->u.array.values = tmp;
+    array->u.array.values[array->u.array.len] = value;
+    array->u.array.len++;
 
-    return (0);
+    return 0;
 }
 
 /*
@@ -244,8 +237,8 @@ static int context_add_value (context_t *ctx, yajl_val v)
                               "Object key is not a string (%#04"PRIx8")",
                               v->type);
 
-            ctx->stack->key = v->data.string;
-            v->data.string = NULL;
+            ctx->stack->key = v->u.string;
+            v->u.string = NULL;
             free(v);
             return (0);
         }
@@ -279,14 +272,14 @@ static int handle_string (void *ctx,
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    v->data.string = malloc (string_length + 1);
-    if (v->data.string == NULL)
+    v->u.string = malloc (string_length + 1);
+    if (v->u.string == NULL)
     {
         free (v);
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
     }
-    memcpy(v->data.string, string, string_length);
-    v->data.string[string_length] = 0;
+    memcpy(v->u.string, string, string_length);
+    v->u.string[string_length] = 0;
 
     return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
@@ -294,53 +287,49 @@ static int handle_string (void *ctx,
 static int handle_number (void *ctx, const char *string, size_t string_length)
 {
     yajl_val v;
-    yajl_val_number *n;
     char *endptr;
 
-    v = value_alloc (yajl_t_number);
+    v = value_alloc(yajl_t_number);
     if (v == NULL)
-        RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
-    n = &(v->data.number);
+        RETURN_ERROR((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    n->r = malloc (string_length + 1);
-    if (n->r == NULL)
+    v->u.number.r = malloc(string_length + 1);
+    if (v->u.number.r == NULL)
     {
-        free (v);
-        RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
+        free(v);
+        RETURN_ERROR((context_t *) ctx, STATUS_ABORT, "Out of memory");
     }
-    memcpy (n->r, string, string_length);
-    n->r[string_length] = 0;
+    memcpy(v->u.number.r, string, string_length);
+    v->u.number.r[string_length] = 0;
 
-    n->flags = 0;
-
-    endptr = NULL;
-    errno = 0;
-    n->i = (int64_t) strtoll (n->r, &endptr, /* base = */ 10);
-    if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
-        n->flags |= YAJL_NUMBER_INT_VALID;
+    v->u.number.flags = 0;
 
     endptr = NULL;
     errno = 0;
-    n->d = strtod (n->r, &endptr);
+    v->u.number.i = (int64_t) strtoll(v->u.number.r, &endptr, /* base = */ 10);
     if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
-        n->flags |= YAJL_NUMBER_DOUBLE_VALID;
+        v->u.number.flags |= YAJL_NUMBER_INT_VALID;
 
-    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    endptr = NULL;
+    errno = 0;
+    v->u.number.d = strtod(v->u.number.r, &endptr);
+    if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
+        v->u.number.flags |= YAJL_NUMBER_DOUBLE_VALID;
+
+    return ((context_add_value(ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
 
 static int handle_start_map (void *ctx)
 {
     yajl_val v;
-    yajl_val_object *o;
 
-    v = value_alloc (yajl_t_object);
+    v = value_alloc(yajl_t_object);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    o = YAJL_GET_OBJECT (v);
-    o->keys = NULL;
-    o->values = NULL;
-    o->len = 0;
+    v->u.object.keys = NULL;
+    v->u.object.values = NULL;
+    v->u.object.len = 0;
 
     return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
@@ -359,15 +348,13 @@ static int handle_end_map (void *ctx)
 static int handle_start_array (void *ctx)
 {
     yajl_val v;
-    yajl_val_array *a;
 
-    v = value_alloc (yajl_t_array);
+    v = value_alloc(yajl_t_array);
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    a = YAJL_GET_ARRAY (v);
-    a->values = NULL;
-    a->len = 0;
+    v->u.array.values = NULL;
+    v->u.array.len = 0;
 
     return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
@@ -470,13 +457,13 @@ yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
         unsigned int i;
 
         if (n->type != yajl_t_object) return NULL;
-        for (i = 0; i < n->data.object.len; i++) {
-            if (!strcmp(*path, n->data.object.keys[i])) {
-                n = n->data.object.values[i];
+        for (i = 0; i < n->u.object.len; i++) {
+            if (!strcmp(*path, n->u.object.keys[i])) {
+                n = n->u.object.values[i];
                 break;
             }
         }
-        if (i == n->data.object.len) return NULL;
+        if (i == n->u.object.len) return NULL;
         path++;
     }
     if (n && type != yajl_t_any && type != n->type) n = NULL;
@@ -489,12 +476,12 @@ void yajl_tree_free (yajl_val v)
 
     if (YAJL_IS_STRING(v))
     {
-        free(v->data.string);
+        free(v->u.string);
         free(v);
     }
     else if (YAJL_IS_NUMBER(v))
     {
-        free(v->data.number.r);
+        free(v->u.number.r);
         free(v);
     }
     else if (YAJL_GET_OBJECT(v))

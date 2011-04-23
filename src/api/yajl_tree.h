@@ -28,54 +28,7 @@
 
 #include <yajl/yajl_common.h>
 
-/* Forward declaration, because "yajl_val_object_t" and "yajl_val_array"
- * contain "yajl_val" and "yajl_val" can be an object or an array. */
-typedef struct yajl_val_s * yajl_val;
-
-#define YAJL_NUMBER_INT_VALID    0x01
-#define YAJL_NUMBER_DOUBLE_VALID 0x02
-/** Structure describing a JSON number. */
-typedef struct yajl_val_number_s
-{
-    /** Holds the raw value of the number, in string form. */
-    char   *r;
-    /** Holds the integer value of the number, if possible. */
-    long long i;
-    /** Holds the double value of the number, if possible. */
-    double  d;
-    /** Signals whether the \em value_int and \em value_double members are
-     * valid. See \c YAJL_NUMBER_INT_VALID and \c YAJL_NUMBER_DOUBLE_VALID. */
-    unsigned int flags;
-} yajl_val_number;
-
-/**
- * Structure describing a JSON object.
- *
- * \sa yajl_val_array_s
- */
-typedef struct yajl_val_object_s
-{
-    /** Array of keys in the JSON object. */
-    const char **keys;
-    /** Array of values in the JSON object. */
-    yajl_val *values;
-    /** Number of key-value-pairs in the JSON object. */
-    size_t len;
-} yajl_val_object;
-
-/**
- * Structure describing a JSON array.
- *
- * \sa yajl_val_object_s
- */
-typedef struct yajl_val_array_s
-{
-    /** Array of elements in the JSON array. */
-    yajl_val *values;
-    /** Number of elements in the JSON array. */
-    size_t len;
-} yajl_val_array;
-
+/** possible data types that a yajl_val_s can hold */
 typedef enum {
     yajl_t_string = 1,
     yajl_t_number = 2,
@@ -84,19 +37,23 @@ typedef enum {
     yajl_t_true = 5,
     yajl_t_false = 6,
     yajl_t_null = 7,
+    /** The any type isn't valid for yajl_val_s.type, but can be
+     *  used as an argument to routines like yajl_tree_get().
+     */
     yajl_t_any = 8
 } yajl_type;
 
+#define YAJL_NUMBER_INT_VALID    0x01
+#define YAJL_NUMBER_DOUBLE_VALID 0x02
+
+/** A pointer to a node in the parse tree */
+typedef struct yajl_val_s * yajl_val;
+
 /**
- * Struct describing a general JSON value.
- *
- * Each value is one of the seven types above. For "string", "number",
- * "object", and "array" additional data is available in the "data" union. Use
- * the "YAJL_IS_*" and "YAJL_TO_*" macros below to check for the correct type
- * and cast the struct.
- *
- * \sa yajl_val_string, yajl_val_number, yajl_val_object,
- * yajl_val_array
+ * A JSON value:is one of the seven types above. For "string", "number",
+ * "object", and "array" additional data is available in the "data" union.
+ * The "YAJL_IS_*" and "YAJL_GET_*" macros below allow type checking
+ * and convenient value extraction.
  */
 struct yajl_val_s
 {
@@ -108,10 +65,25 @@ struct yajl_val_s
     union
     {
         char * string;
-        yajl_val_number number;
-        yajl_val_object object;
-        yajl_val_array  array;
-    } data;
+        struct {
+            char   *r;   /*< unparsed number in string form. */
+            long long i; /*< integer value, if representable. */
+            double  d;   /*< double value, if representable. */
+            /** Signals whether the \em i and \em d members are
+             * valid. See \c YAJL_NUMBER_INT_VALID and
+             * \c YAJL_NUMBER_DOUBLE_VALID. */
+            unsigned int flags;
+        } number;
+        struct {
+            const char **keys; /*< Array of keys */
+            yajl_val *values; /** Array of values. */
+            size_t len; /*< Number of key-value-pairs. */
+        } object;
+        struct {
+            yajl_val *values; /*< Array of elements. */
+            size_t len; /*< Number of elements. */
+        } array;
+    } u;
 };
 
 /**
@@ -157,8 +129,8 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type t
 /* Various convenience macros to check the type of a `yajl_val` */
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == yajl_t_string))
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == yajl_t_number))
-#define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->data.flags & YAJL_NUMBER_INT_VALID))
-#define YAJL_IS_DOUBLE(v) (YAJL_IS_NUMBER(v) && ((v)->data.flags & YAJL_NUMBER_DOUBLE_VALID))
+#define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->u.flags & YAJL_NUMBER_INT_VALID))
+#define YAJL_IS_DOUBLE(v) (YAJL_IS_NUMBER(v) && ((v)->u.flags & YAJL_NUMBER_DOUBLE_VALID))
 #define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == yajl_t_object))
 #define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == yajl_t_array ))
 #define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == yajl_t_true  ))
@@ -167,24 +139,24 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type t
 
 /** Given a yajl_val_string return a ptr to the bare string it contains,
  *  or NULL if the value is not a string. */
-#define YAJL_GET_STRING(v) (YAJL_IS_STRING(v) ? (v)->data.string : NULL)
+#define YAJL_GET_STRING(v) (YAJL_IS_STRING(v) ? (v)->u.string : NULL)
 
 /** Get the string representation of a number.  You should check type first,
  *  perhaps using YAJL_IS_NUMBER */
-#define YAJL_GET_NUMBER(v) ((v)->data.number.r)
+#define YAJL_GET_NUMBER(v) ((v)->u.number.r)
 
 /** Get the double representation of a number.  You should check type first,
  *  perhaps using YAJL_IS_DOUBLE */
-#define YAJL_GET_DOUBLE(v) ((v)->data.number.d)
+#define YAJL_GET_DOUBLE(v) ((v)->u.number.d)
 
 /** Get the 64bit (long long) integer representation of a number.  You should
  *  check type first, perhaps using YAJL_IS_INTEGER */
-#define YAJL_GET_INTEGER(v) ((v)->data.number.i)
+#define YAJL_GET_INTEGER(v) ((v)->u.number.i)
 
 /** Get a pointer to a yajl_val_object or NULL if the value is not an object. */
-#define YAJL_GET_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->data.object : NULL)
+#define YAJL_GET_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->u.object : NULL)
 
 /** Get a pointer to a yajl_val_array or NULL if the value is not an object. */
-#define YAJL_GET_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->data.array  : NULL)
+#define YAJL_GET_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->u.array  : NULL)
 
 #endif /* YAJL_TREE_H */
