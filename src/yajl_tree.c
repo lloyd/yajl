@@ -157,7 +157,7 @@ static int object_add_keyval(context_t *ctx,
     assert (value != NULL);
 
     /* We're assuring that "obj" is an object in "context_add_value". */
-    assert(YAJL_IS_OBJECT(o));
+    assert(YAJL_IS_OBJECT(obj));
 
     tmpk = realloc(obj->u.object.keys, sizeof(*(obj->u.object.keys)) * (obj->u.object.len + 1));
     if (tmpk == NULL)
