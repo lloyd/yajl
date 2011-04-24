@@ -120,7 +120,8 @@ extern "C" {
         /**
          * When set the parser will verify that all strings in JSON input are
          * valid UTF8 and will emit a parse error if this is not so.  When set,
-         * this option makes parsing slightly more expensive (~10%) (XXX: get real numbers)
+         * this option makes parsing slightly more expensive (~7% depending
+         * on processor and compiler in use)
          *
          * example:
          *   yajl_config(h, yajl_dont_validate_strings, 1); // disable utf8 checking
