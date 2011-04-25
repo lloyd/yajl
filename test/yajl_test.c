@@ -26,8 +26,8 @@
 /* memory debugging routines */
 typedef struct
 {
-    size_t numFrees;
-    size_t numMallocs;
+    unsigned int numFrees;
+    unsigned int numMallocs;
     /* XXX: we really need a hash table here with per-allocation
      *      information */
 } yajlTestMemoryContext;
@@ -275,7 +275,7 @@ main(int argc, char ** argv)
 */
     fflush(stderr);
     fflush(stdout);
-    printf("memory leaks:\t%zu\n", memCtx.numMallocs - memCtx.numFrees);
+    printf("memory leaks:\t%u\n", memCtx.numMallocs - memCtx.numFrees);
 
     return 0;
 }
