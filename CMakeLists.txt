@@ -16,11 +16,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(YetAnotherJSONParser C)
 
-# XXX: attempt to clearly indicate that the 2.x branch is not yet stable,
-# bump to 2.0.0 and remove this comment when baked.
-SET (YAJL_MAJOR 1)
-SET (YAJL_MINOR 99)
-SET (YAJL_MICRO 99)
+SET (YAJL_MAJOR 2)
+SET (YAJL_MINOR 0)
+SET (YAJL_MICRO 0)
 
 SET (YAJL_DIST_NAME "yajl-${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO}")
 
