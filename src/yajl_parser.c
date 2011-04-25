@@ -42,12 +42,15 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
     if (*pos == '+') { pos++; }
 
     while (pos < number + length) {
-
         if ( ret > MAX_VALUE_TO_MULTIPLY ) {
             errno = ERANGE;
             return sign == 1 ? LLONG_MAX : LLONG_MIN;
         }
         ret *= 10;
+        if (LLONG_MAX - ret < (*pos - '0')) {
+            errno = ERANGE;
+            return sign == 1 ? LLONG_MAX : LLONG_MIN;
+        }
         ret += (*pos++ - '0');
     }
 
