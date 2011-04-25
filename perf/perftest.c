@@ -25,7 +25,7 @@
  * portable format */
 #ifndef WIN32
 #include <sys/time.h>
-double mygettime(void) {
+static double mygettime(void) {
     struct timeval now;
     gettimeofday(&now, NULL);
     return now.tv_sec + (now.tv_usec / 1000000.0);
@@ -33,7 +33,7 @@ double mygettime(void) {
 #else
 #define _WIN32 1
 #include <windows.h>
-double mygettime(void) {
+static double mygettime(void) {
     long long tval;
 	FILETIME ft;
 	GetSystemTimeAsFileTime(&ft);
