@@ -53,6 +53,11 @@ yajl_string_encode2(const yajl_print_t print,
             case '\r': escaped = "\\r"; break;
             case '\n': escaped = "\\n"; break;
             case '\\': escaped = "\\\\"; break;
+            /* it is not required to escape a solidus in JSON:
+             * read sec. 2.5: http://www.ietf.org/rfc/rfc4627.txt
+             * specifically, this production from the grammar:
+             *   unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+             */
             /* case '/': escaped = "\\/"; break; */
             case '"': escaped = "\\\""; break;
             case '\f': escaped = "\\f"; break;
