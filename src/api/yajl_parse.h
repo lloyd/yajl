@@ -16,7 +16,7 @@
 
 /**
  * \file yajl_parse.h
- * Interface to YAJL's JSON parsing facilities.
+ * Interface to YAJL's JSON stream parsing facilities.
  */
 
 #include <yajl/yajl_common.h>
@@ -57,15 +57,19 @@ extern "C" {
      *  continue.  If zero, the parse will be canceled and
      *  yajl_status_client_canceled will be returned from the parse.
      *
-     *  Note about handling of numbers:
-     *    yajl will only convert numbers that can be represented in a double
-     *    or a 64 bit (long long) int.  All other numbers will be passed to the client
-     *    in string form using the yajl_number callback.  Furthermore, if
-     *    yajl_number is not NULL, it will always be used to return numbers,
-     *    that is yajl_integer and yajl_double will be ignored.  If
-     *    yajl_number is NULL but one of yajl_integer or yajl_double are
-     *    defined, parsing of a number larger than is representable
-     *    in a double or 64 bit integer will result in a parse error.
+     *  \attention {
+     *    A note about the handling of numbers:
+     *
+     *    yajl will only convert numbers that can be represented in a
+     *    double or a 64 bit (long long) int.  All other numbers will
+     *    be passed to the client in string form using the yajl_number
+     *    callback.  Furthermore, if yajl_number is not NULL, it will
+     *    always be used to return numbers, that is yajl_integer and
+     *    yajl_double will be ignored.  If yajl_number is NULL but one
+     *    of yajl_integer or yajl_double are defined, parsing of a
+     *    number larger than is representable in a double or 64 bit
+     *    integer will result in a parse error.
+     *  }
      */
     typedef struct {
         int (* yajl_null)(void * ctx);

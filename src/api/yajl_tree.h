@@ -21,6 +21,11 @@
  *
  * \author Florian Forster
  * \date August 2010
+ *
+ * This interface makes quick parsing and extraction of
+ * smallish JSON docs trivial:
+ *
+ * \include example/parse_config.c
  */
 
 #ifndef YAJL_TREE_H
@@ -50,17 +55,18 @@ typedef enum {
 typedef struct yajl_val_s * yajl_val;
 
 /**
- * A JSON value:is one of the seven types above. For "string", "number",
- * "object", and "array" additional data is available in the "data" union.
- * The "YAJL_IS_*" and "YAJL_GET_*" macros below allow type checking
- * and convenient value extraction.
+ * A JSON value representation capable of holding one of the seven
+ * types above. For "string", "number", "object", and "array"
+ * additional data is available in the union.  The "YAJL_IS_*"
+ * and "YAJL_GET_*" macros below allow type checking and convenient
+ * value extraction.
  */
 struct yajl_val_s
 {
     /** Type of the value contained. Use the "YAJL_IS_*" macors to check for a
      * specific type. */
     yajl_type type;
-    /** Type-specific data. Use the "YAJL_TO_*" macros to access these
+    /** Type-specific data. You may use the "YAJL_GET_*" macros to access these
      * members. */
     union
     {
@@ -76,7 +82,7 @@ struct yajl_val_s
         } number;
         struct {
             const char **keys; /*< Array of keys */
-            yajl_val *values; /** Array of values. */
+            yajl_val *values; /*< Array of values. */
             size_t len; /*< Number of key-value-pairs. */
         } object;
         struct {
@@ -92,7 +98,7 @@ struct yajl_val_s
  * Parses an null-terminated string containing JSON data and returns a pointer
  * to the top-level value (root of the parse tree).
  *
- * \param input              Pointer to a null-terminated string containing
+ * \param input              Pointer to a null-terminated utf8 string containing
  *                           JSON data.
  * \param error_buffer       Pointer to a buffer in which an error message will
  *                           be stored if \em yajl_tree_parse fails, or
@@ -112,9 +118,7 @@ YAJL_API yajl_val yajl_tree_parse (const char *input,
                                    char *error_buffer, size_t error_buffer_size);
 
 /**
- * Free a parse tree.
- *
- * Recursively frees a pointer returned by "yajl_tree_parse".
+ * Free a parse tree returned by "yajl_tree_parse".
  *
  * \param v Pointer to a JSON value returned by "yajl_tree_parse". Passing NULL
  * is valid and results in a no-op.
@@ -122,7 +126,18 @@ YAJL_API yajl_val yajl_tree_parse (const char *input,
 YAJL_API void yajl_tree_free (yajl_val v);
 
 /**
- * Access a nested value.
+ * Access a nested value inside a tree.
+ *
+ * \param parent the node under which you'd like to extract values.
+ * \param path A null terminated array of strings, each the name of an object key
+ * \param type the yajl_type of the object you seek, or yajl_t_any if any will do.
+ *
+ * \returns a pointer to the found value, or NULL if we came up empty.
+ * 
+ * Future Ideas:  it'd be nice to move path to a string and implement support for
+ * a teeny tiny micro language here, so you can extract array elements, do things
+ * like .first and .last, even .length.  Inspiration from JSONPath and css selectors?
+ * No it wouldn't be fast, but that's not what this API is about.
  */
 YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type type);
 
