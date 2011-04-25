@@ -20,6 +20,7 @@
 #include "api/yajl_parse.h"
 #include "yajl_bytestack.h"
 #include "yajl_buf.h"
+#include "yajl_lex.h"
 
 
 typedef enum {
@@ -28,7 +29,7 @@ typedef enum {
     yajl_state_parse_error,
     yajl_state_lexical_error,
     yajl_state_map_start,
-    yajl_state_map_sep,    
+    yajl_state_map_sep,
     yajl_state_map_need_val,
     yajl_state_map_got_val,
     yajl_state_map_need_key,
@@ -67,6 +68,11 @@ yajl_do_finish(yajl_handle handle);
 unsigned char *
 yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
                          size_t jsonTextLen, int verbose);
+
+/* A little built in integer parsing routine with the same semantics as strtol
+ * that's unaffected by LOCALE. */
+long long
+yajl_parse_integer(const unsigned char *number, unsigned int length);
 
 
 #endif

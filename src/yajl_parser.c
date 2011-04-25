@@ -32,7 +32,7 @@
 #define MAX_VALUE_TO_MULTIPLY ((LLONG_MAX / 10) + (LLONG_MAX % 10))
 
  /* same semantics as strtol */
-static long long
+long long
 yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
     long long ret  = 0;

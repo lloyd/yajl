@@ -24,6 +24,8 @@
 #include "api/yajl_tree.h"
 #include "api/yajl_parse.h"
 
+#include "yajl_parser.h"
+
 #define STATUS_CONTINUE 1
 #define STATUS_ABORT    0
 
@@ -306,7 +308,8 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
 
     endptr = NULL;
     errno = 0;
-    v->u.number.i = (int64_t) strtoll(v->u.number.r, &endptr, /* base = */ 10);
+    v->u.number.i = yajl_parse_integer((const unsigned char *) v->u.number.r,
+                                       strlen(v->u.number.r));
     if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
         v->u.number.flags |= YAJL_NUMBER_INT_VALID;
 
