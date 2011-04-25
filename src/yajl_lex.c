@@ -252,9 +252,9 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
     int hasEscapes = 0;
 
     for (;;) {
-		unsigned char curChar;
+        unsigned char curChar;
 
-		STR_CHECK_EOF;
+        STR_CHECK_EOF;
 
         curChar = readChar(lexer, jsonText, offset);
 
