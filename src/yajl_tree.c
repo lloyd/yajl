@@ -19,7 +19,6 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include <inttypes.h>
 
 #include "api/yajl_tree.h"
 #include "api/yajl_parse.h"
@@ -236,7 +235,7 @@ static int context_add_value (context_t *ctx, yajl_val v)
         {
             if (!YAJL_IS_STRING (v))
                 RETURN_ERROR (ctx, EINVAL, "context_add_value: "
-                              "Object key is not a string (%#04"PRIx8")",
+                              "Object key is not a string (%#04x)",
                               v->type);
 
             ctx->stack->key = v->u.string;
@@ -260,7 +259,7 @@ static int context_add_value (context_t *ctx, yajl_val v)
     else
     {
         RETURN_ERROR (ctx, EINVAL, "context_add_value: Cannot add value to "
-                      "a value of type %#04"PRIx8" (not a composite type)",
+                      "a value of type %#04x (not a composite type)",
                       ctx->stack->value->type);
     }
 }

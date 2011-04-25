@@ -101,8 +101,6 @@ extern "C" {
     YAJL_API int yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...);
 
     /** allocate a generator handle
-     *  \param config a pointer to a structure containing parameters which
-     *                configure the behavior of the json generator
      *  \param allocFuncs an optional pointer to a structure which allows
      *                    the client to overide the memory allocation
      *                    used by yajl.  May be NULL, in which case
