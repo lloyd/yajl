@@ -114,6 +114,7 @@ main(int argc, char ** argv)
     yajl_status stat;
     size_t rd;
     int retval = 0;
+    int a = 1;
 
     g = yajl_gen_alloc(NULL);
     yajl_gen_config(g, yajl_gen_beautify, 1);
@@ -125,7 +126,6 @@ main(int argc, char ** argv)
     yajl_config(hand, yajl_allow_comments, 1);
 
     /* check arguments.*/
-    int a = 1;
     while ((a < argc) && (argv[a][0] == '-') && (strlen(argv[a]) > 1)) {
         unsigned int i;
         for ( i=1; i < strlen(argv[a]); i++) {

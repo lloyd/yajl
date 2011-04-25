@@ -41,12 +41,12 @@ main(int argc, char ** argv)
     static unsigned char fileData[65536];
     int quiet = 0;
     int retval = 0;
+    int a = 1;
 
     /* allocate a parser */
     hand = yajl_alloc(NULL, NULL, NULL);
 
     /* check arguments.*/
-    int a = 1;
     while ((a < argc) && (argv[a][0] == '-') && (strlen(argv[a]) > 1)) {
         unsigned int i;
         for ( i=1; i < strlen(argv[a]); i++) {

@@ -14,13 +14,35 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "documents.h"
-
 #include <yajl/yajl_parse.h>
-#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "documents.h"
+
+/* a platform specific defn' of a function to get a high res time in a
+ * portable format */
+#ifndef WIN32
+#include <sys/time.h>
+double mygettime(void) {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return now.tv_sec + (now.tv_usec / 1000000.0);
+}
+#else
+#define _WIN32 1
+#include <windows.h>
+double mygettime(void) {
+    long long tval;
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
+	tval = ft.dwHighDateTime;
+	tval <<=32;
+	tval |= ft.dwLowDateTime;
+	return tval / 10000000.00;
+}
+#endif
 
 #define PARSE_TIME_SECS 3
 
@@ -28,22 +50,19 @@ static int
 run(int validate_utf8)
 {
     long long times = 0; 
-    struct timeval starttime;
-    gettimeofday(&starttime, NULL);
+    double starttime;
+
+    starttime = mygettime();
 
     /* allocate a parser */
     for (;;) {
+		int i;
         {
-            struct timeval now;
-            gettimeofday(&now, NULL);
-            now.tv_sec -= starttime.tv_sec;
-            if (now.tv_usec < starttime.tv_usec) {
-                now.tv_sec--;
-            }
-            if (now.tv_sec >= PARSE_TIME_SECS) break;
+            double now = mygettime();
+            if (now - starttime >= PARSE_TIME_SECS) break;
         }
 
-        for (int i = 0; i < 100; i++) {
+        for (i = 0; i < 100; i++) {
             yajl_handle hand = yajl_alloc(NULL, NULL, NULL);
             yajl_status stat;        
             const char ** d;
@@ -73,22 +92,18 @@ run(int validate_utf8)
 
     /* parsed doc 'times' times */
     {
-        double then, n;
         double throughput;
-        struct timeval now;
+        double now;
         const char * all_units[] = { "B/s", "KB/s", "MB/s", (char *) 0 };
         const char ** units = all_units;
-        int avg_doc_size = 0;
+        int i, avg_doc_size = 0;
 
-        gettimeofday(&now, NULL);
+        now = mygettime();
 
-        then = starttime.tv_sec + (starttime.tv_usec / 1000000.0);
-        n = now.tv_sec + (now.tv_usec / 1000000.0);
-
-        for (int i = 0; i < num_docs(); i++) avg_doc_size += doc_size(i);
+        for (i = 0; i < num_docs(); i++) avg_doc_size += doc_size(i);
         avg_doc_size /= num_docs();
 
-        throughput = (times * avg_doc_size) / (n - then);
+        throughput = (times * avg_doc_size) / (now - starttime);
         
         while (*(units + 1) && throughput > 1024) {
             throughput /= 1024;

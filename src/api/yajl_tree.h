@@ -72,12 +72,12 @@ struct yajl_val_s
     {
         char * string;
         struct {
-            char   *r;   /*< unparsed number in string form. */
             long long i; /*< integer value, if representable. */
             double  d;   /*< double value, if representable. */
             /** Signals whether the \em i and \em d members are
              * valid. See \c YAJL_NUMBER_INT_VALID and
              * \c YAJL_NUMBER_DOUBLE_VALID. */
+            char   *r;   /*< unparsed number in string form. */
             unsigned int flags;
         } number;
         struct {

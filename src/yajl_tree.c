@@ -25,6 +25,10 @@
 
 #include "yajl_parser.h"
 
+#if WIN32
+#define snprintf sprintf_s
+#endif
+
 #define STATUS_CONTINUE 1
 #define STATUS_ABORT    0
 
@@ -46,11 +50,11 @@ struct context_s
 };
 typedef struct context_s context_t;
 
-#define RETURN_ERROR(ctx,retval,...) do {                               \
+#define RETURN_ERROR(ctx,retval,...) {                                  \
         if ((ctx)->errbuf != NULL)                                      \
             snprintf ((ctx)->errbuf, (ctx)->errbuf_size, __VA_ARGS__);  \
         return (retval);                                                \
-    } while (0)                                                         \
+    }
 
 static yajl_val value_alloc (yajl_type type)
 {
@@ -78,7 +82,7 @@ static void yajl_object_free (yajl_val v)
         v->u.object.values[i] = NULL;
     }
 
-    free(v->u.object.keys);
+    free((void*) v->u.object.keys);
     free(v->u.object.values);
     free(v);
 }
@@ -160,7 +164,7 @@ static int object_add_keyval(context_t *ctx,
     /* We're assuring that "obj" is an object in "context_add_value". */
     assert(YAJL_IS_OBJECT(obj));
 
-    tmpk = realloc(obj->u.object.keys, sizeof(*(obj->u.object.keys)) * (obj->u.object.len + 1));
+    tmpk = realloc((void *) obj->u.object.keys, sizeof(*(obj->u.object.keys)) * (obj->u.object.len + 1));
     if (tmpk == NULL)
         RETURN_ERROR(ctx, ENOMEM, "Out of memory");
     obj->u.object.keys = tmpk;
@@ -415,16 +419,12 @@ yajl_val yajl_tree_parse (const char *input,
             /* end array   = */ handle_end_array
         };
 
-    context_t ctx =
-        {
-            /* key         = */ NULL,
-            /* stack       = */ NULL,
-            /* errbuf      = */ error_buffer,
-            /* errbuf_size = */ error_buffer_size
-        };
-
     yajl_handle handle;
     yajl_status status;
+	context_t ctx = { NULL, NULL, NULL, 0 };
+
+	ctx.errbuf = error_buffer;
+	ctx.errbuf_size = error_buffer_size;
 
     if (error_buffer != NULL)
         memset (error_buffer, 0, error_buffer_size);
