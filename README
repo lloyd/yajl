@@ -1,3 +1,8 @@
+**********************************************************************
+        This is YAJL 2, for the legacy version of YAJL.  see
+              https://github.com/lloyd/yajl/tree/1.x
+**********************************************************************
+
 Welcome to Yet Another JSON Library (YAJL)
 
 ## Why does the world need another C library for parsing JSON?  

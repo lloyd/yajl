@@ -21,6 +21,16 @@
      * lth addition of a little in tree performance benchmark, `perftest` in
 	perf/perftest.c
 
+1.0.12
+     * Conrad Irwin - Parse null bytes correctly
+     * Mirek Rusin - fix LLVM warnings
+     * gno - Don't generate numbers for keys. closes #13
+     * lth - various win32 fixes, including build documentation improvements
+     * John Stamp - Don't export private symbols.
+     * John Stamp - Install yajl_version.h, not the template.
+     * John Stamp - Don't use -fPIC for static lib.  Cmake will automatically add it for the shared.
+     * lth 0 fix paths embedded in dylib upon installation on osx.  closes #11
+
 1.0.11
      * lth remove -Wno-missing-field-initializers for greater gcc compat (3.4.6)
 
