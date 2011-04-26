@@ -155,7 +155,7 @@ yajl_status
 yajl_do_finish(yajl_handle hand)
 {
     yajl_status stat;
-    stat = yajl_do_parse(hand,(const unsigned char *)" ",1);
+    stat = yajl_do_parse(hand,(const unsigned char *) " ",1);
 
     if (stat != yajl_status_ok) return stat;
 

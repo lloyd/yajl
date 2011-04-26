@@ -49,7 +49,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
 {
     yajl_handle hand = NULL;
     yajl_alloc_funcs afsBuffer;
-    
+
     /* first order of business is to set up memory allocation routines */
     if (afs != NULL) {
         if (afs->malloc == NULL || afs->realloc == NULL || afs->free == NULL)
@@ -73,7 +73,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
     hand->flags	    = 0;
     yajl_bs_init(hand->stateStack, &(hand->alloc));
-    yajl_bs_push(hand->stateStack, yajl_state_start);    
+    yajl_bs_push(hand->stateStack, yajl_state_start);
 
     return hand;
 }
@@ -120,7 +120,7 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
 {
     yajl_status status;
 
-    // lazy allocate the lexer
+    /* lazy allocation of the lexer */
     if (hand->lexer == NULL) {
         hand->lexer = yajl_lex_alloc(&(hand->alloc),
                                      hand->flags & yajl_allow_comments,
@@ -135,6 +135,18 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
 yajl_status
 yajl_complete_parse(yajl_handle hand)
 {
+    /* The lexer is lazy allocated in the first call to parse.  if parse is
+     * never called, then no data was provided to parse at all.  This is a
+     * "premature EOF" error unless yajl_allow_partial_values is specified.
+     * allocating the lexer now is the simplest possible way to handle this
+     * case while preserving all the other semantics of the parser
+     * (multiple values, partial values, etc). */
+    if (hand->lexer == NULL) {
+        hand->lexer = yajl_lex_alloc(&(hand->alloc),
+                                     hand->flags & yajl_allow_comments,
+                                     !(hand->flags & yajl_dont_validate_strings));
+    }
+
     return yajl_do_finish(hand);
 }
 
