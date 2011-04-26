@@ -29,20 +29,14 @@ static void CharToHex(unsigned char c, char * hexBuf)
 }
 
 void
-yajl_string_encode(yajl_buf buf, const unsigned char * str,
-                   size_t len)
-{
-    yajl_string_encode2((const yajl_print_t) &yajl_buf_append, buf, str, len);
-}
-
-void
-yajl_string_encode2(const yajl_print_t print,
-                    void * ctx,
-                    const unsigned char * str,
-                    size_t len)
+yajl_string_encode(const yajl_print_t print,
+                   void * ctx,
+                   const unsigned char * str,
+                   size_t len,
+                   int escape_solidus)
 {
     size_t beg = 0;
-    size_t end = 0;    
+    size_t end = 0;
     char hexBuf[7];
     hexBuf[0] = '\\'; hexBuf[1] = 'u'; hexBuf[2] = '0'; hexBuf[3] = '0';
     hexBuf[6] = 0;
@@ -58,7 +52,7 @@ yajl_string_encode2(const yajl_print_t print,
              * specifically, this production from the grammar:
              *   unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
              */
-            /* case '/': escaped = "\\/"; break; */
+            case '/': if (escape_solidus) escaped = "\\/"; break;
             case '"': escaped = "\\\""; break;
             case '\f': escaped = "\\f"; break;
             case '\b': escaped = "\\b"; break;

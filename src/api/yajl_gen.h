@@ -28,7 +28,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif    
+#endif
     /** generator status codes */
     typedef enum {
         /** no error */
@@ -91,7 +91,14 @@ extern "C" {
          * pass to it via yajl_gen_string() are valid UTF8.  Enabling
          * this option will cause it to do so.
          */
-        yajl_gen_validate_utf8 = 0x08
+        yajl_gen_validate_utf8 = 0x08,
+        /**
+         * the forward solidus (slash or '/' in human) is not required to be
+         * escaped in json text.  By default, YAJL will not escape it in the
+         * iterest of saving bytes.  Setting this flag will cause YAJL to
+         * always escape '/' in generated JSON strings.
+         */
+        yajl_gen_escape_solidus = 0x10
     } yajl_gen_option;
 
     /** allow the modification of generator options subsequent to handle
@@ -110,7 +117,7 @@ extern "C" {
      */
     YAJL_API yajl_gen yajl_gen_alloc(const yajl_alloc_funcs * allocFuncs);
 
-    /** free a generator handle */    
+    /** free a generator handle */
     YAJL_API void yajl_gen_free(yajl_gen handle);
 
     YAJL_API yajl_gen_status yajl_gen_integer(yajl_gen hand, long long int number);
@@ -125,7 +132,7 @@ extern "C" {
                                              const unsigned char * str,
                                              size_t len);
     YAJL_API yajl_gen_status yajl_gen_null(yajl_gen hand);
-    YAJL_API yajl_gen_status yajl_gen_bool(yajl_gen hand, int boolean);    
+    YAJL_API yajl_gen_status yajl_gen_bool(yajl_gen hand, int boolean);
     YAJL_API yajl_gen_status yajl_gen_map_open(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_map_close(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_array_open(yajl_gen hand);

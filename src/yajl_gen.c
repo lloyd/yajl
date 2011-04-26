@@ -35,7 +35,7 @@ typedef enum {
     yajl_gen_error
 } yajl_gen_state;
 
-struct yajl_gen_t 
+struct yajl_gen_t
 {
     unsigned int flags;
     unsigned int depth;
@@ -252,7 +252,7 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
     }
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, "\"", 1);
-    yajl_string_encode2(g->print, g->ctx, str, len);
+    yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
     g->print(g->ctx, "\"", 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;
