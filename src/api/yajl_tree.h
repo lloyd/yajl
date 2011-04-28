@@ -148,8 +148,8 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type t
 /* Various convenience macros to check the type of a `yajl_val` */
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == yajl_t_string))
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == yajl_t_number))
-#define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->u.flags & YAJL_NUMBER_INT_VALID))
-#define YAJL_IS_DOUBLE(v) (YAJL_IS_NUMBER(v) && ((v)->u.flags & YAJL_NUMBER_DOUBLE_VALID))
+#define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->u.number.flags & YAJL_NUMBER_INT_VALID))
+#define YAJL_IS_DOUBLE(v) (YAJL_IS_NUMBER(v) && ((v)->u.number.flags & YAJL_NUMBER_DOUBLE_VALID))
 #define YAJL_IS_OBJECT(v) (((v) != NULL) && ((v)->type == yajl_t_object))
 #define YAJL_IS_ARRAY(v)  (((v) != NULL) && ((v)->type == yajl_t_array ))
 #define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == yajl_t_true  ))

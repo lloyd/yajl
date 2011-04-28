@@ -1,4 +1,6 @@
 2.0.2
+     * lth fix typos in yajl_tree.h macros YAJL_IS_INTEGER and YAJL_IS_DOUBLE,
+	contributed by Artem S Vybornov.
      * lth add #ifdef __cplusplus wrappers to yajl_tree to allow proper
 	usage from many populer C++ compilers.
 
