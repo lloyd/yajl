@@ -1,3 +1,7 @@
+2.0.2
+     * lth add #ifdef __cplusplus wrappers to yajl_tree to allow proper
+	usage from many populer C++ compilers.
+
 2.0.1
      * lth generator flag to allow client to specify they want
 	escaped solidi '/'.  issue #28
