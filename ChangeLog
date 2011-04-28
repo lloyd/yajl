@@ -1,3 +1,8 @@
+2.0.1
+     * lth generator flag to allow client to specify they want
+	escaped solidi '/'.  issue #28
+     * lth crash fix when yajl_parse() is never called. issue #27
+
 2.0.0
      * lth YAJL is now ISC licensed: http://en.wikipedia.org/wiki/ISC_license
      * lth 20-35% (osx and linux respectively) parsing performance
