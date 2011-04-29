@@ -1,3 +1,6 @@
+2.0.3
+
+
 2.0.2
      * lth fix typos in yajl_tree.h macros YAJL_IS_INTEGER and YAJL_IS_DOUBLE,
 	contributed by Artem S Vybornov.
