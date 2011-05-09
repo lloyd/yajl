@@ -50,13 +50,14 @@ typedef struct yajl_bytestack_t
 #define yajl_bs_current(obs)               \
     (assert((obs).used > 0), (obs).stack[(obs).used - 1])
 
-#define yajl_bs_push(obs, byte) {                       \
-    if (((obs).size - (obs).used) == 0) {               \
-        (obs).size += YAJL_BS_INC;                      \
-        (obs).stack = (obs).yaf->realloc((obs).yaf->ctx,\
-                                         (void *) (obs).stack, (obs).size);\
-    }                                                   \
-    (obs).stack[((obs).used)++] = (byte);               \
+#define yajl_bs_push(obs, byte) {                               \
+    if (((obs).size - (obs).used) == 0) {                       \
+        (obs).size += YAJL_BS_INC;                              \
+        (obs).stack = (obs).yaf->realloc((obs).yaf->ctx,        \
+                                         (void *)((obs).stack), \
+                                         (size_t)((obs).size)); \
+    }                                                           \
+    (obs).stack[((obs).used)++] = (byte);                       \
 }
 
 /* removes the top item of the stack, returns nothing */
