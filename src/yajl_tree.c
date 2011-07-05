@@ -260,11 +260,16 @@ static int context_add_value (context_t *ctx, yajl_val v)
     {
         return (array_add_value (ctx, ctx->stack->value, v));
     }
-    else
+    else if (ctx->stack->value != NULL)
     {
         RETURN_ERROR (ctx, EINVAL, "context_add_value: Cannot add value to "
                       "a value of type %#04x (not a composite type)",
                       ctx->stack->value->type);
+    }
+    else
+    {
+        RETURN_ERROR (ctx, EINVAL, "context_add_value: Cannot add value to "
+                      "NULL value");
     }
 }
 
@@ -435,21 +440,26 @@ yajl_val yajl_tree_parse (const char *input,
     status = yajl_parse(handle,
                         (unsigned char *) input,
                         strlen (input));
+    if (status != yajl_status_ok)
+        goto error;
+
     status = yajl_complete_parse (handle);
-    if (status != yajl_status_ok) {
-        if (error_buffer != NULL && error_buffer_size > 0) {
-            snprintf(
-                error_buffer, error_buffer_size, "%s",
-                (char *) yajl_get_error(handle, 1,
-                                        (const unsigned char *) input,
-                                        strlen(input)));
-        }
-        yajl_free (handle);
-        return NULL;
-    }
+    if (status != yajl_status_ok)
+        goto error;
 
     yajl_free (handle);
     return (ctx.root);
+
+error:
+    if (error_buffer != NULL && error_buffer_size > 0) {
+        snprintf(
+                 error_buffer, error_buffer_size, "%s",
+                 (char *) yajl_get_error(handle, 1,
+                                         (const unsigned char *) input,
+                                         strlen(input)));
+    }
+    yajl_free (handle);
+    return NULL;
 }
 
 yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)

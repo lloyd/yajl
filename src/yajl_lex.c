@@ -626,8 +626,11 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                                        jsonTextLen, offset);
                 if (tok == yajl_tok_comment) {
                     /* "error" is silly, but that's the initial
-                     * state of tok.  guilty until proven innocent. */  
+                     * state of tok.  guilty until proven innocent. */
+#if 0
+                    /* Static analyser says that it is innocent */
                     tok = yajl_tok_error;
+#endif
                     yajl_buf_clear(lexer->buf);
                     lexer->bufInUse = 0;
                     startOffset = *offset; 
