@@ -171,7 +171,7 @@ yajl_gen_free(yajl_gen g)
     if (++(g->depth) >= YAJL_MAX_DEPTH) return yajl_max_depth_exceeded;
 
 #define DECREMENT_DEPTH \
-  if (--(g->depth) >= YAJL_MAX_DEPTH) return yajl_gen_error;
+  if (--(g->depth) >= YAJL_MAX_DEPTH) return yajl_max_depth_exceeded;
 
 #define APPENDED_ATOM \
     switch (g->state[g->depth]) {                   \
