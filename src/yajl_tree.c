@@ -314,11 +314,10 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
 
     v->u.number.flags = 0;
 
-    endptr = NULL;
     errno = 0;
     v->u.number.i = yajl_parse_integer((const unsigned char *) v->u.number.r,
                                        strlen(v->u.number.r));
-    if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
+    if (errno == 0)
         v->u.number.flags |= YAJL_NUMBER_INT_VALID;
 
     endptr = NULL;
