@@ -50,6 +50,12 @@ struct context_s
 };
 typedef struct context_s context_t;
 
+typedef struct yajl_tree_stream_context_s
+{ 
+    yajl_handle handle;
+    context_t *context;
+} yajl_tree_stream_context_t;
+
 #define RETURN_ERROR(ctx,retval,...) {                                  \
         if ((ctx)->errbuf != NULL)                                      \
             snprintf ((ctx)->errbuf, (ctx)->errbuf_size, __VA_ARGS__);  \
@@ -500,3 +506,91 @@ void yajl_tree_free (yajl_val v)
         free(v);
     }
 }
+
+
+yajl_tree_stream_context yajl_tree_stream_init (int allow_comments,
+                          char *error_buffer, size_t error_buffer_size)
+{
+    static const yajl_callbacks callbacks =
+        {
+            /* null        = */ handle_null,
+            /* boolean     = */ handle_boolean,
+            /* integer     = */ NULL,
+            /* double      = */ NULL,
+            /* number      = */ handle_number,
+            /* string      = */ handle_string,
+            /* start map   = */ handle_start_map,
+            /* map key     = */ handle_string,
+            /* end map     = */ handle_end_map,
+            /* start array = */ handle_start_array,
+            /* end array   = */ handle_end_array
+        };
+
+    yajl_tree_stream_context stream_ctx = malloc(sizeof(yajl_tree_stream_context_t));
+    context_t *ctx = malloc(sizeof(context_t));
+    memset (ctx, 0, sizeof(context_t));
+	stream_ctx->context = ctx;
+
+	ctx->errbuf = error_buffer;
+	ctx->errbuf_size = error_buffer_size;
+
+    if (error_buffer != NULL)
+        memset (error_buffer, 0, error_buffer_size);
+
+    stream_ctx->handle = yajl_alloc (&callbacks, NULL, ctx);
+    yajl_config(stream_ctx->handle, yajl_allow_comments, allow_comments);
+    return stream_ctx;
+}
+
+yajl_status yajl_tree_stream_parse (yajl_tree_stream_context stream_ctx, const char *input, int input_length)
+{
+    yajl_status status;
+    context_t *ctx;
+    ctx = stream_ctx->context;
+    status = yajl_parse(stream_ctx->handle,
+                        (unsigned char *) input,
+                        input_length);
+
+    if (status != yajl_status_ok) {
+        if (ctx->errbuf != NULL && ctx->errbuf_size > 0) {
+            snprintf(
+                ctx->errbuf, ctx->errbuf_size, "%s",
+                (char *) yajl_get_error(stream_ctx->handle, 1,
+                                        (const unsigned char *) NULL,
+                                        0));
+        }
+        yajl_free (stream_ctx->handle);
+    }
+
+    return status;
+}
+
+yajl_val yajl_tree_stream_finish (yajl_tree_stream_context stream_ctx)
+{
+    yajl_val root;
+    yajl_status status;
+    context_t *ctx;
+    ctx = stream_ctx->context;
+
+    status = yajl_complete_parse (stream_ctx->handle);
+    if (status != yajl_status_ok) {
+        if (ctx->errbuf != NULL && ctx->errbuf_size > 0) {
+            snprintf(
+                ctx->errbuf, ctx->errbuf_size, "%s",
+                (char *) yajl_get_error(stream_ctx->handle, 1,
+                                        (const unsigned char *) NULL,
+                                        0));
+        }
+        yajl_free (stream_ctx->handle);
+        return NULL;
+    }
+
+    root = ctx->root;
+
+    yajl_free (stream_ctx->handle);
+    free(ctx);
+    free(stream_ctx);
+
+    return (root);
+}
+

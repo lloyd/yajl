@@ -32,6 +32,7 @@
 #define YAJL_TREE_H 1
 
 #include <yajl/yajl_common.h>
+#include <yajl/yajl_parse.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,6 +97,8 @@ struct yajl_val_s
     } u;
 };
 
+typedef struct yajl_tree_stream_context_s * yajl_tree_stream_context;
+
 /**
  * Parse a string.
  *
@@ -120,6 +123,60 @@ struct yajl_val_s
  */
 YAJL_API yajl_val yajl_tree_parse (const char *input,
                                    char *error_buffer, size_t error_buffer_size);
+
+/**
+ * Initialize a json tree parser.
+ *
+ * Initialize a context for parsing a stream of JSON data.
+ *
+ * \param allow_comments     Whether to allow JS like comments in the JSON data.
+ *
+ * \param error_buffer       Pointer to a buffer in which an error message will
+ *                           be stored if \em yajl_tree_parse fails, or
+ *                           \c NULL. The buffer will be initialized before
+ *                           parsing, so its content will be destroyed even if
+ *                           \em yajl_tree_parse succeeds.
+ * \param error_buffer_size  Size of the memory area pointed to by
+ *                           \em error_buffer_size. If \em error_buffer_size is
+ *                           \c NULL, this argument is ignored.
+ *
+ * \returns stream context to pass to yahl_tree_stream_parse and yajl_tree_stream_finish.
+ */
+YAJL_API yajl_tree_stream_context yajl_tree_stream_init (int allow_comments,
+                          char *error_buffer, size_t error_buffer_size);
+
+/**
+ * Parse a string.
+ *
+ * Parses an null-terminated string containing JSON data and returns a pointer
+ * to the top-level value (root of the parse tree).
+ *
+ * \param stream_ctx         json tree stream context
+ *
+ * \param input              Pointer to the next set of data for parse.
+ *
+ * \param input_length       Size of the input to parse.
+ *
+ * \returns status of the parser, on error, check the error_buffer the stream
+ * parser was initialized with for more details.
+ */
+YAJL_API yajl_status yajl_tree_stream_parse (yajl_tree_stream_context stream_ctx, const char *input, int input_length);
+
+/**
+ * Parse a string.
+ *
+ * Parses an null-terminated string containing JSON data and returns a pointer
+ * to the top-level value (root of the parse tree).
+ *
+ * \param stream_ctx         json tree stream context
+ *
+ * \returns Pointer to the top-level value or \c NULL on error. The memory
+ * pointed to must be freed using \em yajl_tree_free. In case of an error, a
+ * null terminated message describing the error in more detail is stored in
+ * \em error_buffer if it is not \c NULL.
+ */
+YAJL_API yajl_val yajl_tree_stream_finish (yajl_tree_stream_context stream_ctx);
+
 
 /**
  * Free a parse tree returned by "yajl_tree_parse".
@@ -183,3 +240,4 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type t
 #endif
 
 #endif /* YAJL_TREE_H */
+
