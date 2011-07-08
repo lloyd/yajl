@@ -77,7 +77,7 @@ ENDIF (WIN32)
 
 
 ADD_SUBDIRECTORY(src)
-ADD_SUBDIRECTORY(test)
+ADD_SUBDIRECTORY(test EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(reformatter)
 ADD_SUBDIRECTORY(verify)
 ADD_SUBDIRECTORY(example)
@@ -88,4 +88,7 @@ INCLUDE(YAJLDoc.cmake)
 # a test target
 ADD_CUSTOM_TARGET(test
                   ./run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/yajl_test
+                  DEPENDS yajl_test
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+ADD_CUSTOM_TARGET(check)
+ADD_DEPENDENCIES(check test)
