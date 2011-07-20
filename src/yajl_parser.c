@@ -51,6 +51,10 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
             errno = ERANGE;
             return sign == 1 ? LLONG_MAX : LLONG_MIN;
         }
+        if (*pos < '0' || *pos > '9') {
+            errno = ERANGE;
+            return sign == 1 ? LLONG_MAX : LLONG_MIN;
+        }
         ret += (*pos++ - '0');
     }
 
