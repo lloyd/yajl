@@ -21,11 +21,13 @@
 #include <string.h>
 #include <stdio.h>
 
-static void CharToHex(unsigned char c, char * hexBuf)
+static void Utf16ToHex(unsigned short utf16, char * hexBuf)
 {
     const char * hexchar = "0123456789ABCDEF";
-    hexBuf[0] = hexchar[c >> 4];
-    hexBuf[1] = hexchar[c & 0x0F];
+    hexBuf[0] = hexchar[(utf16 >> 12) & 0x0F];
+    hexBuf[1] = hexchar[(utf16 >> 8) & 0x0F];
+    hexBuf[2] = hexchar[(utf16 >> 4)  & 0x0F];
+    hexBuf[3] = hexchar[ utf16        & 0x0F];
 }
 
 void
@@ -37,13 +39,17 @@ yajl_string_encode(const yajl_print_t print,
 {
     size_t beg = 0;
     size_t end = 0;
-    char hexBuf[7];
-    hexBuf[0] = '\\'; hexBuf[1] = 'u'; hexBuf[2] = '0'; hexBuf[3] = '0';
-    hexBuf[6] = 0;
+    char hexBuf[12];
+    hexBuf[0] = '\\'; hexBuf[1] = 'u';
+    hexBuf[6] = '\\'; hexBuf[7] = 'u';
 
     while (end < len) {
         const char * escaped = NULL;
-        switch (str[end]) {
+        unsigned int escapedLen = 6;
+        unsigned char c = (unsigned char) str[end];
+        size_t mark = end;
+        unsigned short utf16 = 0;
+        switch (c) {
             case '\r': escaped = "\\r"; break;
             case '\n': escaped = "\\n"; break;
             case '\\': escaped = "\\\\"; break;
@@ -58,15 +64,69 @@ yajl_string_encode(const yajl_print_t print,
             case '\b': escaped = "\\b"; break;
             case '\t': escaped = "\\t"; break;
             default:
-                if ((unsigned char) str[end] < 32) {
-                    CharToHex(str[end], hexBuf + 4);
-                    escaped = hexBuf;
+                switch (c & 0xF8) { /* 11111 000 */
+                    case 0: break;
+                    case 0xC0: /* 110 00 000 */
+                    case 0xC8: /* 110 01 000 */
+                    case 0xD0: /* 110 10 000 */
+                    case 0xD8: /* 110 11 000 */
+                        escaped = hexBuf;
+                        utf16 = (c & 0x1F) << 6;
+                        if ((c = str[++end]) & 0x80) {
+                            utf16 |= c & 0x3F;
+                        } else {
+                            utf16 = str[--end];
+                        }
+                        Utf16ToHex (utf16, hexBuf + 2);
+                        break;
+                    case 0xE0: /* 1110 0 000 */
+                    case 0xE8: /* 1110 1 000 */
+                        escaped = hexBuf;
+                        utf16 = (c & 0x0F) << 12;
+                        if ((c = str[++end]) & 0x80) {
+                            utf16 |= (c & 0x3F) << 6;
+
+                            if ((c = str[++end]) & 0x80) {
+                                utf16 |= c & 0x3F;
+                                Utf16ToHex (utf16, hexBuf + 2);
+                                break;
+                            }
+                        }
+
+                        Utf16ToHex (str[mark], hexBuf + 2);
+                        end = mark;
+                        break;
+                    case 0xF0: /* 11110 000 */
+                        escaped = hexBuf;
+                        utf16 = (0xD8 << 8) | ((c & 0x07) << 8);
+                        if ((c = str[++end]) & 0x80) {
+                            utf16 |= c << 2;
+
+                            if ((c = str[++end]) & 0x80) {
+                                utf16 |= (c & 0x30) >> 4;
+                                utf16 -= 1 << 6;
+                                Utf16ToHex (utf16, hexBuf + 2);
+
+                                utf16 |= (0xD9 << 8) | (c & 0x0F) << 6;
+
+                                if ((c = str[++end]) & 0x80) {
+                                    utf16 |= c & 0x3F;
+                                    Utf16ToHex (utf16, hexBuf + 8);
+                                    escapedLen = 12;
+                                    break;
+                                }
+                            }
+                        }
+
+                        Utf16ToHex (str[mark], hexBuf + 2);
+                        end = mark;
+                        break;
                 }
                 break;
         }
         if (escaped != NULL) {
-            print(ctx, (const char *) (str + beg), end - beg);
-            print(ctx, escaped, (unsigned int)strlen(escaped));
+            print(ctx, (const char *) (str + beg), mark - beg);
+            print(ctx, escaped, escapedLen);
             beg = ++end;
         } else {
             ++end;
@@ -87,7 +147,7 @@ static void hexToDigit(unsigned int * val, const unsigned char * hex)
     }
 }
 
-static void Utf32toUtf8(unsigned int codepoint, char * utf8Buf) 
+static void Utf32toUtf8(unsigned int codepoint, char * utf8Buf)
 {
     if (codepoint < 0x80) {
         utf8Buf[0] = (char) codepoint;
@@ -117,7 +177,7 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                         size_t len)
 {
     size_t beg = 0;
-    size_t end = 0;    
+    size_t end = 0;
 
     while (end < len) {
         if (str[end] == '\\') {
@@ -144,8 +204,8 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                             unsigned int surrogate = 0;
                             hexToDigit(&surrogate, str + end + 2);
                             codepoint =
-                                (((codepoint & 0x3F) << 10) | 
-                                 ((((codepoint >> 6) & 0xF) + 1) << 16) | 
+                                (((codepoint & 0x3F) << 10) |
+                                 ((((codepoint >> 6) & 0xF) + 1) << 16) |
                                  (surrogate & 0x3FF));
                             end += 5;
                         } else {
@@ -153,7 +213,7 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                             break;
                         }
                     }
-                    
+
                     Utf32toUtf8(codepoint, utf8Buf);
                     unescaped = utf8Buf;
 
@@ -183,13 +243,13 @@ int yajl_string_validate_utf8(const unsigned char * s, size_t len)
 {
     if (!len) return 1;
     if (!s) return 0;
-    
+
     while (len--) {
         /* single byte */
         if (*s <= 0x7f) {
             /* noop */
         }
-        /* two byte */ 
+        /* two byte */
         else if ((*s >> 5) == 0x6) {
             ADV_PTR;
             if (!((*s >> 6) == 0x2)) return 0;
@@ -201,7 +261,7 @@ int yajl_string_validate_utf8(const unsigned char * s, size_t len)
             ADV_PTR;
             if (!((*s >> 6) == 0x2)) return 0;
         }
-        /* four byte */        
+        /* four byte */
         else if ((*s >> 3) == 0x1e) {
             ADV_PTR;
             if (!((*s >> 6) == 0x2)) return 0;
@@ -212,9 +272,9 @@ int yajl_string_validate_utf8(const unsigned char * s, size_t len)
         } else {
             return 0;
         }
-        
+
         s++;
     }
-    
+
     return 1;
 }
