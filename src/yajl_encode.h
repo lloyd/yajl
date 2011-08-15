@@ -18,7 +18,7 @@
 #define __YAJL_ENCODE_H__
 
 #include "yajl_buf.h"
-#include "api/yajl_gen.h"
+#include "yajl/yajl_gen.h"
 
 void yajl_string_encode(const yajl_print_t printer,
                         void * ctx,

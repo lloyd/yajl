@@ -17,7 +17,7 @@
 #ifndef __YAJL_BUF_H__
 #define __YAJL_BUF_H__
 
-#include "api/yajl_common.h"
+#include "yajl/yajl_common.h"
 #include "yajl_alloc.h"
 
 /*

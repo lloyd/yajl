@@ -34,7 +34,7 @@ AC_SUBST(YAJL_MINOR)
 AC_SUBST(YAJL_MICRO)
 
 AC_CONFIG_FILES([Makefile
-                 src/api/yajl_version.h
+                 src/yajl/yajl_version.h
                  pkgconfig/yajl.pc
                  pkgconfig/yajl-uninstalled.pc])
 

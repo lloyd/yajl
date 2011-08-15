@@ -15,7 +15,7 @@ aclocal.m4
 .version
 config.*
 libtool
-src/api/yajl_version.h
+src/yajl/yajl_version.h
 stamp-h1
 configure
 json_reformat

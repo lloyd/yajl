@@ -17,7 +17,7 @@
 #ifndef __YAJL_LEX_H__
 #define __YAJL_LEX_H__
 
-#include "api/yajl_common.h"
+#include "yajl/yajl_common.h"
 
 typedef enum {
     yajl_tok_bool,         

@@ -4,10 +4,10 @@ dist_doc_DATA = TODO README
 
 lib_LTLIBRARIES = libyail.la
 
-pkginclude_HEADERS = src/api/yajl_parse.h \
-		     src/api/yajl_gen.h \
-		     src/api/yajl_common.h \
-		     src/api/yajl_version.h
+pkginclude_HEADERS = src/yajl/yajl_parse.h \
+		     src/yajl/yajl_gen.h \
+		     src/yajl/yajl_common.h \
+		     src/yajl/yajl_version.h
 
 libyail_la_SOURCES = src/yajl.c \
 		     src/yajl_lex.c \
@@ -49,5 +49,5 @@ libyail_la_LDFLAGS = -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 ACLOCAL_AMFLAGS = -I m4
 
-INCLUDES = -I. -I${top_srcdir}/src -I${top_srcdir}/src/api
+INCLUDES = -I. -I${top_srcdir}/src -I${top_srcdir}/src/yajl
 
