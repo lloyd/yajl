@@ -1,0 +1,55 @@
+yajl (2.0.5-2) unstable; urgency=low
+
+  * Merge from upstream 2.0.5
+
+ -- Like Ma <likemartinma@gmail.com>  Sat, 31 Mar 2012 15:36:06 +0800
+
+yajl (2.0.3-2) unstable; urgency=low
+
+  * Add -fPIC to yajl static lib.
+
+ -- Like Ma <likemartinma@gmail.com>  Mon, 07 Nov 2011 17:29:02 +0800
+
+yajl (2.0.3-1) unstable; urgency=low
+
+  * 2.0.3 Initial release.
+
+ -- Like Ma <likemartinma@gmail.com>  Tue, 16 Aug 2011 00:17:05 +0800
+
+yajl (1.0.8-2) unstable; urgency=low
+
+  * Fix yajl_encode_string without converting non-ascii UTF-8 chars to UTF-16
+
+ -- Like Ma <likemartinma@gmail.com>  Fri, 15 Jul 2011 23:56:00 +0800
+
+yajl (1.0.8-1) unstable; urgency=low
+
+  * New upstream
+  * Bump shlibs
+
+ -- John Stamp <jstamp@users.sourceforge.net>  Sat, 26 Dec 2009 16:40:49 -0800
+
+yajl (1.0.6+git20090925-1) unstable; urgency=low
+
+  * New upstream
+  * Drop README.Debian: upstream removed non-free files
+  * Drop relaxed-integer-tests.patch (merged upstream)
+  * Update manpages
+
+ -- John Stamp <jstamp@users.sourceforge.net>  Tue, 06 Oct 2009 11:11:58 -0700
+
+yajl (1.0.5.dfsg-2) unstable; urgency=low
+
+  * Bump Standards-Version to 3.8.3.  No changes needed.
+  * Add README.source
+  * Dynamically link the tools to the lib (Closes: #544721)
+  * Make extended description more detailed and remove unnecessary Section
+    field.
+
+ -- John Stamp <jstamp@users.sourceforge.net>  Tue, 08 Sep 2009 11:59:46 -0700
+
+yajl (1.0.5.dfsg-1) unstable; urgency=low
+
+  * Initial release (Closes: #537199)
+
+ -- John Stamp <jstamp@users.sourceforge.net>  Wed, 05 Aug 2009 15:12:56 -0700

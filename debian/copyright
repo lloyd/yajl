@@ -1,0 +1,37 @@
+This package was debianized by John Stamp <jstamp@users.sourceforge.net> on
+Thu, 15 Jul 2009 19:35:46 -0700.
+
+It was downloaded from http://lloyd.github.com/yajl/
+
+Upstream Author:
+
+    Lloyd Hilaiel <lloyd@hilaiel.com>
+
+Copyright:
+
+    Copyright 2007-2009, Lloyd Hilaiel
+
+License:
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+    
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+    
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in
+        the documentation and/or other materials provided with the
+        distribution.
+    
+     3. Neither the name of Lloyd Hilaiel nor the names of its
+        contributors may be used to endorse or promote products derived
+        from this software without specific prior written permission.
+
+The Debian packaging is:
+
+    Copyright (C) 2009 John Stamp <jstamp@users.sourceforge.net>
+
+and is licensed under the GPL version 2,
+see `/usr/share/common-licenses/GPL-2'.

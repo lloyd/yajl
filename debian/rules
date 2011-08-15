@@ -1,0 +1,110 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+include /usr/share/quilt/quilt.make
+
+yajl_major = $(shell grep -E 'SET.*YAJL_MAJOR[[:space:]]+[0-9]+' CMakeLists.txt | sed 's/.*YAJL_MAJOR\s\+\([0-9]\+\).*/\1/' )
+yajl_minor = $(shell grep -E 'SET.*YAJL_MINOR[[:space:]]+[0-9]+' CMakeLists.txt | sed 's/.*YAJL_MINOR\s\+\([0-9]\+\).*/\1/' )
+yajl_micro = $(shell grep -E 'SET.*YAJL_MICRO[[:space:]]+[0-9]+' CMakeLists.txt | sed 's/.*YAJL_MICRO\s\+\([0-9]\+\).*/\1/' )
+
+yajl_dir = yajl-$(yajl_major).$(yajl_minor).$(yajl_micro)
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+
+configure: patch config-stamp
+config-stamp:
+	dh_testdir
+	mkdir -p build
+	cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_SKIP_RPATH=ON \
+		-DCMAKE_VERBOSE_MAKEFILE=ON
+	touch $@
+
+#Architecture
+build: build-arch build-indep
+
+build-arch: build-arch-stamp
+build-arch-stamp:  configure
+
+	# Add here commands to compile the arch part of the package.
+	$(MAKE) -C build
+	build/test/run_tests.sh
+	touch $@
+
+build-indep: build-indep-stamp
+build-indep-stamp:  configure
+
+	# Add here commands to compile the indep part of the package.
+	$(MAKE) -C build doc
+	touch $@
+
+clean: unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-arch-stamp build-indep-stamp
+
+	# Add here commands to clean up after the build process.
+	rm -rf build
+
+	dh_clean
+
+install: install-indep install-arch
+install-indep:
+	dh_testdir
+	dh_testroot
+	dh_prep -i
+	dh_installdirs -i
+
+	# Add here commands to install the indep part of the package into
+	# debian/<package>-doc.
+	cp -pR build/$(yajl_dir)/share/doc/$(yajl_dir)/* debian/libyajl-doc/usr/share/doc/libyajl-doc/html
+
+	dh_install -i
+
+install-arch:
+	dh_testdir
+	dh_testroot
+	dh_prep -s
+	dh_installdirs -s
+
+	# Add here commands to install the arch part of the package into
+	# debian/tmp.
+	cd build && DESTDIR=$(CURDIR)/debian/tmp $(MAKE) install
+
+	dh_install -s
+	dh_strip -s --dbg-package=libyajl2-dbg -Nyajl-tools
+	dh_strip -s -pyajl-tools
+
+# Must not depend on anything. This is to be called by
+# binary-arch/binary-indep
+# in another 'make' thread.
+binary-common:
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs ChangeLog
+	dh_installdocs -A README TODO
+	dh_installman
+	dh_compress -Xexamples
+	dh_fixperms
+	dh_makeshlibs -plibyajl2 -V'libyajl2 (>= 2.0.3)'
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+# Build architecture independant packages using the common target.
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+
+# Build architecture dependant packages using the common target.
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch

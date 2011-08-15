@@ -1,0 +1,25 @@
+.TH JSON_REFORMAT 1 "Oct 2009" "json_reformat"
+.SH NAME
+json_reformat
+\- A simple json reformatting tool
+.SH SYNOPSIS
+.B json_reformat
+[\fIoptions\fP] < \fIinput-file\fP [> \fIoutput-file\fP]
+.SH DESCRIPTION
+json_reformat reads json data from standard input and sends formatted data to
+standard output.  It attempts to format for readability by default and returns
+success (zero result) if the input file is valid, and failure (nonzero result)
+otherwise.
+.SH OPTIONS
+.TP
+\fB\-m\fR
+minimize json rather than beautify
+.TP
+\fB\-u\fR
+allow invalid UTF8 inside strings during parsing
+.SH AUTHORS
+Lloyd Hilaiel <lloyd@hilaiel.com>
+.PP
+This manual page was written by John Stamp <jstamp@users.sourceforge.net>.
+Permission is granted to redistribute, use, and/or modify this document under
+the same terms as json_reformat itself.

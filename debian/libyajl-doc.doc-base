@@ -1,0 +1,9 @@
+Document: libyajl-doc
+Title: YAJL Library Reference Manual
+Author: Lloyd Hilaiel
+Abstract: This manual describes the API for Yet Another JSON Library (libyajl2).
+Section: Programming/C
+
+Format: HTML
+Index: /usr/share/doc/libyajl-doc/html/index.html
+Files: /usr/share/doc/libyajl-doc/html/*.html

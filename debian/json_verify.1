@@ -1,0 +1,26 @@
+.TH JSON_VERIFY 1 "Oct 2009" "json_verify"
+.SH NAME
+json_verify
+\- A simple json verification tool.
+.SH SYNOPSIS
+.B json_verify
+[\fIoptions\fP] < \fIinput-file\fP
+.SH DESCRIPTION
+json_verify reads json data from standard input. It returns success (zero
+result) if the input file is valid, and failure (nonzero result) otherwise.
+.SH OPTIONS
+.TP
+\fB\-q\fR
+quiet mode
+.TP
+\fB\-c\fR
+allow comments
+.TP
+\fB\-u\fR
+allow invalid utf8 inside strings
+.SH AUTHORS
+Lloyd Hilaiel <lloyd@hilaiel.com>
+.PP
+This manual page was written by John Stamp <jstamp@users.sourceforge.net>.
+Permission is granted to redistribute, use, and/or modify this document under
+the same terms as json_verify itself.

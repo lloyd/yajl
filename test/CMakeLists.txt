@@ -14,6 +14,9 @@
 
 SET (SRCS yajl_test.c)
 
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh.in
+	${CMAKE_CURRENT_BINARY_DIR}/run_tests.sh)
+
 # use the library we build, duh.
 INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include
