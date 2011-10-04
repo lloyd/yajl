@@ -46,29 +46,41 @@ yajl_string_encode(const yajl_print_t print,
     hexBuf[6] = 0;
 
     while (end < len) {
+        const unsigned char chr = str[end];
         const char * escaped = NULL;
         escBuf[1] = 0;
-        switch (str[end]) {
-            case '\r': escBuf[1] = 'r'; break;
-            case '\n': escBuf[1] = 'n'; break;
-            case '\\': escBuf[1] = '\\'; break;
+        /* we're not going to be escaping most characters, so first
+         * check for this common case (of doing nothing).  Doing so
+         * decreases the runtime of this function by around 30%.
+         */
+        if (chr > '/') {
             /* it is not required to escape a solidus in JSON:
              * read sec. 2.5: http://www.ietf.org/rfc/rfc4627.txt
              * specifically, this production from the grammar:
              *   unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
              */
-            case '/': if (escape_solidus) escBuf[1] = '/'; break;
-            case '"': escBuf[1] = '"'; break;
+            if (chr == '\\') {
+                escBuf[1] = '\\';
+            }
+        } else if (chr == ' ' || (chr <  '/' && chr > ')')) {
+            /* skip these fairly common cases */
+        } else {
+            switch (chr) {
+            case '\r': escBuf[1] = 'r'; break;
+            case '\n': escBuf[1] = 'n'; break;
+            case '"':  escBuf[1] = '"'; break;
+            case '\t': escBuf[1] = 't'; break;
             case '\f': escBuf[1] = 'f'; break;
             case '\b': escBuf[1] = 'b'; break;
-            case '\t': escBuf[1] = 't'; break;
+            case '/': if (escape_solidus) escBuf[1] = '/'; break;
             default:
-                if ((unsigned char) str[end] < 32) {
-                    CharToHex(str[end], hexBuf + 4);
+                if (chr < 32) {
+                    CharToHex(chr, hexBuf + 4);
                     escaped = hexBuf;
                     escaped_len = 6;
                 }
                 break;
+            }
         }
         if (escBuf[1] != 0) {
                 escaped = escBuf;
