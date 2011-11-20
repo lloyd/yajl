@@ -47,19 +47,26 @@ IF (WIN32)
   SET(CMAKE_C_FLAGS_DEBUG "/D DEBUG /Od /Z7")
   SET(CMAKE_C_FLAGS_RELEASE "/D NDEBUG /O2")
 ELSE (WIN32)
+  INCLUDE(CheckCCompilerFlag)
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
   IF(CMAKE_COMPILER_IS_GNUCC)
-    INCLUDE(CheckCCompilerFlag)
     CHECK_C_COMPILER_FLAG(-fvisibility=hidden HAVE_GCC_VISIBILITY)
     IF(HAVE_GCC_VISIBILITY)
       SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
     ENDIF(HAVE_GCC_VISIBILITY)
   ENDIF(CMAKE_COMPILER_IS_GNUCC)
   SET(CMAKE_C_FLAGS
-      "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra	-Wundef -Wwrite-strings -Wold-style-definition -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
+      "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra  -Wundef -Wwrite-strings -Wold-style-definition -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
 
   SET(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g")
   SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2 -Wuninitialized")
+
+  IF ("${CMAKE_SYSTEM}" MATCHES "AIX")
+    CHECK_C_COMPILER_FLAG (-Wl,-bnoipath HAVE_LD_BNOIPATH)
+    IF (HAVE_LD_BNOIPATH)
+		SET (YAJL_EXE_LINKER_FLAGS "${YAJL_EXE_LINKER_FLAGS} -Wl,-bnoipath")
+    ENDIF (HAVE_LD_BNOIPATH)
+  ENDIF ("${CMAKE_SYSTEM}" MATCHES "AIX")
 ENDIF (WIN32)
 
 
