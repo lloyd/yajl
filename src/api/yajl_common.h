@@ -21,7 +21,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif    
+#endif
 
 #define YAJL_MAX_DEPTH 128
 
@@ -40,7 +40,7 @@ extern "C" {
 #  else
 #    define YAJL_API
 #  endif
-#endif 
+#endif
 
 /** pointer to a malloc function, supporting client overriding memory
  *  allocation routines */
