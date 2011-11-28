@@ -1,6 +1,7 @@
 2.1.0
-     * lloyd update in-tree synthetic benchmark (perftest) to assess gen
+     * @lloyd update in-tree synthetic benchmark (perftest) to assess gen
 	throughput as well as parse time.
+     * @bpowers 150% improvement in performance of json generation.
 
 2.0.3
      * John Stamp generation of a pkgconfig file at build time.
