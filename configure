@@ -17,14 +17,19 @@
 require 'fileutils'
 require 'optparse'
 
+cmake_options=""
 prefix = "/usr/local"
 options = {}
 OptionParser.new do |opts|
   opts.banner = "Usage: configure [options]"
   opts.on("-p", "--prefix PATH", "Set installation prefix") do |p|
+    cmake_options+=" -DCMAKE_INSTALL_PREFIX='#{p}'"
     prefix = p
   end
-  opts.on_tail("-h", "--help", "Output usage summary") do 
+  opts.on("--lib-suffix SUFFIX", "Set lib directory suffix") do |p|
+    cmake_options+=" -DLIB_SUFFIX='#{p}'"
+  end
+  opts.on_tail("-h", "--help", "Output usage summary") do
     puts opts
     exit
   end
@@ -37,8 +42,8 @@ FileUtils.rm_rf("build")
 FileUtils.rm_f("Makefile")
 puts "== running CMake in build directory"
 FileUtils.mkdir("build")
-FileUtils.cd("build") do 
-  if (!system("cmake -DCMAKE_INSTALL_PREFIX='#{prefix}' .."))
+FileUtils.cd("build") do
+  if (!system("cmake #{cmake_options} .."))
     puts "The \"cmake\" program is required to configure yajl.  It's"
     puts "available from most ports/packaging systems and http://cmake.org"
     exit 1
@@ -47,7 +52,7 @@ end
 
 # now generate a Makefile
 puts "== Generating Makefile"
-File.open("Makefile", "w+") do |f| 
+File.open("Makefile", "w+") do |f|
   f.puts ".PHONY: all clean distclean install package test distro"
   f.puts "all: distro doc test"
   f.puts
@@ -60,14 +65,14 @@ File.open("Makefile", "w+") do |f|
   f.puts "test:"
   f.puts "	@cd build && make test"
   f.puts
-  f.puts "clean:"  
+  f.puts "clean:"
   f.puts "	@cd build && make clean"
   f.puts
-  f.puts "distclean:"  
+  f.puts "distclean:"
   f.puts "	@rm -rf Makefile build"
   f.puts "	@rm -f yajl-*.tgz"
   f.puts
-  f.puts "install: all" 
+  f.puts "install: all"
   f.puts "	@cd build && make install"
   f.puts
   f.puts "package: all"
