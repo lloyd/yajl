@@ -150,6 +150,12 @@ extern "C" {
      *  intended to enable incremental JSON outputing. */
     YAJL_API void yajl_gen_clear(yajl_gen hand);
 
+    /** completely reset the generator state. Using this function
+     * allows for a single generator instance to be used to generate a
+     * series of JSON values.  This the counterpart to the
+     * yajl_allow_multiple_values parser option. */
+    YAJL_API void yajl_gen_reset(yajl_gen hand);
+
 #ifdef __cplusplus
 }
 #endif    
