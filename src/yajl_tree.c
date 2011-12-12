@@ -312,7 +312,7 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
     endptr = NULL;
     errno = 0;
     v->u.number.i = yajl_parse_integer((const unsigned char *) v->u.number.r,
-                                       strlen(v->u.number.r));
+                                       strlen(v->u.number.r), &endptr);
     if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
         v->u.number.flags |= YAJL_NUMBER_INT_VALID;
 
@@ -401,7 +401,7 @@ static int handle_null (void *ctx)
 /*
  * Public functions
  */
-yajl_val yajl_tree_parse (const char *input,
+yajl_val yajl_tree_parse (const char *input, size_t input_size,
                           char *error_buffer, size_t error_buffer_size)
 {
     static const yajl_callbacks callbacks =
@@ -434,7 +434,7 @@ yajl_val yajl_tree_parse (const char *input,
 
     status = yajl_parse(handle,
                         (unsigned char *) input,
-                        strlen (input));
+                        input_size ? input_size : strlen (input));
     status = yajl_complete_parse (handle);
     if (status != yajl_status_ok) {
         if (error_buffer != NULL && error_buffer_size > 0) {
@@ -456,8 +456,8 @@ yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
 {
     if (!path) return NULL;
     while (n && *path) {
-        unsigned int i;
-        int len;
+        size_t i;
+        size_t len;
 
         if (n->type != yajl_t_object) return NULL;
         len = n->u.object.len;

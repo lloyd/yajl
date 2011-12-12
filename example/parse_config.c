@@ -44,7 +44,7 @@ main(void)
     }
 
     /* we have the whole config file in memory.  let's parse it ... */
-    node = yajl_tree_parse((const char *) fileData, errbuf, sizeof(errbuf));
+    node = yajl_tree_parse((const char *) fileData, 0, errbuf, sizeof(errbuf));
 
     /* parse error handling */
     if (node == NULL) {

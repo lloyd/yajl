@@ -33,13 +33,14 @@
 
  /* same semantics as strtol */
 long long
-yajl_parse_integer(const unsigned char *number, unsigned int length)
+yajl_parse_integer(const unsigned char *number, unsigned int length, const unsigned char **endptr)
 {
     long long ret  = 0;
     long sign = 1;
     const unsigned char *pos = number;
     if (*pos == '-') { pos++; sign = -1; }
     if (*pos == '+') { pos++; }
+	if (endptr) *endptr = NULL;
 
     while (pos < number + length) {
         if ( ret > MAX_VALUE_TO_MULTIPLY ) {
@@ -54,6 +55,7 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
         ret += (*pos++ - '0');
     }
 
+	if (endptr) *endptr = pos;
     return sign * ret;
 }
 
@@ -279,7 +281,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                                         hand->ctx,(const char *) buf, bufLen));
                         } else if (hand->callbacks->yajl_integer) {
                             long long int i = 0;
-                            i = yajl_parse_integer(buf, bufLen);
+                            i = yajl_parse_integer(buf, bufLen, NULL);
                             if ((i == LLONG_MIN || i == LLONG_MAX) &&
                                 errno == ERANGE)
                             {
