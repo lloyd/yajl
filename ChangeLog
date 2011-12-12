@@ -1,5 +1,7 @@
 2.0.3
      * John Stamp generation of a pkgconfig file at build time.
+     * @robzuber bugfix in yajl_tree_get()
+     * @lloyd - fix for compilation on 64 bit windows
 
 2.0.2
      * lth fix typos in yajl_tree.h macros YAJL_IS_INTEGER and YAJL_IS_DOUBLE,
