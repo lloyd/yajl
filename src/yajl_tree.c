@@ -421,6 +421,7 @@ yajl_val yajl_tree_parse (const char *input,
 
     yajl_handle handle;
     yajl_status status;
+    char * internal_err_str;
 	context_t ctx = { NULL, NULL, NULL, 0 };
 
 	ctx.errbuf = error_buffer;
@@ -438,11 +439,11 @@ yajl_val yajl_tree_parse (const char *input,
     status = yajl_complete_parse (handle);
     if (status != yajl_status_ok) {
         if (error_buffer != NULL && error_buffer_size > 0) {
-            snprintf(
-                error_buffer, error_buffer_size, "%s",
-                (char *) yajl_get_error(handle, 1,
-                                        (const unsigned char *) input,
-                                        strlen(input)));
+               internal_err_str = (char *) yajl_get_error(handle, 1,
+                     (const unsigned char *) input,
+                     strlen(input));
+             snprintf(error_buffer, error_buffer_size, "%s", internal_err_str);
+             YA_FREE(&(handle->alloc), internal_err_str);
         }
         yajl_free (handle);
         return NULL;
