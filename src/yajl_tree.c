@@ -260,11 +260,16 @@ static int context_add_value (context_t *ctx, yajl_val v)
     {
         return (array_add_value (ctx, ctx->stack->value, v));
     }
-    else
+    else if (ctx->stack->value != NULL)
     {
         RETURN_ERROR (ctx, EINVAL, "context_add_value: Cannot add value to "
                       "a value of type %#04x (not a composite type)",
                       ctx->stack->value->type);
+    }
+    else
+    {
+        RETURN_ERROR (ctx, EINVAL, "context_add_value: Cannot add value to "
+                      "NULL value");
     }
 }
 
@@ -309,11 +314,10 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
 
     v->u.number.flags = 0;
 
-    endptr = NULL;
     errno = 0;
     v->u.number.i = yajl_parse_integer((const unsigned char *) v->u.number.r,
                                        strlen(v->u.number.r));
-    if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
+    if (errno == 0)
         v->u.number.flags |= YAJL_NUMBER_INT_VALID;
 
     endptr = NULL;
@@ -435,29 +439,34 @@ yajl_val yajl_tree_parse (const char *input,
     status = yajl_parse(handle,
                         (unsigned char *) input,
                         strlen (input));
+    if (status != yajl_status_ok)
+        goto error;
+
     status = yajl_complete_parse (handle);
-    if (status != yajl_status_ok) {
-        if (error_buffer != NULL && error_buffer_size > 0) {
-            snprintf(
-                error_buffer, error_buffer_size, "%s",
-                (char *) yajl_get_error(handle, 1,
-                                        (const unsigned char *) input,
-                                        strlen(input)));
-        }
-        yajl_free (handle);
-        return NULL;
-    }
+    if (status != yajl_status_ok)
+        goto error;
 
     yajl_free (handle);
     return (ctx.root);
+
+error:
+    if (error_buffer != NULL && error_buffer_size > 0) {
+        snprintf(
+                 error_buffer, error_buffer_size, "%s",
+                 (char *) yajl_get_error(handle, 1,
+                                         (const unsigned char *) input,
+                                         strlen(input)));
+    }
+    yajl_free (handle);
+    return NULL;
 }
 
 yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
 {
     if (!path) return NULL;
     while (n && *path) {
-        unsigned int i;
-        int len;
+        size_t i;
+        size_t len;
 
         if (n->type != yajl_t_object) return NULL;
         len = n->u.object.len;
