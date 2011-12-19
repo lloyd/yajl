@@ -222,6 +222,9 @@ yajl_gen_double(yajl_gen g, double number)
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
     INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%.20g", number);
+    if (strspn(i, "0123456789-") == strlen(i)) {
+        strcat(i, ".0");
+    }
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
