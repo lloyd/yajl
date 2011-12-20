@@ -1,5 +1,9 @@
 2.0.4
-
+     * @jcekstrom - additional checking in integer parsing
+     * @jcekstrom - fix a bug in yajl_tree that would cause valid json integersto fail to parse
+     * @plaguemorin - fix a memory leak in yajl_tree (error strings were being leaked)
+     * @7AC - reset errno
+     * @ConradIrwin - include flags to reformatter to allow toggling of escape solidus option
 
 2.0.3
      * John Stamp generation of a pkgconfig file at build time.
