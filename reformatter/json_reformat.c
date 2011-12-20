@@ -98,11 +98,12 @@ usage(const char * progname)
     fprintf(stderr, "%s: reformat json from stdin\n"
             "usage:  json_reformat [options]\n"
             "    -m minimize json rather than beautify (default)\n"
-            "    -u allow invalid UTF8 inside strings during parsing\n",
+            "    -u allow invalid UTF8 inside strings during parsing\n"
+            "    -e escape any forward slashes (for embedding in HTML)\n",
             progname);
     exit(1);
-
 }
+
 
 int 
 main(int argc, char ** argv)
@@ -135,6 +136,9 @@ main(int argc, char ** argv)
                     break;
                 case 'u':
                     yajl_config(hand, yajl_dont_validate_strings, 1);
+                    break;
+                case 'e':
+                    yajl_gen_config(g, yajl_gen_escape_solidus, 1);
                     break;
                 default:
                     fprintf(stderr, "unrecognized option: '%c'\n\n",
