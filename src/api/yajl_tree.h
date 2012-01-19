@@ -145,6 +145,18 @@ YAJL_API void yajl_tree_free (yajl_val v);
  */
 YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type type);
 
+/**
+ * Access a value inside an object.
+ *
+ * \param object the object from which you'd like to extract values.
+ * \param key the key of the value in the object
+ * \param type the yajl_type of the object you seek, or yajl_t_any if any will do.
+ *
+ * \returns a pointer to the found value, or NULL if we came up empty.
+ *
+ */
+YAJL_API yajl_val yajl_object_get(yajl_val object, const char * key, yajl_type type);
+
 /* Various convenience macros to check the type of a `yajl_val` */
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == yajl_t_string))
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == yajl_t_number))
