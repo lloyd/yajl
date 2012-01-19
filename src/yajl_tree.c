@@ -452,7 +452,7 @@ yajl_val yajl_tree_parse (const char *input,
     return (ctx.root);
 }
 
-yajl_val yajl_tree_get(yajl_val n, const char * key, yajl_type type)
+yajl_val yajl_object_get(yajl_val n, const char * key, yajl_type type)
 {
   const char ** path = {key, 0};
   yajl_val v = yajl_tree_get(n, path, type);
