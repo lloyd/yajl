@@ -58,7 +58,7 @@ File.open("Makefile", "w+") do |f|
   f.puts "	@cd build && make doc"
   f.puts
   f.puts "test:"
-  f.puts "	@cd build && make test"
+  f.puts "	@cd build && make test && make decl_test"
   f.puts
   f.puts "clean:"  
   f.puts "	@cd build && make clean"
