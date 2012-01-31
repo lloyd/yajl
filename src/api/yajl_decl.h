@@ -35,6 +35,11 @@ extern "C" {
 #define YAJL_MAX_KEY_LENGTH    64  /* default max key length */
 #endif
 
+
+#ifndef YAJL_MAX_ARRAY_DIM
+#define YAJL_MAX_ARRAY_DIM     8   /* maximum array dimension */
+#endif
+  
 #define YAJL_MIN_CAPACITY      2
   
 typedef struct _yajl_decl_context
@@ -46,10 +51,13 @@ typedef struct _yajl_decl_context
   /* array support */
   void *array_base;
   void *array_cursor;
+  void *array_size_ptr;  
   int array_level;
-  unsigned int array_element_size;
-  unsigned int array_capacity;
-  unsigned int array_size;
+  unsigned int  array_dims;
+  unsigned int  array_element_size;
+  unsigned int  array_capacity;
+  unsigned int  array_size;
+  unsigned int  array_s[YAJL_MAX_ARRAY_DIM];  /* size of each dimension*/
   void (*set_value) ( void *, int, const void *, int );
   
   /* pointer to next element */
@@ -67,6 +75,7 @@ typedef struct
 
 
 char* yajl_strndup ( const char*, size_t );  /* strndup isn't ANSI C*/
+long long yajl_decl_atoi ( const char *, size_t );
 
 void yajl_decl_begin_parse ( yajl_decl_handle* );
 void yajl_decl_end_parse ( yajl_decl_handle* );
@@ -95,8 +104,9 @@ void yajl_decl_context_destroy ( yajl_decl_context* context);
   
 
 #define YAJL_DECL_VALUE_FLOAT(v,l)   ( v != NULL ? atof(v) : 0 )
+#define YAJL_DECL_VALUE_DOUBLE(v,l)   ( v != NULL ? atof(v) : 0 )
 #define YAJL_DECL_VALUE_BOOLEAN(v,l) ( v != NULL ? *((int*)v) : 0 )
-#define YAJL_DECL_VALUE_INTEGER(v,l) ( v != NULL ? atoi(v) : 0 )
+#define YAJL_DECL_VALUE_INTEGER(v,l) ( v != NULL ? yajl_decl_atoi(v,l) : 0 )
 #define YAJL_DECL_VALUE_STRING(v,l)  ( v != NULL ? yajl_strndup(v,l) : 0 )
   
 #define YAJL_FIELD_TYPE(_TYPE_, _NAME_)			        \
@@ -122,6 +132,52 @@ void yajl_decl_context_destroy ( yajl_decl_context* context);
       ptr->_NAME_ = new_context->ptr;					\
       return;								\
     }									
+
+
+
+/* TODO */
+void yajl_decl_callback_array ( void *, const void *, int);
+void yajl_set_value_INTEGER ( void *, int, const void *, int );
+void yajl_set_value_STRING  ( void *, int, const void *, int );
+void yajl_set_value_FLOAT   ( void *, int, const void *, int );
+void yajl_set_value_DOUBLE  ( void *, int, const void *, int );
+void yajl_set_value_BOOLEAN ( void *, int, const void *, int );
+
+#define YAJL_ARRAY_TYPE(_TYPE_, _NAME_)					\
+  if ( !strcmp(context->field_name, #_NAME_) )				\
+  {									\
+    yajl_decl_context *new_context = malloc(sizeof(yajl_decl_context));	\
+    new_context->stack = context;					\
+    handle->stack = new_context;					\
+    new_context->array_size_ptr = NULL;					\
+    new_context->array_dims = 2;					\
+    new_context->array_size = 0;					\
+    new_context->array_capacity = YAJL_MIN_CAPACITY;			\
+    new_context->array_element_size = sizeof( *ptr->_NAME_ );		\
+    new_context->array_level = context->array_level;			\
+    ptr->_NAME_ = malloc ( new_context->array_element_size *		\
+			   new_context->array_capacity );		\
+    new_context->array_cursor = new_context->array_base = ptr->_NAME_;	\
+    new_context->callback = yajl_decl_callback_array;			\
+    new_context->set_value = yajl_set_value_##_TYPE_;			\
+    memset ( new_context->array_s, 0,					\
+	     sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );			\
+    new_context->callback ( param, data, size );			\
+    return;								\
+  }
+  
+  
+#define YAJL_ARRAY_FLOAT(_NAME_)		                        \
+  YAJL_ARRAY_TYPE(FLOAT,_NAME_)
+#define YAJL_ARRAY_DOUBLE(_NAME_)		                        \
+  YAJL_ARRAY_TYPE(DOUBLE,_NAME_)
+#define YAJL_ARRAY_STRING(_NAME_)		                        \
+  YAJL_ARRAY_TYPE(STRING,_NAME_)
+#define YAJL_ARRAY_INTEGER(_NAME_)		                        \
+  YAJL_ARRAY_TYPE(INTEGER,_NAME_)
+#define YAJL_ARRAY_BOOLEAN(_NAME_)		                        \
+  YAJL_ARRAY_TYPE(BOOLEAN,_NAME_)
+
 
 #define YAJL_PARSE_BEGIN(_NAME_)                                        \
   _decl_handle_##_NAME_.ptr = malloc ( sizeof(_NAME_) );		\

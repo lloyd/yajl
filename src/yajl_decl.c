@@ -16,14 +16,22 @@
 
 
 #include "api/yajl_decl.h"
+#include "yajl_parser.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
+static int yajl_set_array_size ( yajl_decl_context* context );
 
 static int handle_null(void *param)
-{  
+{
+  yajl_decl_context *context;
+  
+  assert ( param != NULL );
+
+  context = ((yajl_decl_handle*) param)->stack;
+  context->callback ( param, NULL, 0 );  
   return 1;
 }  
   
@@ -105,15 +113,65 @@ static int handle_end_map(void *param)
   
 static int handle_start_array(void *param)
 {
-  /*TODO: implement array support */
+  yajl_decl_handle *handle;
+  yajl_decl_context *context;
+  
+  assert ( param != NULL );
+
+  handle = ( yajl_decl_handle* ) param;
+  context = handle->stack;
+    
+  context->array_level++;
+
   return 1;
 }  
-  
+
 static int handle_end_array(void *param)
 {
-  /*TODO: implement array support */
+  yajl_decl_handle *handle;
+  yajl_decl_context *context;
+  yajl_decl_context *old_context;
+  
+  assert ( param != NULL );
+
+  handle = ( yajl_decl_handle* ) param;
+  context = handle->stack;
+
+  context->array_level--;
+  if ( context->array_dims > 0 )
+    {
+      if ( context->array_level == -1 )
+	{    
+	  yajl_set_array_size ( context );            
+	  old_context = handle->stack;
+	  handle->stack = handle->stack->stack;
+	  handle->stack->stack = NULL;
+	  free(old_context);
+	}
+      else
+	{
+	  context->array_s[context->array_level]++;
+	}
+    }
   return 1;
 }  
+
+
+static int yajl_set_array_size ( yajl_decl_context* context )
+{
+  unsigned int i = 0, sum = 0;
+  
+  assert ( context != NULL );
+  if ( context->array_size_ptr != NULL )
+    {
+      
+    }
+  for ( i = 0; i < context->array_dims-1; ++i)
+    {
+      sum += context->array_s[i];
+    }
+  context->array_s[context->array_dims-1] = context->array_size / sum;
+}
 
 static const yajl_callbacks callbacks =
   {
@@ -150,6 +208,7 @@ yajl_decl_context* yajl_decl_context_create ( yajl_decl_handle *handle )
       memset ( context, 0, sizeof(yajl_decl_context ));
       context->callback = handle->callback;
       context->ptr = handle->ptr;
+      context->array_level = -1;
     }
   return context;
 }
@@ -169,6 +228,48 @@ void yajl_decl_context_destroy ( yajl_decl_context* context )
     }
 }
 
+void yajl_set_value_INTEGER ( void *dst, int dst_size, const void *src, int src_size )
+{
+  long long i = yajl_parse_integer(src, src_size);
+  memcpy ( dst, &i, dst_size );  
+}
+
+void yajl_set_value_STRING  ( void *dst, int dst_size, const void *src, int src_size )
+{
+  *((char**)dst) = yajl_strndup ( (const char*) src, src_size );
+}
+
+void yajl_set_value_FLOAT   ( void *dst, int dst_size, const void *src, int src_size )
+{
+  float f= atof(src);
+  *((float*)dst) = f;  
+}
+
+void yajl_set_value_DOUBLE  ( void *dst, int dst_size, const void *src, int src_size )
+{
+  double f = atof(src);
+  *((double*)dst) = f;
+}
+
+void yajl_set_value_BOOLEAN ( void *dst, int dst_size, const void *src, int src_size )
+{
+  *((int*)dst) = *((int*)src);
+}
+
+void yajl_decl_callback_array ( void *param, const void *data, int size )
+{
+  yajl_decl_handle *handle = (yajl_decl_handle*) param;  
+  yajl_decl_context *context = handle->stack;
+  if ( context->array_size == context->array_capacity )
+    {
+      context->array_capacity *= 2;
+      context->array_base = realloc ( context->array_base, context->array_capacity * context->array_element_size );
+      context->array_cursor = ((char*) context->array_base) + context->array_size * context->array_element_size;
+    }
+  context->set_value ( context->array_cursor, context->array_element_size, data, size );
+  context->array_cursor = ((char*) context->array_cursor) +  context->array_element_size;
+  context->array_size++;  
+}
 
 /**
  * Our own strndup implementation
@@ -182,4 +283,10 @@ char* yajl_strndup ( const char *src, size_t size )
       dst[size] = 0;
     }
   return dst;
+}
+
+
+long long yajl_decl_atoi ( const char *str, size_t size )
+{
+  return yajl_parse_integer(str, size);
 }

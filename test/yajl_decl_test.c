@@ -1,5 +1,5 @@
 /*
- * Copyright#BEGIN_OBJE (c) 2012, Daniel Calandria <dcalandria@gmail.com>
+ * Copyright (c) 2012, Daniel Calandria <dcalandria@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -45,6 +45,13 @@ typedef struct
 } adt2;
 
 
+typedef struct
+{
+  float *list;
+} adt3;
+
+
+
 /* JSON */
 static const char *json_adt1 = "{                                \
                      \"integer\":  1,				 \
@@ -66,6 +73,11 @@ static const char *json_adt2 = "{                                \
 
 
 
+static const char *json_adt3 = "{                                \
+                     \"list\":  [[1.1, 2.2, 3.3, 4.4],[5.5, 6.6, 7.7, 8.8]]		 \
+                   }";
+
+
 /* DECLARATIONS */
 
 YAJL_OBJECT_BEGIN (adt1)
@@ -79,6 +91,11 @@ YAJL_OBJECT_BEGIN (adt2)
   YAJL_FIELD_INTEGER(integer);
   YAJL_FIELD_OBJECT(adt1, object);
 YAJL_OBJECT_END(adt2)
+
+YAJL_OBJECT_BEGIN (adt3)
+  YAJL_ARRAY_FLOAT(list);
+YAJL_OBJECT_END(adt3)
+
 
 /* TEST */
 void test_adt1 ( void )
@@ -108,17 +125,29 @@ void test_adt2 ( void )
   ASSERT(var != NULL,                              "test_adt2: var == NULL");
   ASSERT(var->integer == 3,                        "test_adt2: var->integer != 3" );
   ASSERT(var->object->integer == 10,               "test_adt2: var->object->integer != 10" );
-  ASSERT(var->object->integer == 10,               "test_adt2: var->object->integer != 10" );
   ASSERT(var->object->boolean == TRUE,             "test_adt2: var->object->boolean != TRUE" );
   ASSERT(var->object->real == 20.0,                "test_adt2: var->object->real != 20.0" );
   ASSERT(!strcmp(var->object->string, "string10"), "test_adt1, var->object->string != \"string10\"" );
   
 }
 
+void test_adt3 ( void )
+{
+  adt3* var = NULL;
+  
+  var = YAJL_PARSE_BEGIN (adt3);
+  YAJL_PARSE(adt3, (unsigned char*) json_adt3, strlen(json_adt3));
+  YAJL_PARSE_END(adt3);
+  for ( int i = 0; i < 4; ++i)
+    printf("%f\n", var->list[i] );
+}
+
+
 int main ( int argc, char **argv )
 {  
   test_adt1 ();
   test_adt2 ();
+  test_adt3 ();
   
   return 0;
 }
