@@ -164,13 +164,21 @@ static int yajl_set_array_size ( yajl_decl_context* context )
   assert ( context != NULL );
   if ( context->array_size_ptr != NULL )
     {
-      
+      if ( context->array_dims == 1 )
+	{
+	  context->array_size_ptr[0] = context->array_size;	  
+	}
+      else
+	{
+	  for ( i = 0; i < context->array_dims-1; ++i)
+	    {
+	      sum += context->array_s[i];
+	      context->array_size_ptr[i] = context->array_s[i];
+	    }
+	  context->array_size_ptr[context->array_dims-1] =
+	  context->array_s[context->array_dims-1] = context->array_size / sum;
+	}
     }
-  for ( i = 0; i < context->array_dims-1; ++i)
-    {
-      sum += context->array_s[i];
-    }
-  context->array_s[context->array_dims-1] = context->array_size / sum;
 }
 
 static const yajl_callbacks callbacks =

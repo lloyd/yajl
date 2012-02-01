@@ -48,6 +48,7 @@ typedef struct
 typedef struct
 {
   float *list;
+  int size[2];
 } adt3;
 
 
@@ -93,7 +94,7 @@ YAJL_OBJECT_BEGIN (adt2)
 YAJL_OBJECT_END(adt2)
 
 YAJL_OBJECT_BEGIN (adt3)
-  YAJL_ARRAY_FLOAT(list);
+  YAJL_MULTIARRAY_FLOAT_S(list, 2, size);
 YAJL_OBJECT_END(adt3)
 
 
@@ -134,12 +135,19 @@ void test_adt2 ( void )
 void test_adt3 ( void )
 {
   adt3* var = NULL;
+  int i, j;
   
   var = YAJL_PARSE_BEGIN (adt3);
   YAJL_PARSE(adt3, (unsigned char*) json_adt3, strlen(json_adt3));
   YAJL_PARSE_END(adt3);
-  for ( int i = 0; i < 4; ++i)
-    printf("%f\n", var->list[i] );
+  for ( i = 0; i < var->size[0]; ++i)
+    {
+      for ( j = 0; j < var->size[1]; ++j)
+	{
+	  printf("%0.2f  ", var->list[ i*var->size[1]+ j ] );
+	}
+      printf("\n");
+    }
 }
 
 
