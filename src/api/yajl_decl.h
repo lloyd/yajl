@@ -91,13 +91,13 @@ typedef struct _yajl_decl_array_desc
 } yajl_decl_array_desc;
   
 
-char* yajl_strndup ( const char*, size_t );  /* strndup isn't ANSI C*/
-long long yajl_decl_atoi ( const char *, size_t );
+YAJL_API char* yajl_strndup ( const char*, size_t );  /* strndup isn't ANSI C*/
+YAJL_API long long yajl_decl_atoi ( const char *, size_t );
 
-void yajl_decl_begin_parse ( yajl_decl_handle* );
-void yajl_decl_end_parse ( yajl_decl_handle* );
-yajl_decl_context* yajl_decl_context_create  (yajl_decl_handle*);
-void yajl_decl_context_destroy ( yajl_decl_context* context);
+YAJL_API void yajl_decl_begin_parse ( yajl_decl_handle* );
+YAJL_API void yajl_decl_end_parse ( yajl_decl_handle* );
+YAJL_API yajl_decl_context* yajl_decl_context_create  (yajl_decl_handle*);
+YAJL_API void yajl_decl_context_destroy ( yajl_decl_context* context);
 
 /*! \endcond */
   
@@ -247,13 +247,13 @@ void yajl_decl_context_destroy ( yajl_decl_context* context);
 /*! \cond PRIVATE */
   
 /* FIXME */
-void yajl_decl_callback_array ( void *, const void *, int);
-void yajl_set_value_INTEGER ( void *, int, const void *, int );
-void yajl_set_value_STRING  ( void *, int, const void *, int );
-void yajl_set_value_FLOAT   ( void *, int, const void *, int );
-void yajl_set_value_DOUBLE  ( void *, int, const void *, int );
-void yajl_set_value_BOOLEAN ( void *, int, const void *, int );
-void yajl_set_value_blob ( void *, int, const void *, int );
+YAJL_API void yajl_decl_callback_array ( void *, const void *, int);
+YAJL_API void yajl_set_value_INTEGER ( void *, int, const void *, int );
+YAJL_API void yajl_set_value_STRING  ( void *, int, const void *, int );
+YAJL_API void yajl_set_value_FLOAT   ( void *, int, const void *, int );
+YAJL_API void yajl_set_value_DOUBLE  ( void *, int, const void *, int );
+YAJL_API void yajl_set_value_BOOLEAN ( void *, int, const void *, int );
+YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
 
 #define YAJL_ARRAY_TYPE_GENERIC_S(_TYPE_, _NAME_, _DIMS_, _SIZE_PTR_)	\
   if ( !strcmp(context->field_name, #_NAME_) )				\
