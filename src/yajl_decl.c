@@ -180,6 +180,8 @@ static int handle_end_array(void *param)
       array_desc->array_level--;
       if ( array_desc->array_level == -1 )
 	{
+	  array_desc->array_base = realloc ( array_desc->array_base,
+					     array_desc->array_size * array_desc->array_element_size );
 	  *((char**)array_desc->array_dest_ptr) = ((char*) array_desc->array_base);
 	  if ( array_desc->array_size_ptr != NULL )
 	    yajl_set_array_size ( context );            	  
