@@ -244,7 +244,8 @@ static const yajl_callbacks callbacks =
 void yajl_decl_begin_parse ( yajl_decl_handle* handle )
 {
   assert(handle != NULL);
-  handle->yajl_handle = yajl_alloc(&callbacks, NULL, (void*) handle);  
+  handle->yajl_handle = yajl_alloc(&callbacks, NULL, (void*) handle);
+  yajl_config(handle->yajl_handle, yajl_allow_comments, 1);
 }
 
 void yajl_decl_end_parse ( yajl_decl_handle* handle )
