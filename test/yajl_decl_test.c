@@ -47,7 +47,13 @@ typedef struct
 
 typedef struct
 {
-  float *list;
+  float a;
+  char* b;
+} adt4;
+
+typedef struct
+{
+  adt4 **list;
   int size[2];
 } adt3;
 
@@ -75,7 +81,7 @@ static const char *json_adt2 = "{                                \
 
 
 static const char *json_adt3 = "{                                \
-                     \"list\":  [[1.1, 2.2, 3.3, 4.4],[5.5, 6.6, 7.7, 8.8]]		 \
+                     \"list\":  [{\"a\": 1.1, \"b\": \"s1\"}, {\"a\": 2.2, \"b\": \"s2\"}]		 \
                    }";
 
 
@@ -93,8 +99,14 @@ YAJL_OBJECT_BEGIN (adt2)
   YAJL_FIELD_OBJECT(adt1, object);
 YAJL_OBJECT_END(adt2)
 
+YAJL_OBJECT_BEGIN (adt4)
+  YAJL_FIELD_FLOAT(a);
+  YAJL_FIELD_STRING(b);
+YAJL_OBJECT_END(adt4)
+
 YAJL_OBJECT_BEGIN (adt3)
-  YAJL_MULTIARRAY_FLOAT_S(list, 2, size);
+//  YAJL_MULTIARRAY_FLOAT_S(list, 2, size);
+  YAJL_ARRAY_OBJECT_S(adt4, list, size)
 YAJL_OBJECT_END(adt3)
 
 
@@ -141,20 +153,22 @@ void test_adt3 ( void )
   YAJL_PARSE(adt3, (unsigned char*) json_adt3, strlen(json_adt3));
   YAJL_PARSE_END(adt3);
   for ( i = 0; i < var->size[0]; ++i)
+    printf("%0.2f\t%s\n", var->list[i]->a, var->list[i]->b );
+  /*for ( i = 0; i < var->size[0]; ++i)
     {
       for ( j = 0; j < var->size[1]; ++j)
 	{
 	  printf("%0.2f  ", var->list[ i*var->size[1]+ j ] );
 	}
       printf("\n");
-    }
+      }*/
 }
 
 
 int main ( int argc, char **argv )
 {  
-  test_adt1 ();
-  test_adt2 ();
+  //test_adt1 ();
+  //test_adt2 ();
   test_adt3 ();
   
   return 0;
