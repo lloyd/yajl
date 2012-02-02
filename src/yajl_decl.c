@@ -180,10 +180,10 @@ static int handle_end_array(void *param)
       array_desc->array_level--;
       if ( array_desc->array_level == -1 )
 	{
+	  *((char**)array_desc->array_dest_ptr) = ((char*) array_desc->array_base);
 	  if ( array_desc->array_size_ptr != NULL )
 	    yajl_set_array_size ( context );            	  
 	  handle->stack = context->stack;
-	  //context->stack->stack = NULL;
 	  free(array_desc);
 	  free(context);
 	}
@@ -330,7 +330,7 @@ void yajl_decl_callback_array ( void *param, const void *data, int size )
 
   array_desc = context->u.array_desc;
   assert ( array_desc != NULL );
-  
+
   if ( array_desc->array_size == array_desc->array_capacity )
     {
       array_desc->array_capacity *= 2;

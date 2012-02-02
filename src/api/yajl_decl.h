@@ -78,6 +78,7 @@ typedef struct _yajl_decl_array_desc
   /* array support */
   void *array_base;
   void *array_cursor;
+  void *array_dest_ptr;
   unsigned int  *array_size_ptr;  
   int array_level;
   unsigned int  array_dims;
@@ -271,11 +272,11 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       array_desc->array_element_size = sizeof( *ptr->_NAME_ );		\
       array_desc->array_level = 0;					\
       array_desc->array_size_ptr = (unsigned int*) &ptr->_SIZE_PTR_;	\
-      ptr->_NAME_ = malloc ( array_desc->array_element_size *		\
-			     array_desc->array_capacity );		\
+      array_desc->array_dest_ptr = &ptr->_NAME_;			\
       array_desc->set_value = yajl_set_value_##_TYPE_;			\
-      array_desc->array_cursor =					\
-	array_desc->array_base = ptr->_NAME_;				\
+      array_desc->array_cursor =  array_desc->array_base =		\
+	malloc ( array_desc->array_element_size *			\
+		 array_desc->array_capacity );				\
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
@@ -298,11 +299,11 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       array_desc->array_capacity = YAJL_MIN_CAPACITY;			\
       array_desc->array_element_size = sizeof( *ptr->_NAME_ );		\
       array_desc->array_level = 0;					\
-      ptr->_NAME_ = malloc ( array_desc->array_element_size *		\
-			     array_desc->array_capacity );		\
+      array_desc->array_dest_ptr = &ptr->_NAME_;			\ 
       array_desc->set_value = yajl_set_value_##_TYPE_;			\
-      array_desc->array_cursor =					\
-	array_desc->array_base = ptr->_NAME_;				\
+      array_desc->array_cursor =  array_desc->array_base =		\
+	malloc ( array_desc->array_element_size *			\
+		 array_desc->array_capacity );				\
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
@@ -460,11 +461,11 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       array_desc->array_level = 0;					\
       array_desc->array_element_handle = &_decl_handle_##_TYPE_;	\
       array_desc->array_object_size = sizeof (_TYPE_ );			\
-      ptr->_NAME_ = malloc ( array_desc->array_element_size *		\
-			     array_desc->array_capacity );		\
+      array_desc->array_dest_ptr = &ptr->_NAME_;			\
       array_desc->set_value =  yajl_set_value_blob;  /*FIXME*/		\
-      array_desc->array_cursor =					\
-	array_desc->array_base = ptr->_NAME_;				\
+      array_desc->array_cursor =  array_desc->array_base =		\
+	malloc ( array_desc->array_element_size *			\
+		 array_desc->array_capacity );				\
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
@@ -489,11 +490,11 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       array_desc->array_element_handle = &_decl_handle_##_TYPE_;	\
       array_desc->array_size_ptr = (unsigned int*) &ptr->_SIZE_PTR_;	\
       array_desc->array_object_size = sizeof (_TYPE_ );			\
-      ptr->_NAME_ = malloc ( array_desc->array_element_size *		\
-			     array_desc->array_capacity );		\
+      array_desc->array_dest_ptr = &ptr->_NAME_;			\
       array_desc->set_value =  yajl_set_value_blob;  /*FIXME*/		\
-      array_desc->array_cursor =					\
-	array_desc->array_base = ptr->_NAME_;				\
+      array_desc->array_cursor =  array_desc->array_base =		\
+	malloc ( array_desc->array_element_size *			\
+		 array_desc->array_capacity );				\
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
