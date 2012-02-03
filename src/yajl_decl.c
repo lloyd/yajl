@@ -104,7 +104,8 @@ static int handle_start_map(void *param)
     }    
   else
     {
-      context->callback ( param, NULL, 0 );     
+      if (!context->callback ( param, NULL, 0 ))
+	context->nesting_level++;
     }
  
   return 1;
@@ -119,8 +120,8 @@ static int handle_end_map(void *param)
 
   handle = (yajl_decl_handle*) param;
   context = handle->stack;
-  
-  if ( context->stack != NULL )
+  context->nesting_level--;
+  if ( (context->stack != NULL) && (context->nesting_level == -1) )
     {
       handle->stack = context->stack;
       if ( handle->stack->u.array_desc != NULL )
@@ -319,7 +320,7 @@ void yajl_set_value_blob ( void *dst, int dst_size, const void *src, int src_siz
 }
 
 
-void yajl_decl_callback_array ( void *param, const void *data, int size )
+int yajl_decl_callback_array ( void *param, const void *data, int size )
 {
   yajl_decl_handle *handle = (yajl_decl_handle*) param;  
   yajl_decl_context *context;
@@ -341,7 +342,9 @@ void yajl_decl_callback_array ( void *param, const void *data, int size )
     }
   array_desc->set_value ( array_desc->array_cursor, array_desc->array_element_size, data, size );
   array_desc->array_cursor = ((char*) array_desc->array_cursor) +  array_desc->array_element_size;
-  array_desc->array_size++;  
+  array_desc->array_size++;
+
+  return 1;
 }
 
 /**

@@ -51,10 +51,11 @@ struct _yajl_decl_array_desc;
   
 typedef struct _yajl_decl_context
 {  
-  void (*callback) (void*, const void*, int );
+  int (*callback) (void*, const void*, int );
   void *ptr;  
   char field_name[YAJL_MAX_KEY_LENGTH];
-
+  int nesting_level;
+  
   union 
   {
     struct _yajl_decl_array_desc *array_desc;
@@ -67,7 +68,7 @@ typedef struct _yajl_decl_context
 
 typedef struct
 {
-  void (*callback) (void*, const void*, int );
+  int (*callback) (void*, const void*, int );
   void *ptr;
   yajl_decl_context *stack;
   yajl_handle yajl_handle;
@@ -121,14 +122,14 @@ YAJL_API void yajl_decl_context_destroy ( yajl_decl_context* context);
  *
  */
 #define YAJL_OBJECT_BEGIN(_NAME_)					\
-  static void _decl_callback_##_NAME_ ( void*, const void*, int );	\
+  static int _decl_callback_##_NAME_ ( void*, const void*, int );	\
   static yajl_decl_handle _decl_handle_##_NAME_ = {			\
     _decl_callback_##_NAME_,						\
     NULL,								\
     NULL,								\
     NULL,								\
   };									\
-  static void _decl_callback_##_NAME_					\
+  static int _decl_callback_##_NAME_					\
   ( void *param, const void *data, int size )				\
   {									\
     yajl_decl_handle *handle = (yajl_decl_handle*) param;		\
@@ -142,6 +143,7 @@ YAJL_API void yajl_decl_context_destroy ( yajl_decl_context* context);
  * \param _NAME_ the struct
  */
 #define YAJL_OBJECT_END(_NAME_)                                         \
+    return 0;								\
   }
 
   
@@ -157,7 +159,7 @@ YAJL_API void yajl_decl_context_destroy ( yajl_decl_context* context);
   if ( !strcmp(context->field_name, #_NAME_) )			\
     {								\
       ptr->_NAME_ = YAJL_DECL_VALUE_##_TYPE_ (data, size);	\
-      return;							\
+      return 1;							\
     }
 
 /*! \endcond */
@@ -240,7 +242,7 @@ YAJL_API void yajl_decl_context_destroy ( yajl_decl_context* context);
       memset (new_context->ptr, 0, sizeof(_TYPE_) );			\
       handle->stack = new_context;					\
       ptr->_NAME_ = new_context->ptr;					\
-      return;								\
+      return 1;								\
     }									
 
 
@@ -248,7 +250,7 @@ YAJL_API void yajl_decl_context_destroy ( yajl_decl_context* context);
 /*! \cond PRIVATE */
   
 /* FIXME */
-YAJL_API void yajl_decl_callback_array ( void *, const void *, int);
+YAJL_API int yajl_decl_callback_array ( void *, const void *, int);
 YAJL_API void yajl_set_value_INTEGER ( void *, int, const void *, int );
 YAJL_API void yajl_set_value_STRING  ( void *, int, const void *, int );
 YAJL_API void yajl_set_value_FLOAT   ( void *, int, const void *, int );
@@ -280,7 +282,7 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
-      return;								\
+      return 1;								\
     }
 
 #define YAJL_ARRAY_TYPE_GENERIC(_TYPE_, _NAME_, _DIMS_)			\
@@ -299,7 +301,7 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       array_desc->array_capacity = YAJL_MIN_CAPACITY;			\
       array_desc->array_element_size = sizeof( *ptr->_NAME_ );		\
       array_desc->array_level = 0;					\
-      array_desc->array_dest_ptr = &ptr->_NAME_;			\ 
+      array_desc->array_dest_ptr = &ptr->_NAME_;			\
       array_desc->set_value = yajl_set_value_##_TYPE_;			\
       array_desc->array_cursor =  array_desc->array_base =		\
 	malloc ( array_desc->array_element_size *			\
@@ -307,7 +309,7 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
-      return;								\
+      return 1;								\
     }
 
 #define YAJL_ARRAY_TYPE(_TYPE_, _NAME_)		\
@@ -469,7 +471,7 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
-      return;								\
+      return 1;								\
     }
 
 #define YAJL_ARRAY_OBJECT_GENERIC_S(_TYPE_, _NAME_, _DIMS_, _SIZE_PTR_)	\
@@ -498,7 +500,7 @@ YAJL_API void yajl_set_value_blob ( void *, int, const void *, int );
       new_context->callback = yajl_decl_callback_array;			\
       memset ( array_desc->array_s, 0,					\
 	       sizeof(unsigned int)*YAJL_MAX_ARRAY_DIM );		\
-      return;								\
+      return 1;								\
     }
 /*! \endcond */
 
