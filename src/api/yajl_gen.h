@@ -20,6 +20,7 @@
  */
 
 #include <yajl/yajl_common.h>
+#include <yajl/yajl_tree.h>
 
 #ifndef __YAJL_GEN_H__
 #define __YAJL_GEN_H__
@@ -43,7 +44,7 @@ extern "C" {
          *  state */
         yajl_gen_in_error_state,
         /** A complete JSON document has been generated */
-        yajl_gen_generation_complete,                
+        yajl_gen_generation_complete,
         /** yajl_gen_double was passed an invalid floating point value
          *  (infinity or NaN). */
         yajl_gen_invalid_number,
@@ -137,6 +138,7 @@ extern "C" {
     YAJL_API yajl_gen_status yajl_gen_map_close(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_array_open(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_array_close(yajl_gen hand);
+    YAJL_API yajl_gen_status yajl_gen_val(yajl_gen hand, yajl_val v);
 
     /** access the null terminated generator buffer.  If incrementally
      *  outputing JSON, one should call yajl_gen_clear to clear the
@@ -152,6 +154,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif    
+#endif
 
 #endif

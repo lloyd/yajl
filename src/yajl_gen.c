@@ -140,7 +140,7 @@ yajl_gen_free(yajl_gen g)
     } else if (g->state[g->depth] == yajl_gen_map_val) {        \
         g->print(g->ctx, ":", 1);                               \
         if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);                \
-   } 
+   }
 
 #define INSERT_WHITESPACE                                               \
     if ((g->flags & yajl_gen_beautify)) {                                                    \
@@ -219,7 +219,7 @@ yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
-    ENSURE_VALID_STATE; ENSURE_NOT_KEY; 
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY;
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
     INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%.20g", number);
@@ -289,8 +289,8 @@ yajl_gen_status
 yajl_gen_map_open(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    INCREMENT_DEPTH; 
-    
+    INCREMENT_DEPTH;
+
     g->state[g->depth] = yajl_gen_map_start;
     g->print(g->ctx, "{", 1);
     if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
@@ -301,9 +301,9 @@ yajl_gen_map_open(yajl_gen g)
 yajl_gen_status
 yajl_gen_map_close(yajl_gen g)
 {
-    ENSURE_VALID_STATE; 
+    ENSURE_VALID_STATE;
     DECREMENT_DEPTH;
-    
+
     if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     APPENDED_ATOM;
     INSERT_WHITESPACE;
@@ -316,7 +316,7 @@ yajl_gen_status
 yajl_gen_array_open(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    INCREMENT_DEPTH; 
+    INCREMENT_DEPTH;
     g->state[g->depth] = yajl_gen_array_start;
     g->print(g->ctx, "[", 1);
     if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
@@ -351,4 +351,46 @@ void
 yajl_gen_clear(yajl_gen g)
 {
     if (g->print == (yajl_print_t)&yajl_buf_append) yajl_buf_clear((yajl_buf)g->ctx);
+}
+
+yajl_gen_status
+yajl_gen_val(yajl_gen g, yajl_val v)
+{
+    size_t i;
+    const char *key;
+    yajl_gen_status status;
+
+    if (YAJL_IS_NULL(v))
+      return yajl_gen_null(g);
+    else if (YAJL_IS_TRUE(v))
+      return yajl_gen_bool(g, 1);
+    else if (YAJL_IS_FALSE(v))
+      return yajl_gen_bool(g, 0);
+    else if (YAJL_IS_NUMBER(v))
+      return yajl_gen_number(g, v->u.number.r, strlen(v->u.number.r));
+    else if (YAJL_IS_STRING(v))
+      return yajl_gen_string(g, v->u.string, strlen(v->u.string));
+    else if (YAJL_IS_ARRAY(v)) {
+        status = yajl_gen_array_open(g);
+        if (status != yajl_gen_status_ok) return status;
+        for (i = 0; i < YAJL_GET_ARRAY(v)->len; i++) {
+            status = yajl_gen_val(g, YAJL_GET_ARRAY(v)->values[i]);
+            if (status != yajl_gen_status_ok) return status;
+        }
+        status = yajl_gen_array_close(g);
+        if (status != yajl_gen_status_ok) return status;
+    }
+    else if (YAJL_IS_OBJECT(v)) {
+        status = yajl_gen_map_open(g);
+        if (status != yajl_gen_status_ok) return status;
+        for (i = 0; i < YAJL_GET_OBJECT(v)->len; i++) {
+            key    = YAJL_GET_OBJECT(v)->keys[i];
+            status = yajl_gen_string(g, key, strlen(key));
+            if (status != yajl_gen_status_ok) return status;
+            status = yajl_gen_val(g, YAJL_GET_OBJECT(v)->values[i]);
+            if (status != yajl_gen_status_ok) return status;
+        }
+        status = yajl_gen_map_close(g);
+        if (status != yajl_gen_status_ok) return status;
+    }
 }
