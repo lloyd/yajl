@@ -369,7 +369,7 @@ yajl_gen_val(yajl_gen g, yajl_val v)
     else if (YAJL_IS_NUMBER(v))
       return yajl_gen_number(g, v->u.number.r, strlen(v->u.number.r));
     else if (YAJL_IS_STRING(v))
-      return yajl_gen_string(g, v->u.string, strlen(v->u.string));
+      return yajl_gen_string(g, (const unsigned char*)v->u.string, strlen(v->u.string));
     else if (YAJL_IS_ARRAY(v)) {
         status = yajl_gen_array_open(g);
         if (status != yajl_gen_status_ok) return status;
@@ -385,7 +385,7 @@ yajl_gen_val(yajl_gen g, yajl_val v)
         if (status != yajl_gen_status_ok) return status;
         for (i = 0; i < YAJL_GET_OBJECT(v)->len; i++) {
             key    = YAJL_GET_OBJECT(v)->keys[i];
-            status = yajl_gen_string(g, key, strlen(key));
+            status = yajl_gen_string(g, (const unsigned char*)key, strlen(key));
             if (status != yajl_gen_status_ok) return status;
             status = yajl_gen_val(g, YAJL_GET_OBJECT(v)->values[i]);
             if (status != yajl_gen_status_ok) return status;
@@ -393,4 +393,17 @@ yajl_gen_val(yajl_gen g, yajl_val v)
         status = yajl_gen_map_close(g);
         if (status != yajl_gen_status_ok) return status;
     }
+
+    /* if control reaches here then something must have gone terribly wrong */
+    return yajl_gen_in_error_state;
+}
+
+yajl_gen_status
+yajl_gen_raw(yajl_gen g, char *json, size_t size)
+{
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    g->print(g->ctx, json, size);
+    APPENDED_ATOM;
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
 }
