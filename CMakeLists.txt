@@ -47,19 +47,26 @@ IF (WIN32)
   SET(CMAKE_C_FLAGS_DEBUG "/D DEBUG /Od /Z7")
   SET(CMAKE_C_FLAGS_RELEASE "/D NDEBUG /O2")
 ELSE (WIN32)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
   IF(CMAKE_COMPILER_IS_GNUCC)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
     INCLUDE(CheckCCompilerFlag)
     CHECK_C_COMPILER_FLAG(-fvisibility=hidden HAVE_GCC_VISIBILITY)
     IF(HAVE_GCC_VISIBILITY)
       SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
     ENDIF(HAVE_GCC_VISIBILITY)
-  ENDIF(CMAKE_COMPILER_IS_GNUCC)
-  SET(CMAKE_C_FLAGS
-      "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra	-Wundef -Wwrite-strings -Wold-style-definition -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
+    SET(CMAKE_C_FLAGS
+        "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra	-Wundef -Wwrite-strings -Wold-style-definition -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
 
-  SET(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g")
-  SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2 -Wuninitialized")
+    SET(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g")
+    SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2 -Wuninitialized")
+
+  ELSE (CMAKE_COMPILER_IS_GNUCC)
+    IF("${CMAKE_C_COMPILER_ID}" MATCHES "SunPro")
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xldscope=hidden -D_XOPEN_SOURCE=600 -xc99=all")
+      SET(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g")
+      SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -xO3 -xbuiltin=%default")
+    ENDIF("${CMAKE_C_COMPILER_ID}" MATCHES "SunPro")
+  ENDIF(CMAKE_COMPILER_IS_GNUCC)
 ENDIF (WIN32)
 
 
