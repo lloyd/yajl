@@ -47,28 +47,28 @@ end
 
 # now generate a Makefile
 puts "== Generating Makefile"
-File.open("Makefile", "w+") do |f| 
+File.open("Makefile", "w+") do |f|
   f.puts ".PHONY: all clean distclean install package test distro"
   f.puts "all: distro doc test"
   f.puts
   f.puts "distro:"
-  f.puts "	@cd build && make"
+  f.puts "	@cd build && $(MAKE)"
   f.puts
   f.puts "doc:"
-  f.puts "	@cd build && make doc"
+  f.puts "	@cd build && $(MAKE) doc"
   f.puts
   f.puts "test:"
-  f.puts "	@cd build && make test"
+  f.puts "	@cd build && $(MAKE) test"
   f.puts
-  f.puts "clean:"  
-  f.puts "	@cd build && make clean"
+  f.puts "clean:"
+  f.puts "	@cd build && $(MAKE) clean"
   f.puts
-  f.puts "distclean:"  
+  f.puts "distclean:"
   f.puts "	@rm -rf Makefile build"
   f.puts "	@rm -f yajl-*.tgz"
   f.puts
-  f.puts "install: all" 
-  f.puts "	@cd build && make install"
+  f.puts "install: all"
+  f.puts "	@cd build && $(MAKE) install"
   f.puts
   f.puts "package: all"
   f.puts "	@echo \"compressing to `basename build/yajl-*`.tgz\""
