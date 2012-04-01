@@ -50,19 +50,19 @@ yajl_string_encode(const yajl_print_t print,
         size_t mark = end;
         unsigned short utf16 = 0;
         switch (c) {
-            case '\r': escaped = "\\r"; break;
-            case '\n': escaped = "\\n"; break;
-            case '\\': escaped = "\\\\"; break;
+            case '\r': escaped = "\\r"; escapedLen = 2; break;
+            case '\n': escaped = "\\n"; escapedLen = 2; break;
+            case '\\': escaped = "\\\\"; escapedLen = 2; break;
             /* it is not required to escape a solidus in JSON:
              * read sec. 2.5: http://www.ietf.org/rfc/rfc4627.txt
              * specifically, this production from the grammar:
              *   unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
              */
-            case '/': if (escape_solidus) escaped = "\\/"; break;
-            case '"': escaped = "\\\""; break;
-            case '\f': escaped = "\\f"; break;
-            case '\b': escaped = "\\b"; break;
-            case '\t': escaped = "\\t"; break;
+            case '/': if (escape_solidus) { escaped = "\\/"; escapedLen = 2; } break;
+            case '"': escaped = "\\\""; escapedLen = 2; break;
+            case '\f': escaped = "\\f"; escapedLen = 2; break;
+            case '\b': escaped = "\\b"; escapedLen = 2; break;
+            case '\t': escaped = "\\t"; escapedLen = 2; break;
             default:
                 switch (c & 0xF8) { /* 11111 000 */
                     case 0: break;
