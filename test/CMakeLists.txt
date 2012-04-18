@@ -15,9 +15,14 @@
 SET (SRCS yajl_test.c)
 
 # use the library we build, duh.
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include)
+INCLUDE_DIRECTORIES(
+	${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include
+	${CMAKE_SOURCE_DIR}/src
+)
 LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(yajl_test ${SRCS})
+ADD_EXECUTABLE(string_encode_test string_encode_test.c)
 
 TARGET_LINK_LIBRARIES(yajl_test yajl_s)
+TARGET_LINK_LIBRARIES(string_encode_test yajl_s)
