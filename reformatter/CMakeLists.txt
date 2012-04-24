@@ -34,6 +34,4 @@ GET_TARGET_PROPERTY(binPath json_reformat LOCATION)
 ADD_CUSTOM_COMMAND(TARGET json_reformat POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
 
-IF (NOT WIN32)
-  INSTALL(TARGETS json_reformat RUNTIME DESTINATION bin)
-ENDIF ()
+INSTALL(TARGETS json_reformat RUNTIME DESTINATION bin)
