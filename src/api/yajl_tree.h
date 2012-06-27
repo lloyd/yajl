@@ -74,7 +74,10 @@ struct yajl_val_s
      * members. */
     union
     {
-        char * string;
+        struct {
+            char * s;
+            size_t len;
+        } string;
         struct {
             long long i; /*< integer value, if representable. */
             double  d;   /*< double value, if representable. */
@@ -158,7 +161,8 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type t
 
 /** Given a yajl_val_string return a ptr to the bare string it contains,
  *  or NULL if the value is not a string. */
-#define YAJL_GET_STRING(v) (YAJL_IS_STRING(v) ? (v)->u.string : NULL)
+#define YAJL_GET_STRING(v)    (YAJL_IS_STRING(v) ? (v)->u.string.s   : NULL)
+#define YAJL_GET_STRINGLEN(v) (YAJL_IS_STRING(v) ? (v)->u.string.len : 0)
 
 /** Get the string representation of a number.  You should check type first,
  *  perhaps using YAJL_IS_NUMBER */
