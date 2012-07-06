@@ -219,6 +219,8 @@ main(int argc, char ** argv)
             yajl_config(hand, yajl_allow_multiple_values, 1);
         } else if (!strcmp("-p", argv[i])) {
             yajl_config(hand, yajl_allow_partial_values, 1);
+        } else if (!strcmp("-e", argv[i])) {
+            yajl_config(hand, yajl_dont_unescape_strings, 1);
         } else {
             fprintf(stderr, "invalid command line option: '%s'\n",
                     argv[i]);

@@ -246,11 +246,16 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     break;
                 case yajl_tok_string_with_escapes:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
-                        yajl_buf_clear(hand->decodeBuf);
-                        yajl_string_decode(hand->decodeBuf, buf, bufLen);
-                        _CC_CHK(hand->callbacks->yajl_string(
+                        if (hand->flags & yajl_dont_unescape_strings) {
+                            _CC_CHK(hand->callbacks->yajl_string(hand->ctx,
+                                                                 buf, bufLen));
+                        } else {
+                            yajl_buf_clear(hand->decodeBuf);
+                            yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                            _CC_CHK(hand->callbacks->yajl_string(
                                     hand->ctx, yajl_buf_data(hand->decodeBuf),
                                     yajl_buf_len(hand->decodeBuf)));
+                        }
                     }
                     break;
                 case yajl_tok_bool:

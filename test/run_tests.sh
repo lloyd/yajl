@@ -41,6 +41,7 @@ for file in cases/*.json ; do
   allowGarbage=""
   allowMultiple=""
   allowPartials=""
+  passEscapedStrings=""
 
   # if the filename starts with dc_, we disallow comments for this test
   case $(basename $file) in
@@ -55,7 +56,9 @@ for file in cases/*.json ; do
      ;;
     ap_*)
      allowPartials="-p ";
-    ;;
+     ;;
+    us_*)
+     passEscapedStrings="-e ";
   esac
   fileShort=`basename $file`
   testName=`echo $fileShort | sed -e 's/\.json$//'`
@@ -67,7 +70,7 @@ for file in cases/*.json ; do
   # ${ECHO} -n "$testBinShort $allowPartials$allowComments$allowGarbage$allowMultiple-b $iter < $fileShort > ${fileShort}.test : "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while [ $iter -lt 32  ] && [ $success = "SUCCESS" ] ; do
-    $testBin $allowPartials $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
+    $testBin $allowPartials $allowComments $allowGarbage $allowMultiple $passEscapedStrings -b $iter < $file > ${file}.test  2>&1
     diff ${DIFF_FLAGS} ${file}.gold ${file}.test > ${file}.out
     if [ $? -eq 0 ] ; then
       if [ $iter -eq 31 ] ; then : $(( testsSucceeded += 1)) ; fi
