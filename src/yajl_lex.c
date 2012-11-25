@@ -146,7 +146,7 @@ yajl_lex_free(yajl_lexer lxr)
 static const char charLookupTable[256] =
 {
 /*00*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
-/*08*/ IJC    , IJC    , IJC|STT, IJC    , IJC    , IJC|STT, IJC    , IJC    ,
+/*08*/ IJC    , IJC|STT, IJC|STT, IJC|STT, IJC|STT, IJC|STT, IJC    , IJC    ,
 /*10*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*18*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 
