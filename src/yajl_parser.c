@@ -204,6 +204,9 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 if (*offset != jsonTextLen) {
                     tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
                                        offset, &buf, &bufLen);
+                    if (tok == yajl_tok_eol && hand->flags & yajl_allow_sloppy_format) {
+                        goto around_again;
+                    }
                     if (tok != yajl_tok_eof) {
                         yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                         hand->parseError = "trailing garbage";
@@ -233,6 +236,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                                offset, &buf, &bufLen);
 
             switch (tok) {
+                case yajl_tok_eol:
+                    goto around_again;
                 case yajl_tok_eof:
                     return yajl_status_ok;
                 case yajl_tok_error:
@@ -332,7 +337,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     break;
                 case yajl_tok_right_brace: {
                     if (yajl_bs_current(hand->stateStack) ==
-                        yajl_state_array_start)
+                        yajl_state_array_start ||
+                        hand->flags & yajl_allow_sloppy_format)
                     {
                         if (hand->callbacks &&
                             hand->callbacks->yajl_end_array)
@@ -381,6 +387,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
                                offset, &buf, &bufLen);
             switch (tok) {
+                case yajl_tok_eol:
+                    goto around_again;
                 case yajl_tok_eof:
                     return yajl_status_ok;
                 case yajl_tok_error:
@@ -403,7 +411,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     goto around_again;
                 case yajl_tok_right_bracket:
                     if (yajl_bs_current(hand->stateStack) ==
-                        yajl_state_map_start)
+                        yajl_state_map_start ||
+                        hand->flags & yajl_allow_sloppy_format)
                     {
                         if (hand->callbacks && hand->callbacks->yajl_end_map) {
                             _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
@@ -448,6 +457,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     yajl_bs_pop(hand->stateStack);
                     goto around_again;
                 case yajl_tok_comma:
+                case yajl_tok_eol:
                     yajl_bs_set(hand->stateStack, yajl_state_map_need_key);
                     goto around_again;
                 case yajl_tok_eof:
@@ -476,6 +486,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     yajl_bs_pop(hand->stateStack);
                     goto around_again;
                 case yajl_tok_comma:
+                case yajl_tok_eol:
                     yajl_bs_set(hand->stateStack, yajl_state_array_need_val);
                     goto around_again;
                 case yajl_tok_eof:

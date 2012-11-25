@@ -156,7 +156,16 @@ extern "C" {
          * yajl will enter an error state (premature EOF).  Setting this
          * flag suppresses that check and the corresponding error.
          */
-        yajl_allow_partial_values = 0x10
+        yajl_allow_partial_values = 0x10,
+        /**
+         * Allow a simplified json format to be parsed, it doesn't require
+         * some redundant tokens as double quotes for strings and comma.
+         * arguments: toggled off with integer zero, on otherwise.
+         *
+         * example:
+         *   yajl_config(h, yajl_allow_sloppy_format, 1);
+         */
+        yajl_allow_sloppy_format = 0x20
     } yajl_option;
 
     /** allow the modification of parser options subsequent to handle

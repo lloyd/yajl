@@ -30,6 +30,7 @@ tokToStr(yajl_tok tok)
         case yajl_tok_bool: return "bool";
         case yajl_tok_colon: return "colon";
         case yajl_tok_comma: return "comma";
+        case yajl_tok_eol: return "eol";
         case yajl_tok_eof: return "eof";
         case yajl_tok_error: return "error";
         case yajl_tok_left_brace: return "brace";
@@ -90,6 +91,9 @@ struct yajl_lexer_t {
     /* shall we validate utf8 inside strings? */
     unsigned int validateUTF8;
 
+    /* a simplified json format is permitted for parsing */
+    unsigned int allowSloppyFormat;
+
     yajl_alloc_funcs * alloc;
 };
 
@@ -102,13 +106,15 @@ struct yajl_lexer_t {
 
 yajl_lexer
 yajl_lex_alloc(yajl_alloc_funcs * alloc,
-               unsigned int allowComments, unsigned int validateUTF8)
+               unsigned int allowComments, unsigned int validateUTF8, 
+               unsigned int allowSloppyFormat)
 {
     yajl_lexer lxr = (yajl_lexer) YA_MALLOC(alloc, sizeof(struct yajl_lexer_t));
     memset((void *) lxr, 0, sizeof(struct yajl_lexer_t));
     lxr->buf = yajl_buf_alloc(alloc);
     lxr->allowComments = allowComments;
     lxr->validateUTF8 = validateUTF8;
+    lxr->allowSloppyFormat = allowSloppyFormat;
     lxr->alloc = alloc;
     return lxr;
 }
@@ -128,29 +134,31 @@ yajl_lex_free(yajl_lexer lxr)
  * VHC - valid hex char
  * NFP - needs further processing (from a string scanning perspective)
  * NUC - needs utf8 checking when enabled (from a string scanning perspective)
+ * STT - sloppy string terminator
  */
 #define VEC 0x01
 #define IJC 0x02
 #define VHC 0x04
 #define NFP 0x08
 #define NUC 0x10
+#define STT 0x20
 
 static const char charLookupTable[256] =
 {
 /*00*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
-/*08*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
+/*08*/ IJC    , IJC    , IJC|STT, IJC    , IJC    , IJC|STT, IJC    , IJC    ,
 /*10*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*18*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 
-/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0      ,
+/*20*/ STT    , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0      ,
 /*28*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , VEC    ,
 /*30*/ VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    ,
-/*38*/ VHC    , VHC    , 0      , 0      , 0      , 0      , 0      , 0      ,
+/*38*/ VHC    , VHC    , STT    , 0      , 0      , 0      , 0      , 0      ,
 
 /*40*/ 0      , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , 0      ,
 /*48*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
 /*50*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
-/*58*/ 0      , 0      , 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      ,
+/*58*/ 0      , 0      , 0      , 0      , NFP|VEC|IJC|STT, 0      , 0      , 0      ,
 
 /*60*/ 0      , VHC    , VEC|VHC, VHC    , VHC    , VHC    , VEC|VHC, 0      ,
 /*68*/ 0      , 0      , 0      , 0      , 0      , 0      , VEC    , 0      ,
@@ -365,6 +373,125 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
     return tok;
 }
 
+/** scan an unquoted string for interesting characters that might need
+ *  further review. return the number of chars that are uninteresting
+ *  and can be skipped.
+ * (lth) hi world, any thoughts on how to make this routine faster? */
+inline static size_t
+yajl_unquoted_string_scan(const unsigned char * buf, size_t len,
+                          int utf8check)
+{
+    unsigned char mask = IJC|STT|(utf8check ? NUC : 0);
+    size_t skip = 0;
+    while (skip < len && !(charLookupTable[*buf] & mask))
+    {
+        skip++;
+        buf++;
+    }
+    return skip;
+}
+
+static yajl_tok
+yajl_lex_unquoted_string(yajl_lexer lexer, const unsigned char * jsonText,
+                         size_t jsonTextLen, size_t * offset)
+{
+    yajl_tok tok = yajl_tok_error;
+    int hasEscapes = 0;
+
+    for (;;) {
+        unsigned char curChar;
+
+        /* now jump into a faster scanning routine to skip as much
+         * of the buffers as possible */
+        {
+            const unsigned char * p;
+            size_t len;
+
+            if ((lexer->bufInUse && yajl_buf_len(lexer->buf) &&
+                 lexer->bufOff < yajl_buf_len(lexer->buf)))
+            {
+                p = ((const unsigned char *) yajl_buf_data(lexer->buf) +
+                     (lexer->bufOff));
+                len = yajl_buf_len(lexer->buf) - lexer->bufOff;
+                lexer->bufOff += yajl_string_scan(p, len, lexer->validateUTF8);
+            }
+            else if (*offset < jsonTextLen)
+            {
+                p = jsonText + *offset;
+                len = jsonTextLen - *offset;
+                *offset += yajl_unquoted_string_scan(p, len, lexer->validateUTF8);
+            }
+        }
+
+        STR_CHECK_EOF;
+
+        curChar = readChar(lexer, jsonText, offset);
+
+        /* an space in an unquoted string or a attribute separator*/
+        if (charLookupTable[curChar] & STT) {
+            tok = yajl_tok_string;
+            break;
+        }
+        /* backslash escapes a set of control chars, */
+        else if (curChar == '\\') {
+            hasEscapes = 1;
+            STR_CHECK_EOF;
+
+            /* special case \u */
+            curChar = readChar(lexer, jsonText, offset);
+            if (curChar == 'u') {
+                unsigned int i = 0;
+
+                for (i=0;i<4;i++) {
+                    STR_CHECK_EOF;
+                    curChar = readChar(lexer, jsonText, offset);
+                    if (!(charLookupTable[curChar] & VHC)) {
+                        /* back up to offending char */
+                        unreadChar(lexer, offset);
+                        lexer->error = yajl_lex_string_invalid_hex_char;
+                        goto finish_string_lex;
+                    }
+                }
+            } else if (!(charLookupTable[curChar] & VEC)) {
+                /* back up to offending char */
+                unreadChar(lexer, offset);
+                lexer->error = yajl_lex_string_invalid_escaped_char;
+                goto finish_string_lex;
+            }
+        }
+        /* when not validating UTF8 it's a simple table lookup to determine
+         * if the present character is invalid */
+        else if(charLookupTable[curChar] & IJC) {
+            /* back up to offending char */
+            unreadChar(lexer, offset);
+            lexer->error = yajl_lex_string_invalid_json_char;
+            goto finish_string_lex;
+        }
+        /* when in validate UTF8 mode we need to do some extra work */
+        else if (lexer->validateUTF8) {
+            yajl_tok t = yajl_lex_utf8_char(lexer, jsonText, jsonTextLen,
+                                            offset, curChar);
+
+            if (t == yajl_tok_eof) {
+                tok = yajl_tok_eof;
+                goto finish_string_lex;
+            } else if (t == yajl_tok_error) {
+                lexer->error = yajl_lex_string_invalid_utf8;
+                goto finish_string_lex;
+            }
+        }
+        /* accept it, and move on */
+    }
+  finish_string_lex:
+    /* tell our buddy, the parser, wether he needs to process this string
+     * again */
+    if (hasEscapes && tok == yajl_tok_string) {
+        tok = yajl_tok_string_with_escapes;
+    }
+
+    return tok;
+}
+
 #define RETURN_IF_EOF if (*offset >= jsonTextLen) return yajl_tok_eof;
 
 static yajl_tok
@@ -503,6 +630,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     yajl_tok tok = yajl_tok_error;
     unsigned char c;
     size_t startOffset = *offset;
+    unsigned char skipStrFixup = 0;
 
     *outBuf = NULL;
     *outLen = 0;
@@ -536,7 +664,12 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             case ':':
                 tok = yajl_tok_colon;
                 goto lexed;
-            case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
+            case '\n':
+                if (lexer->allowSloppyFormat) {
+                    tok = yajl_tok_eol;
+                    goto lexed;
+                }
+            case '\t': case '\v': case '\f': case '\r': case ' ':
                 startOffset++;
                 break;
             case 't': {
@@ -549,9 +682,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                     c = readChar(lexer, jsonText, offset);
                     if (c != *want) {
                         unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
+                        goto invalid;
                     }
                 } while (*(++want));
                 tok = yajl_tok_bool;
@@ -567,9 +698,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                     c = readChar(lexer, jsonText, offset);
                     if (c != *want) {
                         unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
+                        goto invalid;
                     }
                 } while (*(++want));
                 tok = yajl_tok_bool;
@@ -585,9 +714,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                     c = readChar(lexer, jsonText, offset);
                     if (c != *want) {
                         unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
+                        goto invalid;
                     }
                 } while (*(++want));
                 tok = yajl_tok_null;
@@ -636,8 +763,18 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 /* hit error or eof, bail */
                 goto lexed;
             default:
-                lexer->error = yajl_lex_invalid_char;
-                tok = yajl_tok_error;
+            invalid:
+                if (!lexer->allowSloppyFormat) {
+                    lexer->error = yajl_lex_invalid_char;
+                    tok = yajl_tok_error;
+                    goto lexed;
+                }
+                unreadChar(lexer, offset);
+                skipStrFixup = 1;
+                tok = yajl_lex_unquoted_string(lexer,
+                                               (const unsigned char *) jsonText,
+                                               jsonTextLen, offset);
+                unreadChar(lexer, offset);
                 goto lexed;
         }
     }
@@ -663,7 +800,8 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     }
 
     /* special case for strings. skip the quotes. */
-    if (tok == yajl_tok_string || tok == yajl_tok_string_with_escapes)
+    if ((tok == yajl_tok_string || tok == yajl_tok_string_with_escapes) &&
+        !skipStrFixup)
     {
         assert(*outLen >= 2);
         (*outBuf)++;
