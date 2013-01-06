@@ -14,10 +14,16 @@
 
 SET (SRCS parse_config.c)
 
-# use the library we build, duh.
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include)
-LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/include)
 
 ADD_EXECUTABLE(parse_config ${SRCS})
 
-TARGET_LINK_LIBRARIES(parse_config yajl_s)
+IF (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(parse_config yajl_s)
+ELSE (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(parse_config yajl)
+ENDIF (DISABLE_SHARED)
+
+ADD_DEPENDENCIES (parse_config src)
+
+# vim: ts=2 sw=2 et:

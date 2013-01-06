@@ -23,7 +23,7 @@
 #ifndef __YAJL_ALLOC_H__
 #define __YAJL_ALLOC_H__
 
-#include "api/yajl_common.h"
+#include "yajl/yajl_common.h"
 
 #define YA_MALLOC(afs, sz) (afs)->malloc((afs)->ctx, (sz))
 #define YA_FREE(afs, ptr) (afs)->free((afs)->ctx, (ptr))

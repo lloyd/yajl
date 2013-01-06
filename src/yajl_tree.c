@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "api/yajl_tree.h"
-#include "api/yajl_parse.h"
+#include "yajl/yajl_tree.h"
+#include "yajl/yajl_parse.h"
 
 #include "yajl_parser.h"
 
@@ -194,7 +194,7 @@ static int array_add_value (context_t *ctx,
 
     /* "context_add_value" will only call us with array values. */
     assert(YAJL_IS_ARRAY(array));
-    
+
     tmp = realloc(array->u.array.values,
                   sizeof(*(array->u.array.values)) * (array->u.array.len + 1));
     if (tmp == NULL)

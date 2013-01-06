@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "api/yajl_parse.h"
+#include "yajl/yajl_parse.h"
 #include "yajl_lex.h"
 #include "yajl_parser.h"
 #include "yajl_encode.h"
@@ -414,7 +414,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =
-                        "invalid object key (must be a string)"; 
+                        "invalid object key (must be a string)";
                     goto around_again;
             }
         }

@@ -14,10 +14,16 @@
 
 SET (SRCS perftest.c documents.c documents.h)
 
-# use the library we build, duh.
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include)
-LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/include)
 
 ADD_EXECUTABLE(perftest ${SRCS})
 
-TARGET_LINK_LIBRARIES(perftest yajl_s)
+IF (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(perftest yajl_s)
+ELSE (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(perftest yajl)
+ENDIF (DISABLE_SHARED)
+
+ADD_DEPENDENCIES (perftest src)
+
+# vim: ts=2 sw=2 et:

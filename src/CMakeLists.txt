@@ -12,12 +12,33 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-SET (SRCS yajl.c yajl_lex.c yajl_parser.c yajl_buf.c
-          yajl_encode.c yajl_gen.c yajl_alloc.c
-          yajl_tree.c yajl_version.c
+SET (SRCS
+  yajl.c
+  yajl_lex.c
+  yajl_parser.c
+  yajl_buf.c
+  yajl_encode.c
+  yajl_gen.c
+  yajl_alloc.c
+  yajl_tree.c
+  yajl_version.c
 )
-SET (HDRS yajl_parser.h yajl_lex.h yajl_buf.h yajl_encode.h yajl_alloc.h)
-SET (PUB_HDRS api/yajl_parse.h api/yajl_gen.h api/yajl_common.h api/yajl_tree.h)
+
+SET (HDRS
+  yajl_parser.h
+  yajl_lex.h
+  yajl_buf.h
+  yajl_encode.h
+  yajl_alloc.h
+)
+
+SET (PUB_HDRS
+	${CMAKE_SOURCE_DIR}/include/yajl/yajl_parse.h
+	${CMAKE_SOURCE_DIR}/include/yajl/yajl_gen.h
+	${CMAKE_SOURCE_DIR}/include/yajl/yajl_common.h
+	${CMAKE_SOURCE_DIR}/include/yajl/yajl_tree.h
+	${CMAKE_BINARY_DIR}/include/yajl/yajl_version.h
+)
 
 # useful when fixing lexer bugs.
 #ADD_DEFINITIONS(-DYAJL_LEXER_DEBUG)
@@ -27,69 +48,58 @@ SET (PUB_HDRS api/yajl_parse.h api/yajl_gen.h api/yajl_common.h api/yajl_tree.h)
 # building win32 DLL.
 ADD_DEFINITIONS(-DYAJL_BUILD)
 
-# set up some paths
-SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
-SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include/yajl)
-SET (shareDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/share/pkgconfig)
-
-# set the output path for libraries
-SET(LIBRARY_OUTPUT_PATH ${libDir})
-
-ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
-IF(UNIX)
-  IF(CMAKE_COMPILER_IS_GNUCC)
-    SET_TARGET_PROPERTIES(yajl_s PROPERTIES COMPILE_FLAGS "-fPIC")
-  ENDIF(CMAKE_COMPILER_IS_GNUCC)
-
-  IF("${CMAKE_SYSTEM}" MATCHES "AIX")
-    SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> -X32_64 cr <TARGET> <LINK_FLAGS> <OBJECTS>")
-  ENDIF("${CMAKE_SYSTEM}" MATCHES "AIX")
-ENDIF(UNIX)
-
-ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
-
-#### setup shared library version number
-SET_TARGET_PROPERTIES(yajl PROPERTIES
-                      DEFINE_SYMBOL YAJL_SHARED
-                      SOVERSION ${YAJL_MAJOR}
-                      VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
-
-#### ensure a .dylib has correct absolute installation paths upon installation
-IF(APPLE)
-  MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
-  SET_TARGET_PROPERTIES(yajl PROPERTIES
-                        INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-ENDIF(APPLE)
-
-#### build up an sdk as a post build step
-
-# create some directories
-FILE(MAKE_DIRECTORY ${libDir})
-FILE(MAKE_DIRECTORY ${incDir})
-
 # generate build-time source
 SET(dollar $)
-CONFIGURE_FILE(api/yajl_version.h.cmake ${incDir}/yajl_version.h)
-CONFIGURE_FILE(yajl.pc.cmake ${shareDir}/yajl.pc)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/include/yajl/yajl_version.h.cmake
+               ${CMAKE_BINARY_DIR}/include/yajl/yajl_version.h)
+CONFIGURE_FILE(yajl.pc.cmake yajl.pc)
 
-# copy public headers to output directory
-FOREACH (header ${PUB_HDRS})
-  SET (header ${CMAKE_CURRENT_SOURCE_DIR}/${header})
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include)
 
-  EXEC_PROGRAM(${CMAKE_COMMAND} ARGS -E copy_if_different ${header} ${incDir})
+IF (NOT DISABLE_STATIC)
+  ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
 
-  ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
-ENDFOREACH (header ${PUB_HDRS})
+  IF(UNIX)
+    IF(CMAKE_COMPILER_IS_GNUCC)
+      SET_TARGET_PROPERTIES(yajl_s PROPERTIES COMPILE_FLAGS "-fPIC")
+    ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
-INCLUDE_DIRECTORIES(${incDir}/..)
+    IF("${CMAKE_SYSTEM}" MATCHES "AIX")
+      SET(CMAKE_C_ARCHIVE_CREATE
+          "<CMAKE_AR> -X32_64 cr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    ENDIF("${CMAKE_SYSTEM}" MATCHES "AIX")
+  ENDIF(UNIX)
 
-IF(NOT WIN32)
   # at build time you may specify the cmake variable LIB_SUFFIX to handle
   # 64-bit systems which use 'lib64'
-  INSTALL(TARGETS yajl LIBRARY DESTINATION lib${LIB_SUFFIX})
   INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
-  INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
-  INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
-  INSTALL(FILES ${shareDir}/yajl.pc DESTINATION share/pkgconfig)
-ENDIF()
+ENDIF (NOT DISABLE_STATIC)
+
+IF (NOT DISABLE_SHARED)
+  ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
+
+  #### setup shared library version number
+  SET_TARGET_PROPERTIES(yajl PROPERTIES DEFINE_SYMBOL YAJL_SHARED)
+
+  IF(NOT DISABLE_SO_VERSION)
+    SET_TARGET_PROPERTIES(yajl PROPERTIES
+                          SOVERSION ${YAJL_MAJOR}
+                          VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
+  ENDIF(NOT DISABLE_SO_VERSION)
+
+  #### ensure a .dylib has correct absolute installation paths upon installation
+  IF(APPLE)
+    MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
+    SET_TARGET_PROPERTIES(yajl PROPERTIES
+                          INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+  ENDIF(APPLE)
+
+  # at build time you may specify the cmake variable LIB_SUFFIX to handle
+  # 64-bit systems which use 'lib64'
+  INSTALL(TARGETS yajl DESTINATION lib${LIB_SUFFIX})
+ENDIF (NOT DISABLE_SHARED)
+
+INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/yajl.pc DESTINATION share/pkgconfig)
+
+# vim: ts=2 sw=2 et:

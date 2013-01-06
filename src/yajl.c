@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "api/yajl_parse.h"
+#include "yajl/yajl_parse.h"
 #include "yajl_lex.h"
 #include "yajl_parser.h"
 #include "yajl_alloc.h"
@@ -68,7 +68,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = NULL; 
+    hand->lexer = NULL;
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
     hand->flags	    = 0;

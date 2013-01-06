@@ -12,29 +12,20 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# set up a paths
-SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/bin)
-
-# create a directories
-FILE(MAKE_DIRECTORY ${binDir})
-
 SET (SRCS json_reformat.c)
 
-# use the library we build, duh.
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include)
-LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/include)
 SET (CMAKE_EXE_LINKER_FLAGS ${YAJL_EXE_LINKER_FLAGS})
 
 ADD_EXECUTABLE(json_reformat ${SRCS})
 
-TARGET_LINK_LIBRARIES(json_reformat yajl)
+IF (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(json_reformat yajl_s)
+ELSE (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(json_reformat yajl)
+ENDIF (DISABLE_SHARED)
 
-# copy the binary into the output directory
-GET_TARGET_PROPERTY(binPath json_reformat LOCATION)
+ADD_DEPENDENCIES (json_reformat src)
+INSTALL(TARGETS json_reformat DESTINATION bin)
 
-ADD_CUSTOM_COMMAND(TARGET json_reformat POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
-
-IF (NOT WIN32)
-  INSTALL(TARGETS json_reformat RUNTIME DESTINATION bin)
-ENDIF ()
+# vim: ts=2 sw=2 et:

@@ -12,20 +12,31 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-SET (SRCS yajl_test.c)
+CONFIGURE_FILE(run_tests.sh.in run_tests.sh)
 
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh.in
-	${CMAKE_CURRENT_BINARY_DIR}/run_tests.sh)
-
-# use the library we build, duh.
 INCLUDE_DIRECTORIES(
-	${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include
-	${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_BINARY_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/src
 )
-LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 
-ADD_EXECUTABLE(yajl_test ${SRCS})
-ADD_EXECUTABLE(string_encode_test string_encode_test.c)
+ADD_EXECUTABLE(yajl_test yajl_test.c)
 
-TARGET_LINK_LIBRARIES(yajl_test yajl_s)
-TARGET_LINK_LIBRARIES(string_encode_test yajl_s)
+IF (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(yajl_test yajl_s)
+ELSE (DISABLE_SHARED)
+  TARGET_LINK_LIBRARIES(yajl_test yajl)
+ENDIF (DISABLE_SHARED)
+
+ADD_DEPENDENCIES (yajl_test src)
+
+# FIXME string_encode_test can not be ran correctly in Windows.
+IF (NOT WIN32)
+  IF (NOT DISABLE_STATIC)
+	  ADD_EXECUTABLE(string_encode_test string_encode_test.c)
+	  TARGET_LINK_LIBRARIES(string_encode_test yajl_s)
+	  ADD_DEPENDENCIES (string_encode_test src)
+  ENDIF (NOT DISABLE_STATIC)
+ENDIF (NOT WIN32)
+
+# vim: ts=2 sw=2 et:
