@@ -1,2 +1,3 @@
 reformatter/json_reformat.c usr/share/doc/libyajl-doc/examples
 verify/json_verify.c usr/share/doc/libyajl-doc/examples
+usr/share/doc/libyajl-doc/html/*

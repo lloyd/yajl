@@ -1,3 +1,10 @@
+yajl (2.0.5-3) unstable; urgency=low
+
+  * Refine source directory structures and cmake files.
+  * Simplify debian files.
+
+ -- Like Ma <likemartinma@gmail.com>  Sat, 26 Jan 2013 20:21:30 +0800
+
 yajl (2.0.5-2) unstable; urgency=low
 
   * Merge from upstream 2.0.5
