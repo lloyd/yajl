@@ -105,7 +105,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%doc COPYING ChangeLog README TODO
+%doc COPYING ChangeLog README.md TODO
 %ifos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
 %{_libdir}/lib*.so
 %else
