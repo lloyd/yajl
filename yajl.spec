@@ -10,14 +10,20 @@
 %define _cmake_lib_suffix64 -DLIB_SUFFIX=64
 %endif
 
+%ifos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
+%define _disable_docs -DDISABLE_DOCS=1
+%endif # aix
+
+%define _unpackaged_files_terminate_build 0
+
 Name: yajl
 Version: %{YAJLVER}
 Summary: Yet Another JSON Library (YAJL)
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: BSD
 Group: Development/Libraries
 Source0: yajl-%{YAJLVER}.tar.bz2
-Url: http://lloyd.github.com/yajl/
+Url: https://github.com/likema/yajl
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: gcc, cmake
 
@@ -39,7 +45,7 @@ validating JSON generator.
 This sub-package provides the libraries and includes
 necessary for developing against the YAJL library.
 
-%ifnos aix
+%ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
 %package doc
 Summary: Documentation to develop with YAJL
 Group: Documentation
@@ -50,7 +56,7 @@ Yet Another JSON Library. YAJL is a small event-driven
 validating JSON generator.
 
 This sub-package provides the API documentation.
-%endif
+%endif # aix
 
 %package tools
 Summary: Tools that use YAJL
@@ -71,17 +77,19 @@ json_verify - validates JSON data
 %setup -q
 
 %build
-cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_RPATH=ON %{?_cmake_lib_suffix64}
-make VERBOSE=1 %{?_smp_mflags}
+cmake \
+	-DCMAKE_INSTALL_PREFIX=%{_prefix} \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_SKIP_RPATH=ON \
+	%{?_disable_docs} \
+	%{?_cmake_lib_suffix64}
+make %{?_smp_mflags}
 
-%ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
-make VERBOSE=1 doc
-%endif
 
 %ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
 %check
-test/run_tests.sh
-%endif
+LD_LIBRARY_PATH=src test/run_tests.sh
+%endif # aix
 
 %install
 rm -rf %{buildroot}
@@ -93,7 +101,7 @@ rm -rf %{buildroot}
 %ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
-%endif
+%endif # aix
 
 %files
 %defattr(-,root,root)
@@ -102,23 +110,24 @@ rm -rf %{buildroot}
 %{_libdir}/lib*.so
 %else
 %{_libdir}/lib*.so.*
-%endif
+%endif # aix
 
 %files devel
 %defattr(-,root,root)
 %doc COPYING
-%{_includedir}/*
 %ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
+%doc %{_mandir}/*
 %{_libdir}/lib*.so
-%endif
+%endif # aix
 %{_libdir}/lib*.a
+%{_includedir}/*
 
 %ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
 %files doc
 %defattr(-,root,root)
 %doc COPYING
-%doc yajl-%{YAJLVER}/share/doc/yajl-%{YAJLVER}/*
-%endif
+%doc share/doc/libyajl-doc/*
+%endif # aix
 
 %files tools
 %defattr(-,root,root)
@@ -126,6 +135,9 @@ rm -rf %{buildroot}
 %{_bindir}/*
 
 %changelog
+* Sat Jan 26 2013 Like Ma <likemartinma@gmail.com> - 2.0.5-3
+- Refine source directory structures and cmake files.
+
 * Sun Apr 01 2012 Like Ma <likemartinma@gmail.com> - 2.0.5-2
 - Merge from upstream 2.0.5
 
