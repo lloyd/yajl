@@ -668,6 +668,10 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
         assert(*outLen >= 2);
         (*outBuf)++;
         *outLen -= 2; 
+
+        /* overwrite the closing quote with a NULL
+         * XXX: casting away const-ness, perhaps a bad idea? */
+        ((unsigned char *) (*outBuf))[*outLen] = '\0';
     }
 
 

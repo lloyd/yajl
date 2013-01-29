@@ -94,7 +94,12 @@ static int test_yajl_string(void *ctx, const unsigned char * stringVal,
 {
     printf("string: '");
     fwrite(stringVal, 1, stringLen, stdout);
-    printf("'\n");
+
+    if (!stringVal[stringLen])
+        printf("'\n");
+    else
+        printf(" (NOT NULL TERMINATED)'\n");
+
     return 1;
 }
 
