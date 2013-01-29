@@ -14,10 +14,11 @@
 
 SET (SRCS yajl.c yajl_lex.c yajl_parser.c yajl_buf.c
           yajl_encode.c yajl_gen.c yajl_alloc.c
-          yajl_tree.c yajl_version.c
+          yajl_tree.c yajl_version.c 
+	        yajl_decl.c
 )
 SET (HDRS yajl_parser.h yajl_lex.h yajl_buf.h yajl_encode.h yajl_alloc.h)
-SET (PUB_HDRS api/yajl_parse.h api/yajl_gen.h api/yajl_common.h api/yajl_tree.h)
+SET (PUB_HDRS api/yajl_parse.h api/yajl_gen.h api/yajl_common.h api/yajl_tree.h api/yajl_decl.h)
 
 # useful when fixing lexer bugs.
 #ADD_DEFINITIONS(-DYAJL_LEXER_DEBUG)
