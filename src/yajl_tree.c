@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "api/yajl_tree.h"
-#include "api/yajl_parse.h"
+#include "yajl/yajl_tree.h"
+#include "yajl/yajl_parse.h"
 
 #include "yajl_parser.h"
 

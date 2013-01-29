@@ -1,4 +1,4 @@
-#include <yajl/yajl_version.h>
+#include "yajl_version.h"
 
 int yajl_version(void)
 {

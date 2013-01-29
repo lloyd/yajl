@@ -1,0 +1,9 @@
+libdir=@abs_top_builddir@/.libs
+includedir=@abs_top_srcdir@
+
+Name: Yajl
+Description: Yet Another JSON Library
+Version: @VERSION@
+Libs: -L${libdir} -lyajl
+Cflags: -I${includedir}
+
