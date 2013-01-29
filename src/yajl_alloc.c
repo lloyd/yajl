@@ -25,17 +25,20 @@
 
 static void * yajl_internal_malloc(void *ctx, size_t sz)
 {
+    (void)ctx;
     return malloc(sz);
 }
 
 static void * yajl_internal_realloc(void *ctx, void * previous,
                                     size_t sz)
 {
+    (void)ctx;
     return realloc(previous, sz);
 }
 
 static void yajl_internal_free(void *ctx, void * ptr)
 {
+    (void)ctx;
     free(ptr);
 }
 
