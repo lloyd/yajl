@@ -70,19 +70,19 @@ for file in cases/*.json ; do
     $testBin $allowPartials $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
     diff ${DIFF_FLAGS} ${file}.gold ${file}.test > ${file}.out
     if [ $? -eq 0 ] ; then
-      if [ $iter -eq 31 ] ; then : $(( testsSucceeded += 1)) ; fi
+      if [ $iter -eq 31 ] ; then testsSucceeded=$(( $testsSucceeded + 1 )) ; fi
     else
       success="FAILURE"
       iter=32
       ${ECHO}
       cat ${file}.out
     fi
-    : $(( iter += 1 ))
+    iter=$(( iter + 1 ))
     rm ${file}.test ${file}.out
   done
 
   ${ECHO} $success
-  : $(( testsTotal += 1 ))
+  testsTotal=$(( testsTotal + 1 ))
 done
 
 ${ECHO} $testsSucceeded/$testsTotal tests successful
