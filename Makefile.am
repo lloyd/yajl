@@ -2,7 +2,7 @@ EXTRA_DIST = src/YAJL.dxy
 
 dist_doc_DATA = TODO README
 
-lib_LTLIBRARIES = libyail.la
+lib_LTLIBRARIES = libyajl.la
 
 pkginclude_HEADERS = src/yajl/yajl_parse.h \
 		     src/yajl/yajl_gen.h \
