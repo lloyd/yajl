@@ -121,6 +121,7 @@ rm -rf %{buildroot}
 %endif # aix
 %{_libdir}/lib*.a
 %{_includedir}/*
+%{_datadir}/pkgconfig/*
 
 %ifnos aix5.1 aix5.2 aix5.3 aix6.1 aix7.1
 %files doc
