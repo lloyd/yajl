@@ -48,6 +48,12 @@ SET (PUB_HDRS
 # building win32 DLL.
 ADD_DEFINITIONS(-DYAJL_BUILD)
 
+IF(UNIX)
+  IF("${CMAKE_SYSTEM_NAME}" STREQUAL "HP-UX")
+    ADD_DEFINITIONS(-D_POSIX_SOURCE -D_XOPEN_SOURCE)
+  ENDIF("${CMAKE_SYSTEM_NAME}" STREQUAL "HP-UX")
+ENDIF(UNIX)
+
 # generate build-time source
 SET(dollar $)
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/include/yajl/yajl_version.h.cmake
@@ -64,10 +70,10 @@ IF (NOT DISABLE_STATIC)
       SET_TARGET_PROPERTIES(yajl_s PROPERTIES COMPILE_FLAGS "-fPIC")
     ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
-    IF("${CMAKE_SYSTEM}" MATCHES "AIX")
+    IF("${CMAKE_SYSTEM_NAME}" STREQUAL "AIX")
       SET(CMAKE_C_ARCHIVE_CREATE
           "<CMAKE_AR> -X32_64 cr <TARGET> <LINK_FLAGS> <OBJECTS>")
-    ENDIF("${CMAKE_SYSTEM}" MATCHES "AIX")
+    ENDIF("${CMAKE_SYSTEM_NAME}" STREQUAL "AIX")
   ENDIF(UNIX)
 
   # at build time you may specify the cmake variable LIB_SUFFIX to handle
@@ -78,6 +84,17 @@ ENDIF (NOT DISABLE_STATIC)
 IF (NOT DISABLE_SHARED)
   ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
 
+  IF(UNIX)
+    IF("${CMAKE_SYSTEM_NAME}" STREQUAL "HP-UX")
+      TARGET_LINK_LIBRARIES (yajl m)
+    ENDIF("${CMAKE_SYSTEM_NAME}" STREQUAL "HP-UX")
+  ELSEIF(APPLE)
+    #### ensure a .dylib has correct absolute installation paths upon installation
+    MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
+    SET_TARGET_PROPERTIES(yajl PROPERTIES
+                          INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+  ENDIF(UNIX)
+
   #### setup shared library version number
   SET_TARGET_PROPERTIES(yajl PROPERTIES DEFINE_SYMBOL YAJL_SHARED)
 
@@ -86,13 +103,6 @@ IF (NOT DISABLE_SHARED)
                           SOVERSION ${YAJL_MAJOR}
                           VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
   ENDIF(NOT DISABLE_SO_VERSION)
-
-  #### ensure a .dylib has correct absolute installation paths upon installation
-  IF(APPLE)
-    MESSAGE("INSTALL_NAME_DIR: ${CMAKE_INSTALL_PREFIX}/lib")
-    SET_TARGET_PROPERTIES(yajl PROPERTIES
-                          INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-  ENDIF(APPLE)
 
   # at build time you may specify the cmake variable LIB_SUFFIX to handle
   # 64-bit systems which use 'lib64'
