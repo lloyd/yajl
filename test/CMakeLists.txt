@@ -30,13 +30,10 @@ ENDIF (DISABLE_SHARED)
 
 ADD_DEPENDENCIES (yajl_test src)
 
-# FIXME string_encode_test can not be ran correctly in Windows.
-IF (NOT WIN32)
-  IF (NOT DISABLE_STATIC)
-	  ADD_EXECUTABLE(string_encode_test string_encode_test.c)
-	  TARGET_LINK_LIBRARIES(string_encode_test yajl_s)
-	  ADD_DEPENDENCIES (string_encode_test src)
-  ENDIF (NOT DISABLE_STATIC)
-ENDIF (NOT WIN32)
+IF (NOT DISABLE_STATIC)
+  ADD_EXECUTABLE(string_encode_test string_encode_test.c)
+  TARGET_LINK_LIBRARIES(string_encode_test yajl_s)
+  ADD_DEPENDENCIES (string_encode_test src)
+ENDIF (NOT DISABLE_STATIC)
 
 # vim: ts=2 sw=2 et:

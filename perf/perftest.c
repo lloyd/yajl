@@ -49,7 +49,7 @@ static double mygettime(void) {
 static int
 run(int validate_utf8)
 {
-    long long times = 0; 
+    long long times = 0;
     double starttime;
 
     starttime = mygettime();
@@ -64,7 +64,7 @@ run(int validate_utf8)
 
         for (i = 0; i < 100; i++) {
             yajl_handle hand = yajl_alloc(NULL, NULL, NULL);
-            yajl_status stat;        
+            yajl_status stat;
             const char ** d;
 
             yajl_config(hand, yajl_dont_validate_strings, validate_utf8 ? 0 : 1);
@@ -73,7 +73,7 @@ run(int validate_utf8)
                 stat = yajl_parse(hand, (unsigned char *) *d, strlen(*d));
                 if (stat != yajl_status_ok) break;
             }
-            
+
             stat = yajl_complete_parse(hand);
 
             if (stat != yajl_status_ok) {
@@ -104,12 +104,12 @@ run(int validate_utf8)
         avg_doc_size /= num_docs();
 
         throughput = (times * avg_doc_size) / (now - starttime);
-        
+
         while (*(units + 1) && throughput > 1024) {
             throughput /= 1024;
             units++;
         }
-        
+
         printf("Parsing speed: %g %s\n", throughput, *units);
     }
 
@@ -124,10 +124,10 @@ main(void)
     printf("-- speed tests determine parsing throughput given %d different sample documents --\n",
            num_docs());
 
-    printf("With UTF8 validation:\n");
+    printf("With UTF-8 validation:\n");
     rv = run(1);
     if (rv != 0) return rv;
-    printf("Without UTF8 validation:\n");
+    printf("Without UTF-8 validation:\n");
     rv = run(0);
     return rv;
 }
