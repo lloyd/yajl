@@ -20,7 +20,6 @@ SET (SRCS
   yajl_encode.c
   yajl_gen.c
   yajl_alloc.c
-  yajl_tree.c
   yajl_version.c
 )
 
@@ -36,9 +35,13 @@ SET (PUB_HDRS
 	${CMAKE_SOURCE_DIR}/include/yajl/yajl_parse.h
 	${CMAKE_SOURCE_DIR}/include/yajl/yajl_gen.h
 	${CMAKE_SOURCE_DIR}/include/yajl/yajl_common.h
-	${CMAKE_SOURCE_DIR}/include/yajl/yajl_tree.h
 	${CMAKE_BINARY_DIR}/include/yajl/yajl_version.h
 )
+
+IF(NOT DISABLE_TREE)
+  SET (SRCS ${SRCS} yajl_tree.c)
+  SET (PUB_HDRS ${PUB_HDRS} ${CMAKE_SOURCE_DIR}/include/yajl/yajl_tree.h)
+ENDIF(NOT DISABLE_TREE)
 
 # useful when fixing lexer bugs.
 #ADD_DEFINITIONS(-DYAJL_LEXER_DEBUG)
