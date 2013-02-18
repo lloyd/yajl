@@ -109,7 +109,10 @@ IF (NOT DISABLE_SHARED)
 
   # at build time you may specify the cmake variable LIB_SUFFIX to handle
   # 64-bit systems which use 'lib64'
-  INSTALL(TARGETS yajl DESTINATION lib${LIB_SUFFIX})
+  INSTALL(TARGETS yajl
+          RUNTIME DESTINATION bin
+          LIBRARY DESTINATION lib${LIB_SUFFIX}
+          ARCHIVE DESTINATION lib)
 ENDIF (NOT DISABLE_SHARED)
 
 INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
