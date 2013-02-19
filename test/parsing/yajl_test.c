@@ -168,8 +168,9 @@ int
 main(int argc, char ** argv)
 {
     yajl_handle hand;
-    const char * fileName;
+    const char * fileName = NULL;
     static unsigned char * fileData = NULL;
+    FILE *file;
     size_t bufSize = BUF_SIZE;
     yajl_status stat;
     size_t rd;
@@ -220,9 +221,8 @@ main(int argc, char ** argv)
         } else if (!strcmp("-p", argv[i])) {
             yajl_config(hand, yajl_allow_partial_values, 1);
         } else {
-            fprintf(stderr, "invalid command line option: '%s'\n",
-                    argv[i]);
-            usage(argv[0]);
+            fileName = argv[i];
+            break;
         }
     }
 
@@ -236,10 +236,16 @@ main(int argc, char ** argv)
         exit(2);
     }
 
-    fileName = argv[argc-1];
-
+    if (fileName)
+    {
+        file = fopen(fileName, "r");
+    }
+    else
+    {
+        file = stdin;
+    }
     for (;;) {
-        rd = fread((void *) fileData, 1, bufSize, stdin);
+        rd = fread((void *) fileData, 1, bufSize, file);
 
         if (rd == 0) {
             if (!feof(stdin)) {
@@ -265,6 +271,10 @@ main(int argc, char ** argv)
     yajl_free(hand);
     free(fileData);
 
+    if (fileName)
+    {
+        fclose(file);
+    }
     /* finally, print out some memory statistics */
 
 /* (lth) only print leaks here, as allocations and frees may vary depending
