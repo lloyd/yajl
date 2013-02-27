@@ -24,6 +24,24 @@
 #include <math.h>
 #include <stdarg.h>
 
+#if defined(HAVE_IEEEFP_H)
+#   include <ieeefp.h>
+#endif
+
+#if defined(HAVE_FLOAT_H)
+#   include <float.h>
+#endif
+
+#if !defined(HAVE_FINITE) && defined (HAVE__FINITE)
+#   define finite _finite
+#   define HAVE_FINITE 1
+#endif
+
+#if !defined(HAVE_ISNAN) && defined (HAVE__ISNAN)
+#   define isnan _isnan
+#   define HAVE_ISNAN
+#endif
+
 typedef enum {
     yajl_gen_start,
     yajl_gen_map_start,
@@ -209,18 +227,16 @@ yajl_gen_integer(yajl_gen g, long long int number)
     return yajl_gen_status_ok;
 }
 
-#if defined(_WIN32) || defined(WIN32)
-#include <float.h>
-#define isnan _isnan
-#define isinf !_finite
-#endif
-
 yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY;
+#if defined(HAVE_FINITE)
+	if (!finite(number)) return yajl_gen_invalid_number;
+#else
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
+#endif
     INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%.20g", number);
     if (strspn(i, "0123456789-") == strlen(i)) {
