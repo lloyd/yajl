@@ -23,6 +23,24 @@
 
 #include <assert.h>
 
+#if defined(HAVE_INTTYPES_H)
+#	include <inttypes.h>
+#endif
+
+#if defined(_WIN32) && defined(PRId64)
+#	define LLD_FMT "%" PRId64
+#else
+#	define LLD_FMT "%lld"
+#endif
+
+#if defined(_WIN64) && defined(PRIu64)
+#	define ZU_FMT "%" PRIu64
+#elif defined(_WIN32)
+#	define ZU_FMT "%u"
+#else
+#	define ZU_FMT "%zu"
+#endif
+
 /* memory debugging routines */
 typedef struct
 {
@@ -79,7 +97,7 @@ static int test_yajl_boolean(void * ctx, int boolVal)
 
 static int test_yajl_integer(void *ctx, long long integerVal)
 {
-    printf("integer: %lld\n", integerVal);
+    printf("integer: " LLD_FMT "\n", integerVal);
     return 1;
 }
 
@@ -210,7 +228,7 @@ main(int argc, char ** argv)
 
             bufSize = atoi(argv[i]);
             if (!bufSize) {
-                fprintf(stderr, "%zu is an invalid buffer size\n",
+                fprintf(stderr, ZU_FMT " is an invalid buffer size\n",
                         bufSize);
             }
         } else if (!strcmp("-g", argv[i])) {
@@ -230,7 +248,7 @@ main(int argc, char ** argv)
 
     if (fileData == NULL) {
         fprintf(stderr,
-                "failed to allocate read buffer of %zu bytes, exiting.",
+                "failed to allocate read buffer of " ZU_FMT " bytes, exiting.",
                 bufSize);
         yajl_free(hand);
         exit(2);

@@ -32,6 +32,10 @@
 #   include <float.h>
 #endif
 
+#if defined(HAVE_INTTYPES_H)
+#	include <inttypes.h>
+#endif
+
 #if !defined(HAVE_FINITE) && defined (HAVE__FINITE)
 #   define finite _finite
 #   define HAVE_FINITE 1
@@ -40,6 +44,12 @@
 #if !defined(HAVE_ISNAN) && defined (HAVE__ISNAN)
 #   define isnan _isnan
 #   define HAVE_ISNAN
+#endif
+
+#if defined(_WIN32) && defined(PRId64)
+#	define LLD_FMT "%" PRId64
+#else
+#	define LLD_FMT "%lld"
 #endif
 
 typedef enum {
@@ -220,7 +230,7 @@ yajl_gen_integer(yajl_gen g, long long int number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%lld", number);
+    sprintf(i, LLD_FMT, number);
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
