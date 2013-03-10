@@ -1,3 +1,9 @@
+yajl (2.0.5-4) unstable; urgency=low
+
+  * Support building multiarch deb.
+
+ -- Like Ma <likemartinma@gmail.com>  Sun, 10 Mar 2013 04:17:56 +0800
+
 yajl (2.0.5-3) unstable; urgency=low
 
   * Refine source directory structures and cmake files.
