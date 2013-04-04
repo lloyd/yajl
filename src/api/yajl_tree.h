@@ -122,6 +122,14 @@ YAJL_API yajl_val yajl_tree_parse (const char *input,
                                    char *error_buffer, size_t error_buffer_size);
 
 /**
+ * Similar with yajl_tree_parse, but input must be with len
+ */
+
+YAJL_API yajl_val yajl_tree_parse_with_len (const char *input, size_t input_len,
+                                   char *error_buffer, size_t error_buffer_size);
+
+
+/**
  * Free a parse tree returned by "yajl_tree_parse".
  *
  * \param v Pointer to a JSON value returned by "yajl_tree_parse". Passing NULL
