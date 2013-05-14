@@ -1,0 +1,15 @@
+### Yajl package configuration ###
+# This module configure the yajl libs.
+#
+# It defines the following:
+#   - YAJL_INCLUDE_DIRS, define the include directories;
+#   - yajl is the dynamic library imported target;
+#   - yajl_s is the static library imported target.
+
+GET_FILENAME_COMPONENT(YAJL_ROOT "${CMAKE_CURRENT_LIST_DIR}/../" ABSOLUTE)
+
+# Include directories
+GET_FILENAME_COMPONENT(YAJL_INCLUDE_DIRS "${YAJL_ROOT}/include" ABSOLUTE)
+
+# Include generated targets
+INCLUDE("${YAJL_ROOT}/cmake/YajlTargets@LIB_SUFFIX@.cmake")

@@ -31,6 +31,7 @@ ADD_DEFINITIONS(-DYAJL_BUILD)
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include/yajl)
 SET (shareDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/share/pkgconfig)
+SET (cmakeOutDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/share/cmake)
 
 # set the output path for libraries
 SET(LIBRARY_OUTPUT_PATH ${libDir})
@@ -75,13 +76,17 @@ ENDFOREACH (header ${PUB_HDRS})
 
 INCLUDE_DIRECTORIES(${incDir}/..)
 
+#### installation
 # at build time you may specify the cmake variable LIB_SUFFIX to handle
 # 64-bit systems which use 'lib64'
-INSTALL(TARGETS yajl 
+
+INSTALL(TARGETS yajl
+  EXPORT "YajlTargets${LIB_SUFFIX}"
   RUNTIME DESTINATION bin${LIB_SUFFIX}
   LIBRARY DESTINATION lib${LIB_SUFFIX}
   ARCHIVE DESTINATION lib${LIB_SUFFIX})
-INSTALL(TARGETS yajl_s 
+INSTALL(TARGETS yajl_s
+  EXPORT "YajlTargets${LIB_SUFFIX}"
   ARCHIVE DESTINATION lib${LIB_SUFFIX})
 
 INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
@@ -90,3 +95,7 @@ INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
 IF(NOT WIN32)
   INSTALL(FILES ${shareDir}/yajl.pc DESTINATION share/pkgconfig)
 ENDIF()
+
+CONFIGURE_FILE(YajlConfig.cmake.in "${cmakeOutDir}/YajlConfig.cmake" @ONLY)
+INSTALL(FILES "${cmakeOutDir}/YajlConfig.cmake" DESTINATION cmake/)
+INSTALL(EXPORT "YajlTargets${LIB_SUFFIX}" DESTINATION cmake/)
