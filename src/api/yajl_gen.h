@@ -150,6 +150,11 @@ extern "C" {
      *  intended to enable incremental JSON outputing. */
     YAJL_API void yajl_gen_clear(yajl_gen hand);
 
+    /** clear yajl's output buffer and reset generator state, but do not
+     *  clear options. this will roll the state back to just before generation
+     *  began */
+    YAJL_API void yajl_gen_reset(yajl_gen hand);
+
 #ifdef __cplusplus
 }
 #endif    
