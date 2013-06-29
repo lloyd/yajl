@@ -1,0 +1,11 @@
+language: c
+compiler:
+    - gcc
+    - clang
+install: 
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq doxygen
+script: 
+    - cmake ./
+    - make all
+    - ctest -V
