@@ -21,3 +21,11 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 ADD_EXECUTABLE(yajl_test ${SRCS})
 
 TARGET_LINK_LIBRARIES(yajl_test yajl_s)
+
+# Approximating that Unix == having the ability to run shell scripts.
+IF(UNIX)
+    ADD_TEST(
+        NAME yajl_test
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND ./run_tests.sh $<TARGET_FILE:yajl_test>)
+ENDIF()

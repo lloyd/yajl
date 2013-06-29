@@ -1,11 +1,8 @@
-**********************************************************************
-        This is YAJL 2.  For the legacy version of YAJL see
-              https://github.com/lloyd/yajl/tree/1.x
-**********************************************************************
+*This is YAJL 2.  For the legacy version of YAJL see https://github.com/lloyd/yajl/tree/1.x*
 
-Welcome to Yet Another JSON Library (YAJL)
+# Welcome to Yet Another JSON Library (YAJL) #
 
-## Why does the world need another C library for parsing JSON?  
+### Why does the world need another C library for parsing JSON? ###
 
 Good question.  In a review of current C JSON parsing libraries I was 
 unable to find one that satisfies my requirements.  Those are, 
@@ -24,7 +21,7 @@ Numbers 3, 5, 6, and 7 were particularly hard to find, and were what
 caused me to ultimately create YAJL.  This document is a tour of some
 of the more important aspects of YAJL.
 
-## YAJL is Free.
+### YAJL is Free. ###
 
 Permissive licensing means you can use it in open source and
 commercial products alike without any fees.  My request beyond the
@@ -34,7 +31,7 @@ fork and fix.
 Porting YAJL should be trivial, the implementation is ANSI C.  If you
 port to new systems I'd love to hear of it and integrate your patches.
 
-## YAJL is data representation independent.
+### YAJL is data representation independent. ###
 
 BYODR!  Many JSON libraries impose a structure based data representation
 on you.  This is a benefit in some cases and a drawback in others.
@@ -46,14 +43,14 @@ in memory structure.
 This also means that YAJL can be used by other (higher level) JSON
 libraries if so desired.
 
-## YAJL supports stream parsing
+### YAJL supports stream parsing ###
 
 This means you do not need to hold the whole JSON representation in
 textual form in memory.  This makes YAJL ideal for filtering projects,
 where you're converting YAJL from one form to another (i.e. XML).  The
 included JSON pretty printer is an example of such a filter program.
 
-## YAJL is fast
+### YAJL is fast ###
 
 Minimal memory copying is performed.  YAJL, when possible, returns
 pointers into the client provided text (i.e. for strings that have no
@@ -66,9 +63,11 @@ the fastest JSON parser out there.
 YAJL should impose both minimal CPU and memory requirements on your
 application.
 
-## YAJL is tiny.
+### YAJL is tiny. ###
 
 Fat free.  No whip.
+
+### YAJL is [![Build status](https://travis-ci.org/cloderic/yajl.png)](https://travis-ci.org/cloderic/yajl). ###
 
 enjoy,
 Lloyd - July, 2007 
