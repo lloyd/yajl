@@ -33,7 +33,7 @@
 
  /* same semantics as strtol */
 long long
-yajl_parse_integer(const unsigned char *number, unsigned int length)
+yajl_parse_integer(const unsigned char *number, size_t length)
 {
     long long ret  = 0;
     long sign = 1;
