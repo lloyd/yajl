@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 prefix="/usr/local"
-if [ "$1" == "--help" ]
+if [ "$1" = "--help" ]
 then
     cat <<EOS
 Usage: configure [options]
@@ -25,7 +25,7 @@ Usage: configure [options]
 EOS
     exit 0
 fi
-if [ "$1" == "-p" ]; then
+if [ "$1" = "-p" ]; then
     if [ "$#" != 2 ]; then
         ./configure.sh --help
         exit 1
