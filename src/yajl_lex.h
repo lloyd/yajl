@@ -23,6 +23,7 @@ typedef enum {
     yajl_tok_bool,         
     yajl_tok_colon,
     yajl_tok_comma,     
+    yajl_tok_eol,
     yajl_tok_eof,
     yajl_tok_error,
     yajl_tok_left_brace,     
@@ -49,7 +50,8 @@ typedef struct yajl_lexer_t * yajl_lexer;
 
 yajl_lexer yajl_lex_alloc(yajl_alloc_funcs * alloc,
                           unsigned int allowComments,
-                          unsigned int validateUTF8);
+                          unsigned int validateUTF8,
+                          unsigned int allowSloppyFormat);
 
 void yajl_lex_free(yajl_lexer lexer);
 
