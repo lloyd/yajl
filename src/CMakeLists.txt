@@ -35,15 +35,22 @@ SET (shareDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/share/pkgconfig)
 # set the output path for libraries
 SET(LIBRARY_OUTPUT_PATH ${libDir})
 
-ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
 
-ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
+IF (BUILD_STATIC_LIBS)
+  ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
+ENDIF (BUILD_STATIC_LIBS)
+
+IF (BUILD_SHARED_LIBS)
+  ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
+ENDIF (BUILD_SHARED_LIBS)
 
 #### setup shared library version number
-SET_TARGET_PROPERTIES(yajl PROPERTIES
-                      DEFINE_SYMBOL YAJL_SHARED
-                      SOVERSION ${YAJL_MAJOR}
-                      VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
+IF (BUILD_SHARED_LIBS)
+  SET_TARGET_PROPERTIES(yajl PROPERTIES
+                        DEFINE_SYMBOL YAJL_SHARED
+                        SOVERSION ${YAJL_MAJOR}
+                        VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
+ENDIF (BUILD_SHARED_LIBS)
 
 #### ensure a .dylib has correct absolute installation paths upon installation
 IF(APPLE)
@@ -69,8 +76,10 @@ FOREACH (header ${PUB_HDRS})
 
   EXEC_PROGRAM(${CMAKE_COMMAND} ARGS -E copy_if_different ${header} ${incDir})
 
-  ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
+  IF (BUILD_STATIC_LIBS)
+    ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
+  ENDIF (BUILD_STATIC_LIBS)
 ENDFOREACH (header ${PUB_HDRS})
 
 INCLUDE_DIRECTORIES(${incDir}/..)
@@ -78,8 +87,12 @@ INCLUDE_DIRECTORIES(${incDir}/..)
 IF(NOT WIN32)
   # at build time you may specify the cmake variable LIB_SUFFIX to handle
   # 64-bit systems which use 'lib64'
-  INSTALL(TARGETS yajl LIBRARY DESTINATION lib${LIB_SUFFIX})
-  INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
+  IF (BUILD_SHARED_LIBS)
+    INSTALL(TARGETS yajl LIBRARY DESTINATION lib${LIB_SUFFIX})
+  ENDIF (BUILD_SHARED_LIBS)
+  IF (BUILD_STATIC_LIBS)
+    INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
+  ENDIF (BUILD_STATIC_LIBS)
   INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
   INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
   INSTALL(FILES ${shareDir}/yajl.pc DESTINATION share/pkgconfig)
