@@ -1,0 +1,2 @@
+string: 'my escaped \"string\"'
+memory leaks:	0

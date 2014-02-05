@@ -156,7 +156,14 @@ extern "C" {
          * yajl will enter an error state (premature EOF).  Setting this
          * flag suppresses that check and the corresponding error.
          */
-        yajl_allow_partial_values = 0x10
+        yajl_allow_partial_values = 0x10,
+        /**
+           By default YAJL unescapes strings before passing them to the
+           string callback function. This options disables that behaviour.
+           Some applications might want the string escaped, and without this
+           option their string callback would have to escape the input string.
+         */
+        yajl_dont_unescape_strings = 0x20
     } yajl_option;
 
     /** allow the modification of parser options subsequent to handle
