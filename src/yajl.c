@@ -172,4 +172,20 @@ yajl_free_error(yajl_handle hand, unsigned char * str)
     YA_FREE(&(hand->alloc), str);
 }
 
+int
+yajl_is_terminal(yajl_handle hand)
+{
+    yajl_state;
+    if (!hand) return 0;
+
+    switch (yajl_bs_current(hand->stateStack)) {
+        case yajl_state_parse_complete:
+        case yajl_state_parse_error:
+        case yajl_state_lexical_error:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 /* XXX: add utility routines to parse from file */
