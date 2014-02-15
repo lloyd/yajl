@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/bin/sh
 #
 # Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
 #
@@ -14,66 +14,65 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-require 'fileutils'
-require 'optparse'
+prefix="/usr/local"
+if [ "$1" = "--help" ]
+then
+    cat <<EOS
+Usage: configure [options]
+    -p, --prefix PATH                Set installation prefix
+    -h, --help                       Output usage summary
+EOS
+    exit 0
+fi
+if [ "$1" = "-p" ]; then
+    if [ "$#" != 2 ]; then
+        ./configure.sh --help
+        exit 1
+    fi
+    prefix="$2"
+fi
 
-prefix = "/usr/local"
-options = {}
-OptionParser.new do |opts|
-  opts.banner = "Usage: configure [options]"
-  opts.on("-p", "--prefix PATH", "Set installation prefix") do |p|
-    prefix = p
-  end
-  opts.on_tail("-h", "--help", "Output usage summary") do 
-    puts opts
-    exit
-  end
-
-  opts.parse!(ARGV)
-end
-
-puts "== removing old build files"
-FileUtils.rm_rf("build")
-FileUtils.rm_f("Makefile")
-puts "== running CMake in build directory"
-FileUtils.mkdir("build")
-FileUtils.cd("build") do 
-  if (!system("cmake -DCMAKE_INSTALL_PREFIX='#{prefix}' .."))
-    puts "The \"cmake\" program is required to configure yajl.  It's"
-    puts "available from most ports/packaging systems and http://cmake.org"
+echo "== removing old build files"
+rm -rf build
+rm -f Makefile
+echo "== running CMake in build directory"
+mkdir build || exit 1
+cd build || exit 1
+cmake -DCMAKE_INSTALL_PREFIX="$prefix" .. ||
+{
+    echo "The \"cmake\" program is required to configure yajl."
+    echo "It's available from most ports/packaging systems and http://cmake.org"
     exit 1
-  end
-end
+}
+cd ..
 
-# now generate a Makefile
-puts "== Generating Makefile"
-File.open("Makefile", "w+") do |f| 
-  f.puts ".PHONY: all clean distclean install package test distro"
-  f.puts "all: distro doc test"
-  f.puts
-  f.puts "distro:"
-  f.puts "	@cd build && make"
-  f.puts
-  f.puts "doc:"
-  f.puts "	@cd build && make doc"
-  f.puts
-  f.puts "test:"
-  f.puts "	@cd build && make test"
-  f.puts
-  f.puts "clean:"  
-  f.puts "	@cd build && make clean"
-  f.puts
-  f.puts "distclean:"  
-  f.puts "	@rm -rf Makefile build"
-  f.puts "	@rm -f yajl-*.tgz"
-  f.puts
-  f.puts "install: all" 
-  f.puts "	@cd build && make install"
-  f.puts
-  f.puts "package: all"
-  f.puts "	@echo \"compressing to `basename build/yajl-*`.tgz\""
-  f.puts "	@cd build && tar czf ../`basename yajl-*`.tgz yajl-*"
-end
+echo "== Generating Makefile"
+cat > ./Makefile <<EOS
+.PHONY: all clean distclean install package test distro
+all: distro doc test
 
-puts "== Configured with installation prefix: #{prefix}"
+distro:
+	@cd build && make
 
+doc:
+	@cd build && make doc
+
+test:
+	@cd build && make test
+
+clean:
+	@cd build && make clean
+
+distclean:
+	@rm -rf Makefile build
+	@rm -f yajl-*.tgz
+
+install: all
+	@cd build && make install
+
+package: all
+	@echo \"compressing to $(basename build/yajl-*).tgz\"
+	@cd build && tar czf ../$(basename yajl-*).tgz yajl-*
+EOS
+
+echo "== Configured with installation prefix: $prefix"
