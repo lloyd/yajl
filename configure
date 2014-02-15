@@ -49,7 +49,7 @@ cd ..
 echo "== Generating Makefile"
 cat > ./Makefile <<EOS
 .PHONY: all clean distclean install package test distro
-all: distro doc test
+all: distro doc test test-api
 
 distro:
 	@cd build && make
@@ -59,6 +59,9 @@ doc:
 
 test:
 	@cd build && make test
+
+test-api:
+	@cd build && make test-api
 
 clean:
 	@cd build && make clean
