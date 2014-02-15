@@ -70,7 +70,7 @@ distclean:
 	@rm -rf Makefile build
 	@rm -f yajl-*.tgz
 
-install: all
+install: distro doc
 	@cd build && make install
 
 package: all
