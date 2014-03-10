@@ -12,18 +12,27 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-SET (SRCS perftest.c documents.c documents.h)
+CONFIGURE_FILE(run_tests.sh.in run_tests.sh)
 
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include ${CMAKE_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(
+  ${CMAKE_BINARY_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/src
+)
 
-ADD_EXECUTABLE(perftest ${SRCS})
+SET (TESTS gen-extra-close.c)
 
-IF (DISABLE_SHARED)
-  TARGET_LINK_LIBRARIES(perftest yajl_s)
-ELSE (DISABLE_SHARED)
-  TARGET_LINK_LIBRARIES(perftest yajl)
-ENDIF (DISABLE_SHARED)
+# for each test, we'll create a target, and make the api-tests target depend on it
+FOREACH (test ${TESTS})
+  GET_FILENAME_COMPONENT(testProg ${test} NAME_WE)
+  ADD_EXECUTABLE(${testProg} ${test})
 
-ADD_DEPENDENCIES (perftest src)
+  IF (DISABLE_SHARED)
+    TARGET_LINK_LIBRARIES(${testProg} yajl_s)
+  ELSE (DISABLE_SHARED)
+    TARGET_LINK_LIBRARIES(${testProg} yajl)
+  ENDIF (DISABLE_SHARED)
 
+  ADD_DEPENDENCIES(${testProg} src)
+ENDFOREACH()
 # vim: ts=2 sw=2 et:

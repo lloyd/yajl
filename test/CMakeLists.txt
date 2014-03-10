@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2011, Lloyd Hilaiel <lloyd@hilaiel.com>
+# Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -12,32 +12,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-CONFIGURE_FILE(run_tests.sh.in run_tests.sh)
-
-INCLUDE_DIRECTORIES(
-  ${CMAKE_BINARY_DIR}/include
-  ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/src
-)
-
-IF(HAVE_INTTYPES_H)
-  ADD_DEFINITIONS(-DHAVE_INTTYPES_H=1)
-ENDIF(HAVE_INTTYPES_H)
-
-ADD_EXECUTABLE(yajl_test yajl_test.c)
-
-IF (DISABLE_SHARED)
-  TARGET_LINK_LIBRARIES(yajl_test yajl_s)
-ELSE (DISABLE_SHARED)
-  TARGET_LINK_LIBRARIES(yajl_test yajl)
-ENDIF (DISABLE_SHARED)
-
-ADD_DEPENDENCIES (yajl_test src)
-
-IF (NOT DISABLE_STATIC)
-  ADD_EXECUTABLE(string_encode_test string_encode_test.c)
-  TARGET_LINK_LIBRARIES(string_encode_test yajl_s)
-  ADD_DEPENDENCIES (string_encode_test src)
-ENDIF (NOT DISABLE_STATIC)
+ADD_SUBDIRECTORY(parsing)
+ADD_SUBDIRECTORY(api)
 
 # vim: ts=2 sw=2 et:

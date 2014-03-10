@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2011, Lloyd Hilaiel <lloyd@hilaiel.com>
+ * Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -200,7 +200,7 @@ yajl_gen_free(yajl_gen g)
     if (++(g->depth) >= YAJL_MAX_DEPTH) return yajl_max_depth_exceeded;
 
 #define DECREMENT_DEPTH \
-  if (--(g->depth) >= YAJL_MAX_DEPTH) return yajl_gen_error;
+  if (--(g->depth) >= YAJL_MAX_DEPTH) return yajl_gen_generation_complete;
 
 #define APPENDED_ATOM \
     switch (g->state[g->depth]) {                   \
@@ -243,7 +243,7 @@ yajl_gen_double(yajl_gen g, double number)
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY;
 #if defined(HAVE_FINITE)
-	if (!finite(number)) return yajl_gen_invalid_number;
+    if (!finite(number)) return yajl_gen_invalid_number;
 #else
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
 #endif

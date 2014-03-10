@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2011, Lloyd Hilaiel <lloyd@hilaiel.com>
+# Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -32,10 +32,10 @@ SET (HDRS
 )
 
 SET (PUB_HDRS
-	${CMAKE_SOURCE_DIR}/include/yajl/yajl_parse.h
-	${CMAKE_SOURCE_DIR}/include/yajl/yajl_gen.h
-	${CMAKE_SOURCE_DIR}/include/yajl/yajl_common.h
-	${CMAKE_BINARY_DIR}/include/yajl/yajl_version.h
+  ${CMAKE_SOURCE_DIR}/include/yajl/yajl_parse.h
+  ${CMAKE_SOURCE_DIR}/include/yajl/yajl_gen.h
+  ${CMAKE_SOURCE_DIR}/include/yajl/yajl_common.h
+  ${CMAKE_BINARY_DIR}/include/yajl/yajl_version.h
 )
 
 IF(NOT DISABLE_TREE)
@@ -84,7 +84,7 @@ IF(HAVE_INTTYPES_H)
 ENDIF(HAVE_INTTYPES_H)
 
 IF(UNIX)
-	IF ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+  IF ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     ADD_DEFINITIONS(-D_BSD_SOURCE)
   ELSEIF("${CMAKE_SYSTEM_NAME}" STREQUAL "HP-UX")
     ADD_DEFINITIONS(-D_POSIX_SOURCE -D_XOPEN_SOURCE)
@@ -148,7 +148,7 @@ IF (NOT DISABLE_SHARED)
   INSTALL(TARGETS yajl
           RUNTIME DESTINATION bin
           LIBRARY DESTINATION lib${LIB_SUFFIX}
-          ARCHIVE DESTINATION lib)
+          ARCHIVE DESTINATION lib${LIB_SUFFIX})
 ENDIF (NOT DISABLE_SHARED)
 
 INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)

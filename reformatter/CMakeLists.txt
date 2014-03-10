@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2011, Lloyd Hilaiel <lloyd@hilaiel.com>
+# Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -21,11 +21,17 @@ ADD_EXECUTABLE(json_reformat ${SRCS})
 
 IF (DISABLE_SHARED)
   TARGET_LINK_LIBRARIES(json_reformat yajl_s)
+
+  # In some environments, we must explicitly link libm (like qnx,
+  # thanks @shahbag)
+  IF (NOT WIN32)
+      TARGET_LINK_LIBRARIES(json_reformat m)
+  ENDIF (NOT WIN32)
 ELSE (DISABLE_SHARED)
   TARGET_LINK_LIBRARIES(json_reformat yajl)
 ENDIF (DISABLE_SHARED)
 
 ADD_DEPENDENCIES (json_reformat src)
-INSTALL(TARGETS json_reformat DESTINATION bin)
+INSTALL(TARGETS json_reformat RUNTIME DESTINATION bin)
 
 # vim: ts=2 sw=2 et:

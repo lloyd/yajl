@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2011, Lloyd Hilaiel <lloyd@hilaiel.com>
+# Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -101,10 +101,13 @@ IF (NOT DISABLE_TESTS)
   ENDIF (NOT DISABLE_TREE)
 
   IF (NOT WIN32)
-    # a test target
     ADD_CUSTOM_TARGET(test
-                      ${CMAKE_CURRENT_BINARY_DIR}/test/run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/yajl_test
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+                      ${CMAKE_CURRENT_BINARY_DIR}/test/parsing/run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/parsing/yajl_test
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/parsing)
+
+	ADD_CUSTOM_TARGET(test-api
+		              ${CMAKE_CURRENT_SOURCE_DIR}/test/api/run_tests.sh
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test/api)
   ENDIF (NOT WIN32)
 ENDIF (NOT DISABLE_TESTS)
 
