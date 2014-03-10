@@ -57,13 +57,14 @@ IF (MSVC)
   ADD_DEFINITIONS (-D_CRT_SECURE_NO_WARNINGS=1)
 ELSEIF (CMAKE_COMPILER_IS_GNUCC)
   INCLUDE(CheckCCompilerFlag)
+
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-  IF(CMAKE_COMPILER_IS_GNUCC)
-    CHECK_C_COMPILER_FLAG(-fvisibility=hidden HAVE_GCC_VISIBILITY)
-    IF(HAVE_GCC_VISIBILITY)
-      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-    ENDIF(HAVE_GCC_VISIBILITY)
-  ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
+  CHECK_C_COMPILER_FLAG(-fvisibility=hidden HAVE_GCC_VISIBILITY)
+  IF(HAVE_GCC_VISIBILITY)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+  ENDIF(HAVE_GCC_VISIBILITY)
+
   SET(CMAKE_C_FLAGS
 		"${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra  -Wundef -Wwrite-strings -Wold-style-definition -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
 
