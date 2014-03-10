@@ -65,8 +65,18 @@ ELSEIF (CMAKE_COMPILER_IS_GNUCC)
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
   ENDIF(HAVE_GCC_VISIBILITY)
 
+  CHECK_C_COMPILER_FLAG(-Wextra HAVE_GCC_WEXTRA)
+  IF(HAVE_GCC_WEXTRA)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
+  ENDIF(HAVE_GCC_WEXTRA)
+
+  CHECK_C_COMPILER_FLAG(-Wold-style-definition HAVE_GCC_WOLD_STYLE_DEFINITION)
+  IF(HAVE_GCC_WOLD_STYLE_DEFINITION)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wold-style-definition")
+  ENDIF(HAVE_GCC_WOLD_STYLE_DEFINITION)
+
   SET(CMAKE_C_FLAGS
-		"${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra  -Wundef -Wwrite-strings -Wold-style-definition -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
+		"${CMAKE_C_FLAGS} -std=c99 -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wundef -Wwrite-strings -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
 
   IF ("${CMAKE_SYSTEM}" MATCHES "AIX")
     CHECK_C_COMPILER_FLAG (-Wl,-bnoipath HAVE_LD_BNOIPATH)
