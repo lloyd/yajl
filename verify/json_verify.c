@@ -27,6 +27,7 @@ usage(const char * progname)
                     "usage: json_verify [options]\n"
                     "    -q quiet mode\n"
                     "    -c allow comments\n"
+                    "    -m verify a stream of multiple json entities\n",
                     "    -u allow invalid utf8 inside strings\n",
             progname);
     exit(1);
@@ -59,6 +60,9 @@ main(int argc, char ** argv)
                     break;
                 case 'u':
                     yajl_config(hand, yajl_dont_validate_strings, 1);
+                    break;
+                case 'm':
+                    yajl_config(hand, yajl_allow_multiple_values, 1);
                     break;
                 default:
                     fprintf(stderr, "unrecognized option: '%c'\n\n", argv[a][i]);
