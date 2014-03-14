@@ -126,6 +126,14 @@ yajl_gen_alloc(const yajl_alloc_funcs * afs)
 }
 
 void
+yajl_gen_reset(yajl_gen g, const char * sep)
+{
+    g->depth = 0;
+    memset((void *) &(g->state), 0, sizeof(g->state));
+    if (sep != NULL) g->print(g->ctx, sep, strlen(sep));
+}
+
+void
 yajl_gen_free(yajl_gen g)
 {
     if (g->print == (yajl_print_t)&yajl_buf_append) yajl_buf_free((yajl_buf)g->ctx);

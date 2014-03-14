@@ -21,61 +21,73 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* non-zero when we're reformatting a stream */
+static int s_streamReformat = 0;
+
+#define GEN_AND_RETURN(func)                                          \
+  {                                                                   \
+    yajl_gen_status __stat = func;                                    \
+    if (__stat == yajl_gen_generation_complete && s_streamReformat) { \
+      yajl_gen_reset(g, "\n");                                        \
+      __stat = func;                                                  \
+    }                                                                 \
+    return __stat == yajl_gen_status_ok; }
+
 static int reformat_null(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_null(g);
+    GEN_AND_RETURN(yajl_gen_null(g));
 }
 
 static int reformat_boolean(void * ctx, int boolean)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_bool(g, boolean);
+    GEN_AND_RETURN(yajl_gen_bool(g, boolean));
 }
 
 static int reformat_number(void * ctx, const char * s, size_t l)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_number(g, s, l);
+    GEN_AND_RETURN(yajl_gen_number(g, s, l));
 }
 
 static int reformat_string(void * ctx, const unsigned char * stringVal,
                            size_t stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_string(g, stringVal, stringLen);
+    GEN_AND_RETURN(yajl_gen_string(g, stringVal, stringLen));
 }
 
 static int reformat_map_key(void * ctx, const unsigned char * stringVal,
                             size_t stringLen)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_string(g, stringVal, stringLen);
+    GEN_AND_RETURN(yajl_gen_string(g, stringVal, stringLen));
 }
 
 static int reformat_start_map(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_map_open(g);
+    GEN_AND_RETURN(yajl_gen_map_open(g));
 }
 
 
 static int reformat_end_map(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_map_close(g);
+    GEN_AND_RETURN(yajl_gen_map_close(g));
 }
 
 static int reformat_start_array(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_array_open(g);
+    GEN_AND_RETURN(yajl_gen_array_open(g));
 }
 
 static int reformat_end_array(void * ctx)
 {
     yajl_gen g = (yajl_gen) ctx;
-    return yajl_gen_status_ok == yajl_gen_array_close(g);
+    GEN_AND_RETURN(yajl_gen_array_close(g));
 }
 
 static yajl_callbacks callbacks = {
@@ -97,13 +109,13 @@ usage(const char * progname)
 {
     fprintf(stderr, "%s: reformat json from stdin\n"
             "usage:  json_reformat [options]\n"
+            "    -e escape any forward slashes (for embedding in HTML)\n"
             "    -m minimize json rather than beautify (default)\n"
-            "    -u allow invalid UTF8 inside strings during parsing\n"
-            "    -e escape any forward slashes (for embedding in HTML)\n",
+            "    -s reformat a stream of multiple json entites\n"
+            "    -u allow invalid UTF8 inside strings during parsing\n",
             progname);
     exit(1);
 }
-
 
 int
 main(int argc, char ** argv)
@@ -133,6 +145,10 @@ main(int argc, char ** argv)
             switch (argv[a][i]) {
                 case 'm':
                     yajl_gen_config(g, yajl_gen_beautify, 0);
+                    break;
+                case 's':
+                    yajl_config(hand, yajl_allow_multiple_values, 1);
+                    s_streamReformat = 1;
                     break;
                 case 'u':
                     yajl_config(hand, yajl_dont_validate_strings, 1);

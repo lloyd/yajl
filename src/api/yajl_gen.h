@@ -150,6 +150,14 @@ extern "C" {
      *  intended to enable incremental JSON outputing. */
     YAJL_API void yajl_gen_clear(yajl_gen hand);
 
+    /** Reset the generator state.  Allows a client to generate multiple
+     *  json entities in a stream. The "sep" string will be inserted to
+     *  separate the previously generated entity from the current,
+     *  NULL means *no separation* of entites (clients beware, generating
+     *  multiple JSON numbers, for instance, will result in inscrutable
+     *  output) */
+    YAJL_API void yajl_gen_reset(yajl_gen hand, const char * sep);
+
 #ifdef __cplusplus
 }
 #endif
