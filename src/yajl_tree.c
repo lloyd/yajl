@@ -194,7 +194,7 @@ static int array_add_value (context_t *ctx,
 
     /* "context_add_value" will only call us with array values. */
     assert(YAJL_IS_ARRAY(array));
-    
+
     tmp = realloc(array->u.array.values,
                   sizeof(*(array->u.array.values)) * (array->u.array.len + 1));
     if (tmp == NULL)

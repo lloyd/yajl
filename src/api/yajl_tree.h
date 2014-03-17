@@ -67,7 +67,7 @@ typedef struct yajl_val_s * yajl_val;
  */
 struct yajl_val_s
 {
-    /** Type of the value contained. Use the "YAJL_IS_*" macors to check for a
+    /** Type of the value contained. Use the "YAJL_IS_*" macros to check for a
      * specific type. */
     yajl_type type;
     /** Type-specific data. You may use the "YAJL_GET_*" macros to access these
@@ -78,10 +78,10 @@ struct yajl_val_s
         struct {
             long long i; /*< integer value, if representable. */
             double  d;   /*< double value, if representable. */
+            char   *r;   /*< unparsed number in string form. */
             /** Signals whether the \em i and \em d members are
              * valid. See \c YAJL_NUMBER_INT_VALID and
              * \c YAJL_NUMBER_DOUBLE_VALID. */
-            char   *r;   /*< unparsed number in string form. */
             unsigned int flags;
         } number;
         struct {
@@ -137,7 +137,7 @@ YAJL_API void yajl_tree_free (yajl_val v);
  * \param type the yajl_type of the object you seek, or yajl_t_any if any will do.
  *
  * \returns a pointer to the found value, or NULL if we came up empty.
- * 
+ *
  * Future Ideas:  it'd be nice to move path to a string and implement support for
  * a teeny tiny micro language here, so you can extract array elements, do things
  * like .first and .last, even .length.  Inspiration from JSONPath and css selectors?
