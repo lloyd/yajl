@@ -1,3 +1,17 @@
+2.1.0
+     * @nonodename, @patperry - fixed some compiler warnings
+     * @yep, @emaste - documentation improvements
+     * @sgravrock - build fix for NetBSD (and whenever sh != bash)
+     * @rotty, @brimstone3, @lloyd - allow client to reset generator
+     * @sgravrock - remove bash dependencies
+     * @lloyd - add api tests
+     * @rflynn - remove ruby dependency
+     * @cloderic - nmake install works on windows
+     * @shahbag - build fix for qnx
+     * @breese - debugging improvements
+     * @lloyd - json_verify supports -s flag for stream processing
+     * @lloyd - json_reformat supports -s flag for stream processing
+
 2.0.4
      * @jcekstrom - additional checking in integer parsing
      * @jcekstrom - fix a bug in yajl_tree that would cause valid json integersto fail to parse
