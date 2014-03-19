@@ -154,8 +154,10 @@ extern "C" {
      *  json entities in a stream. The "sep" string will be inserted to
      *  separate the previously generated entity from the current,
      *  NULL means *no separation* of entites (clients beware, generating
-     *  multiple JSON numbers, for instance, will result in inscrutable
-     *  output) */
+     *  multiple JSON numbers without a separator, for instance, will result in ambiguous output)
+     *
+     *  Note: this call will not clear yajl's output buffer.  This
+     *  may be accomplished explicitly by calling yajl_gen_clear() */
     YAJL_API void yajl_gen_reset(yajl_gen hand, const char * sep);
 
 #ifdef __cplusplus
