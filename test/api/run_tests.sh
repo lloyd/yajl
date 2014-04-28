@@ -5,7 +5,7 @@ echo Running api tests:
 tests=0
 passed=0
 
-for file in `ls`; do
+for file in `ls ../../build/test/api`; do
     [ ! -x $file -o -d $file ] && continue
     tests=`expr 1 + $tests`
     printf " test(%s): " $file
