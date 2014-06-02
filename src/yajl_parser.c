@@ -223,7 +223,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             /* for arrays and maps, we advance the state for this
              * depth, then push the state of the next depth.
              * If an error occurs during the parsing of the nesting
-             * enitity, the state at this level will not matter.
+             * entity, the state at this level will not matter.
              * a state that needs pushing will be anything other
              * than state_start */
 
@@ -411,6 +411,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         yajl_bs_pop(hand->stateStack);
                         goto around_again;
                     }
+                    /* intentional fall-through */
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =

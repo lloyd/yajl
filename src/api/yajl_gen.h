@@ -120,7 +120,8 @@ extern "C" {
     /** free a generator handle */
     YAJL_API void yajl_gen_free(yajl_gen handle);
 
-    YAJL_API yajl_gen_status yajl_gen_integer(yajl_gen hand, long long int number);
+    YAJL_API yajl_gen_status yajl_gen_integer(yajl_gen hand,
+                                              long long int number);
     /** generate a floating point number.  number may not be infinity or
      *  NaN, as these have no representation in JSON.  In these cases the
      *  generator will return 'yajl_gen_invalid_number' */
@@ -154,7 +155,8 @@ extern "C" {
      *  json entities in a stream. The "sep" string will be inserted to
      *  separate the previously generated entity from the current,
      *  NULL means *no separation* of entites (clients beware, generating
-     *  multiple JSON numbers without a separator, for instance, will result in ambiguous output)
+     *  multiple JSON numbers without a separator, for instance,
+     *  will result in ambiguous output)
      *
      *  Note: this call will not clear yajl's output buffer.  This
      *  may be accomplished explicitly by calling yajl_gen_clear() */
