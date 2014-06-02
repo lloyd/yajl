@@ -644,8 +644,10 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     /* need to append to buffer if the buffer is in use or
      * if it's an EOF token */
     if (tok == yajl_tok_eof || lexer->bufInUse) {
-        if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
-        lexer->bufInUse = 1;
+        if (!lexer->bufInUse) {
+            yajl_buf_clear(lexer->buf);
+            lexer->bufInUse = 1;
+        }
         yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
         lexer->bufOff = 0;
 
