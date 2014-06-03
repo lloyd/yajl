@@ -52,7 +52,7 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
     pos++;
     ret = -ret;
     long long cutoff = (-LLONG_MAX) / 10;
-    int cutlim = (-LLONG_MAX) % 10;
+    int cutlim = ((LLONG_MAX) % 10) + neg;
     while (pos < number + length) {
         int c = *pos++ - '0';
         assert(0 <= c && c <= 9);
