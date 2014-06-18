@@ -27,22 +27,25 @@
 #include <string>
 #include <yajl/yajlpp.h>
 
+static char * make_char_pointer() {
+    static char s[] { "test" };
+    return s;
+}
+
+static const char * make_const_char_pointer() {
+    static const char s[] { "const test" };
+    return s;
+}
+
 int main()
 {
-    static std::string expected = R"json({"obj":{"first":"1st","second":2,"third":3.5},"array":[12,13,14],"nothing":null})json";
+    static std::string expected = R"json(["test","const test"])json";
 
     yajlpp::generator g;
-    g.map_open() << 
-        "obj" <<
-            g.map_open() <<
-                std::string("first") << "1st" << "second" << 2 << "third" << 3.5 <<
-            g.map_close() <<
-        "array" <<
-            g.array_open() <<
-                12 << 13 << 14 <<
-            g.array_close() <<
-        "nothing" << g.null() <<
-    g.map_close();
+    g.array_open();
+    g << make_char_pointer();
+    g << make_const_char_pointer();
+    g.array_close();
 
-    return expected == g.result();
+    return (expected == g.result());
 }

@@ -428,6 +428,16 @@ namespace yajlpp {
              * yajl_gen_string.
              */
             inline
+            generator& operator<<(char * s) {
+                m_status = yajl_gen_string(m_gen, reinterpret_cast<const unsigned char *>(s), strlen(s));
+                return *this;
+            }
+
+            /*!
+             * Insert a const char pointer into the output string. See \ref
+             * yajl_gen_string.
+             */
+            inline
             generator& operator<<(const char * s) {
                 m_status = yajl_gen_string(m_gen, reinterpret_cast<const unsigned char *>(s), strlen(s));
                 return *this;

@@ -42,5 +42,5 @@ int main()
     yajlpp::generator g;
     g << g.map_open() << "point" << p << g.map_close();
 
-    return !(expected == g.result());
+    return expected == g.result();
 }

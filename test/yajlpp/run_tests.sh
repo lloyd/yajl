@@ -10,7 +10,7 @@ for file in `ls`; do
     tests=`expr 1 + $tests`
     printf " test(%s): " $file
     ./$file
-    if [ $? ]; then
+    if [ $? -eq 1 ]; then
         passed=`expr 1 + $passed`
         echo 'SUCCESS'
     else
