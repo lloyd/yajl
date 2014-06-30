@@ -17,5 +17,4 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 override_dh_auto_configure:
 	dh_auto_configure -- -G"Unix Makefiles" \
 		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DLIB_SUFFIX=/$(DEB_HOST_MULTIARCH) \
-		-DVERSIONED_SO=1
+		-DLIB_SUFFIX=/$(DEB_HOST_MULTIARCH)
