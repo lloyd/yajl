@@ -18,3 +18,9 @@ override_dh_auto_configure:
 	dh_auto_configure -- -G"Unix Makefiles" \
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DLIB_SUFFIX=/$(DEB_HOST_MULTIARCH)
+
+override_dh_auto_install: debian/libyajl2.install debian/libyajl-dev.install
+	dh_auto_install
+
+%.install: %.install.in
+	sed 's/@DEB_HOST_MULTIARCH@/$(DEB_HOST_MULTIARCH)/' $< > $@
