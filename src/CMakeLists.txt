@@ -145,9 +145,15 @@ IF (NOT DISABLE_SHARED)
 
   # at build time you may specify the cmake variable LIB_SUFFIX to handle
   # 64-bit systems which use 'lib64'
+  #
+  # rpmbuild in Ubuntu 12.04 excludes *.so.* from provides and requires list
+  # without executable permission.
   INSTALL(TARGETS yajl
           RUNTIME DESTINATION bin
           LIBRARY DESTINATION lib${LIB_SUFFIX}
+                  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                              GROUP_READ GROUP_EXECUTE
+                              WORLD_READ WORLD_EXECUTE
           ARCHIVE DESTINATION lib${LIB_SUFFIX})
 ENDIF (NOT DISABLE_SHARED)
 
