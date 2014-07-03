@@ -146,6 +146,53 @@ YAJL_API void yajl_tree_free (yajl_val v);
  */
 YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type type);
 
+
+/**
+ * Access a elem inside an array.
+ *
+ * \param array the node in which you'd like to extract the value.
+ * \param index the array index
+ *
+ * \returns a pointer to the found value, or NULL if we came up empty, or
+ * in the parameters are invalid.
+ */
+YAJL_API yajl_val yajl_tree_array_get_elem(yajl_val array, int index);
+
+/**
+ * Apply a function over all the elements of a given object.
+ *
+ * \param object the object in which you'd apply a callback
+ * \param cb the callback to apply on each of the object's elements
+ * \param data the extra parameter provided to the callback, alongside the key and value
+ *
+ * \returns 0 on success, -1 on error
+ */
+YAJL_API int yajl_tree_object_iter(yajl_val object, int (*cb)(const char *key, void *val, void *data), void *data);
+
+/**
+ * Apply a function over all the elements of a given array.
+ *
+ * \param array the array in which you'd apply a callback
+ * \param cb the callback to apply on each of the array's elements
+ * \param data the extra parameter provided to the callback, alongside the key and value
+ *
+ * \returns 0 on success, -1 on error
+ */
+YAJL_API int yajl_tree_array_iter(yajl_val array, int (*cb)(void *val, void *data), void *data);
+
+/**
+ * Return the number of elements in a given object, or -1 on error (if the value is not an object,
+ * or if it's NULL).
+ */
+YAJL_API int yajl_tree_object_n_elems(yajl_val object);
+
+/**
+ * Return the number of elements in a given array, or -1 on error (if the value is not an array,
+ * or if it's NULL).
+ */
+YAJL_API int yajl_tree_array_n_elems(yajl_val array);
+
+
 /* Various convenience macros to check the type of a `yajl_val` */
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == yajl_t_string))
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == yajl_t_number))

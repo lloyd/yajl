@@ -452,6 +452,85 @@ yajl_val yajl_tree_parse (const char *input,
     return (ctx.root);
 }
 
+yajl_val yajl_tree_array_get_elem(yajl_val n, int index)
+{
+        if (! n)
+                return NULL;
+
+        if (n->type != yajl_t_array)
+                return NULL;
+
+        if (index >= n->u.array.len ||
+            index < 0)
+                return NULL;
+
+        return n->u.array.values[index];
+}
+
+int yajl_tree_object_n_elems(yajl_val n)
+{
+        if (! n)
+                return -1;
+
+        if (n->type != yajl_t_object)
+                return -1;
+
+        return n->u.object.len;
+}
+
+int yajl_tree_array_n_elems(yajl_val n)
+{
+        if (! n)
+                return -1;
+
+        if (n->type != yajl_t_array)
+                return -1;
+
+        return n->u.array.len;
+}
+
+int yajl_tree_object_iter(yajl_val n,
+                          int (*cb)(const char *key, void *val, void *data), void *data)
+{
+        if (! n)
+                return -1;
+
+        if (! cb)
+                return -1;
+
+        if (n->type != yajl_t_object)
+                return -1;
+
+        for (int i = 0; i < n->u.object.len; i++) {
+                int rc = cb(n->u.object.keys[i], n->u.object.values[i], data);
+                if (rc)
+                        return -1;
+        }
+
+        return 0;
+}
+
+int yajl_tree_array_iter(yajl_val n, int (*cb)(void *val, void *data), void *data)
+{
+        if (! n)
+                return -1;
+
+        if (! cb)
+                return -1;
+
+        if (n->type != yajl_t_array)
+                return -1;
+
+        for (int i = 0; i < n->u.array.len; i++) {
+                int rc = cb(n->u.array.values[i], data);
+                if (rc)
+                        return -1;
+        }
+
+        return 0;
+}
+
+
 yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
 {
     if (!path) return NULL;
