@@ -33,11 +33,31 @@
 #include <string>
 
 #include <yajl/yajl_gen.h>
+#include <yajl/yajl_parse.h>
 
 //! YAJL C++ APIs.
 namespace yajlpp {
 
+    /**
+     * \name Forward declarations.
+     *
+     * These are friend functions used internally by the yajlpp classes.
+     */
+    ///@{
     void generator_print_cb(void * ctx, const char * str, size_t len);
+    int cb_null_dispatch(void *);
+    int cb_bool_dispatch(void *, int);
+    int cb_integer_dispatch(void *, long long);
+    int cb_double_dispatch(void *, double);
+    int cb_number_dispatch(void *, const char *, size_t);
+    int cb_string_dispatch(void *, const unsigned char *, size_t);
+    int cb_map_start_dispatch(void *);
+    int cb_map_key_dispatch(void *, const unsigned char *, size_t);
+    int cb_map_end_dispatch(void *);
+    int cb_array_start_dispatch(void *);
+    int cb_array_end_dispatch(void *);
+    ///@}
+
 
     /**
      * \brief yajl_gen C++ APIs.
@@ -201,7 +221,7 @@ namespace yajlpp {
              */
             inline
             void reset(std::string sep = std::string()) {
-                yajl_gen_reset(m_gen, sep.empty() ? NULL : sep.c_str());
+                yajl_gen_reset(m_gen, sep.empty() ? nullptr : sep.c_str());
             }
 
             ///@}
@@ -226,7 +246,7 @@ namespace yajlpp {
              * spaces are used. See \ref yajl_gen_indent_string.
              */
             inline
-            bool indentString(const std::string& indent) {
+            bool indent_string(const std::string& indent) {
                 return !yajl_gen_config(m_gen, yajl_gen_indent_string, indent.c_str());
             }
 
@@ -235,7 +255,7 @@ namespace yajlpp {
              * yajl_gen_validate_utf8.
              */
             inline
-            bool validateUtf8(bool validate) {
+            bool validate_utf8(bool validate) {
                 return !yajl_gen_config(m_gen, yajl_gen_validate_utf8, (validate ? 1 : 0));
             }
 
@@ -244,7 +264,7 @@ namespace yajlpp {
              * yajl_gen_escape_solidus.
              */
             inline
-            bool escapeSolidus(bool escape) {
+            bool escape_solidus(bool escape) {
                 return !yajl_gen_config(m_gen, yajl_gen_escape_solidus, (escape ? 1 : 0));
             }
 
@@ -482,6 +502,298 @@ namespace yajlpp {
             generator * obj = static_cast<generator *>(ctx);
             obj->m_json.append(str, len);
         }
+    };
+
+    /**
+     * \brief yajl_parse C++ APIs.
+     *
+     * \class yajlpp::parser yajlpp.h
+     *
+     * Parser synopsis:
+     *
+     *     // Define a class deriving publicly from yajlpp::parser and
+     *     // implement the pure virtual callbacks declared in the base
+     *     // class.
+     *     struct myparser : public yajlpp::parser {
+     *         myparser() {}
+     *
+     *         int cb_null() { ... }
+     *         int cb_boolean() { ... }
+     *         int cb_integer(long long i) { ... }
+     *         .....
+     *     };
+     *
+     *     // Create an instance of your parser class and invoke methods on it.
+     *     myparser p;
+     *     const char * input = "{ \"key\" : 12 }";
+     *     yajl_status s = p.parse(input);
+     *     if (s != yajl_status_ok) {
+     *         cout << "Error after " << p.bytes_consumed() << " bytes: ";
+     *         cout << p.get_error(input);
+     *         ...
+     *     } 
+     */
+    class parser {
+
+        public:
+
+            /*!
+             * Construct a new yajlpp::parser. This constructor might fail and
+             * throw std::bad_alloc if the allocation of the underlying
+             * yajl_handle object fails.
+             */
+            parser()
+                : m_handle { yajl_alloc(&m_callbacks, NULL, this) }
+            {
+                init_callbacks();
+            }
+
+            /*!
+             * Move constructor.
+             */
+            parser(parser&& other)
+                : m_handle { other.m_handle }
+            {
+                init_callbacks();
+                yajl_free(other.m_handle);
+                other.m_handle = nullptr;
+            }
+
+            /*!
+             * Move assignment.
+             */
+            parser& operator=(parser&& other) {
+                yajl_free(m_handle);
+
+                m_handle = other.m_handle;
+                init_callbacks();
+
+                yajl_free(other.m_handle);
+                other.m_handle = nullptr;
+
+                return *this;
+            }
+
+            /*!
+             * This object is not copy constructible.
+             */
+            parser(const parser& other) = delete;
+
+            /*!
+             * This object is not copy assignable.
+             */
+            parser& operator=(const parser& other) = delete;
+
+            /*!
+             * Destroy a yajlpp::parser instance. The underlaying yajl_handle
+             * object is free'd.
+             */
+            virtual ~parser() {
+                yajl_free(m_handle);
+            }
+
+            /*!
+             * \name Configuration options.
+             */
+            ///@{
+
+            /*!
+             * Ignore JavaScript style comments. See \ref yajl_allow_comments.
+             */
+            inline
+            bool allow_comments(bool allow) {
+                return !yajl_config(m_handle, yajl_allow_comments, allow);
+            }
+
+            /*!
+             * Make sure all strings are valid UTF8. This works the opposite
+             * from plain \ref yajl_dont_validate_strings. Passing true to this
+             * function turns validation on.
+             */
+            inline
+            bool validate_utf8(bool validate) {
+                return !yajl_config(m_handle, yajl_dont_validate_strings, !validate);
+            }
+
+            /*!
+             * Allow trailing garbage. See \ref yajl_allow_trailing_garbage.
+             */
+            inline
+            bool allow_trailing_garbage(bool allow) {
+                return !yajl_config(m_handle, yajl_allow_trailing_garbage, allow);
+            }
+
+            /*!
+             * Allow multiple values. See \ref yajl_allow_multiple_values.
+             */
+            inline
+            bool allow_multiple_values(bool allow) {
+                return !yajl_config(m_handle, yajl_allow_multiple_values, allow);
+            }
+
+            /*!
+             * Allow partial values. See \ref yajl_allow_partial_values.
+             */
+            inline
+            bool allow_partial_values(bool allow) {
+                return !yajl_config(m_handle, yajl_allow_partial_values, allow);
+            }
+
+
+            ///@}
+
+            /*!
+             * Parse a string containing JSON text. See \ref yajl_parse.
+             */
+            inline
+            yajl_status parse(std::string jsonText) {
+                return yajl_parse(m_handle, reinterpret_cast<const unsigned char *>(jsonText.c_str()), jsonText.size());
+            }
+
+            /*!
+             * Parse any remaining buffered JSON. See \ref yajl_complete_parse.
+             */
+            inline
+            yajl_status complete_parse() {
+                return yajl_complete_parse(m_handle);
+            }
+
+            /*!
+             * Get the number of bytes consumed from the last chunk of input.
+             * See \ref yajl_get_bytes_consumed.
+             */
+            inline
+            size_t bytes_consumed() {
+                return yajl_get_bytes_consumed(m_handle);
+            }
+
+            /*!
+             * Return a string describing the state of the parser. See \ref
+             * yajl_get_error.
+             */
+            inline
+            std::string get_error(std::string jsonText, bool verbose = false) {
+                unsigned char * buffer { yajl_get_error(m_handle, verbose, reinterpret_cast<const unsigned char *>(jsonText.c_str()), jsonText.size()) };
+                std::string s { reinterpret_cast<const char *>(buffer) };
+                yajl_free_error(m_handle, buffer);
+                return s;
+            }
+
+            /*!
+             * \name Callbacks
+             *
+             * These pure virtual callbacks must be implemented in derived
+             * classed. If non-zero is returned, the parsing continues.
+             * If zero is returned, the parsing is canceled and
+             * yajl_status_client_canceled will be returned from the parse.
+             */
+
+            ///@{
+                virtual int cb_null() =0;
+                virtual int cb_boolean(bool) =0;
+                virtual int cb_integer(long long) =0;
+                virtual int cb_double(double) =0;
+                virtual int cb_number(std::string) =0;
+                virtual int cb_string(std::string) =0;
+                virtual int cb_map_start() =0;
+                virtual int cb_map_key(std::string) =0;
+                virtual int cb_map_end() =0;
+                virtual int cb_array_start() =0;
+                virtual int cb_array_end() =0;
+            ///@}
+
+        private:
+
+            /*!
+             * Initialize the callbacks structure.
+             */
+            void init_callbacks() {
+                m_callbacks = {
+                    cb_null_dispatch,
+                    cb_bool_dispatch,
+                    cb_integer_dispatch,
+                    cb_double_dispatch,
+                    cb_number_dispatch,
+                    cb_string_dispatch,
+                    cb_map_start_dispatch, cb_map_key_dispatch,
+                    cb_map_end_dispatch, cb_array_start_dispatch,
+                    cb_array_end_dispatch
+                };
+            }
+
+            /*!
+             * \name Internal callbacks.
+             */
+
+            ///@{
+
+                friend inline
+                int cb_null_dispatch(void * ctx) {
+                    return static_cast<parser *>(ctx)->cb_null();
+                }
+
+                friend inline
+                int cb_bool_dispatch(void * ctx, int val) {
+                    return static_cast<parser *>(ctx)->cb_boolean(val);
+                }
+
+                friend inline
+                int cb_integer_dispatch(void * ctx, long long val) {
+                    return static_cast<parser *>(ctx)->cb_integer(val);
+                }
+
+                friend inline
+                int cb_double_dispatch(void * ctx, double val) {
+                    return static_cast<parser *>(ctx)->cb_double(val);
+                }
+
+                friend inline
+                int cb_number_dispatch(void * ctx, const char * val, size_t len) {
+                    return static_cast<parser *>(ctx)->cb_number(std::string(val, len));
+                }
+
+                friend inline
+                int cb_string_dispatch(void * ctx, const unsigned char * val, size_t len) {
+                    return static_cast<parser *>(ctx)->cb_string(std::string(reinterpret_cast<const char *>(val), len));
+                }
+
+                friend inline
+                int cb_map_start_dispatch(void * ctx) {
+                    return static_cast<parser *>(ctx)->cb_map_start();
+                }
+
+                friend inline
+                int cb_map_key_dispatch(void * ctx, const unsigned char * val, size_t len) {
+                    return static_cast<parser *>(ctx)->cb_map_key(std::string(reinterpret_cast<const char *>(val), len));
+                }
+
+                friend inline
+                int cb_map_end_dispatch(void * ctx) {
+                    return static_cast<parser *>(ctx)->cb_map_end();
+                }
+
+                friend inline
+                int cb_array_start_dispatch(void * ctx) {
+                    return static_cast<parser *>(ctx)->cb_array_start();
+                }
+
+                friend inline
+                int cb_array_end_dispatch(void * ctx) {
+                    return static_cast<parser *>(ctx)->cb_array_end();
+                }
+
+            ///@}
+
+            /*!
+             * Callbacks structure. These are all virtual methods that must be
+             * reimplemented in subclasses. See \ref yajl_callbacks.
+             */
+            yajl_callbacks m_callbacks;
+
+            /*!
+             * Internal handle. See \ref yajl_handle.
+             */
+            yajl_handle m_handle;
     };
 }
 
