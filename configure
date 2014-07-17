@@ -15,7 +15,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 prefix="/usr/local"
-if [ "$1" = "--help" ]
+if [ "$1" = "--help" -o "$1" = "-h" ]
 then
     cat <<EOS
 Usage: configure [options]
@@ -62,6 +62,9 @@ test:
 
 test-api:
 	@cd build && make test-api
+
+test-yajlpp:
+	@cd build && make test-yajlpp
 
 clean:
 	@cd build && make clean

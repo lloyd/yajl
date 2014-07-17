@@ -14,7 +14,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-PROJECT(YetAnotherJSONParser C)
+PROJECT(YetAnotherJSONParser C CXX)
 
 SET (YAJL_MAJOR 2)
 SET (YAJL_MINOR 1)
@@ -79,3 +79,6 @@ ADD_CUSTOM_TARGET(test
 
 ADD_CUSTOM_TARGET(test-api ${CMAKE_CURRENT_SOURCE_DIR}/test/api/run_tests.sh
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test/api)
+
+ADD_CUSTOM_TARGET(test-yajlpp ${CMAKE_CURRENT_SOURCE_DIR}/test/yajlpp/run_tests.sh
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test/yajlpp)
