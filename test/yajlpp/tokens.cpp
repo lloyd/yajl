@@ -32,16 +32,17 @@ int main()
     static std::string expected = R"json({"obj":{"first":"1st","second":2,"third":3.5},"array":[12,13,14],"nothing":null})json";
 
     yajlpp::generator g;
-    g.map_open() << 
-        "obj" <<
-            g.map_open() <<
-                std::string("first") << "1st" << "second" << 2 << "third" << 3.5 <<
-            g.map_close() <<
-        "array" <<
-            g.array_open() <<
-                12 << 13 << 14 <<
-            g.array_close() <<
-        "nothing" << g.null() <<
+    g.map_open();
+    g << "obj";
+    g.map_open();
+    g << std::string("first") << "1st" << "second" << 2 << "third" << 3.5;
+    g.map_close();
+    g << "array";
+    g.array_open();
+    g << 12 << 13 << 14;
+    g.array_close();
+    g << "nothing";
+    g.null();
     g.map_close();
 
     return expected == g.result();

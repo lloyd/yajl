@@ -30,7 +30,9 @@
 struct Point { double x, y, z; };
 
 static yajlpp::generator& operator<<(yajlpp::generator& gen, Point& p) {
-    gen << gen.map_open() << "x" << p.x << "y" << p.y << "z" << p.z << gen.map_close();
+    gen.map_open();
+    gen << "x" << p.x << "y" << p.y << "z" << p.z;
+    gen.map_close();
     return gen;
 }
 
@@ -40,7 +42,9 @@ int main()
     Point p { 1., 2., 3. };
 
     yajlpp::generator g;
-    g << g.map_open() << "point" << p << g.map_close();
+    g.map_open();
+    g << "point" << p;
+    g.map_close();
 
     return expected == g.result();
 }

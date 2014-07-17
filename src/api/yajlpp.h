@@ -76,20 +76,21 @@ namespace yajlpp {
      *     gen.escapeSolidus(true);
      *
      *     // Put various objects to the generator
-     *     gen << gen.map_open()
-     *             << "title" << "London Calling"
+     *     gen.map_open();
+     *         gen << "title" << "London Calling"
      *             << "year" << 1979
-     *             << "tracks" << gen.array_open()
-     *                 << gen.map_open()
-     *                     << "title" << "London Calling"
-     *                     << "length" << 3.18
-     *                 << gen.map_close()
-     *                 << gen.map_open()
-     *                     << "title" << "Brand New Cadillac"
-     *                     << "length" << 2.08
-     *                 << gen.map.close()
-     *             << gen.array_close()
-     *         << gen.map_close();
+     *             << "tracks";
+     *             gen.array_open();
+     *                 gen.map_open();
+     *                     gen << "title" << "London Calling"
+     *                         << "length" << 3.18;
+     *                 gen.map_close();
+     *                 gen.map_open();
+     *                     gen << "title" << "Brand New Cadillac"
+     *                         << "length" << 2.08;
+     *                 gen.map.close();
+     *             gen.array_close();
+     *     gen.map_close();
      *
      *     // Get the resulting JSON
      *     std::string json { gen.result() };
@@ -280,45 +281,40 @@ namespace yajlpp {
              * Generate a 'null' token. See \ref yajl_gen_null.
              */
             inline
-            generator& null() {
+            void null() {
                 m_status = yajl_gen_null(m_gen);
-                return *this;
             }
 
             /*!
              * Generate a '{' token. See \ref yajl_gen_map_open.
              */
             inline
-            generator& map_open() {
+            void map_open() {
                 m_status = yajl_gen_map_open(m_gen);
-                return *this;
             }
 
             /*!
              * Generate a '}' token. See \ref yajl_gen_map_close.
              */
             inline
-            generator& map_close() {
+            void map_close() {
                 m_status = yajl_gen_map_close(m_gen);
-                return *this;
             }
 
             /*!
              * Generate a '[' token. See \ref yajl_gen_array_open.
              */
             inline
-            generator& array_open() {
+            void array_open() {
                 m_status = yajl_gen_array_open(m_gen);
-                return *this;
             }
 
             /*!
              * Generate a ']' token. See \ref yajl_gen_array_close.
              */
             inline
-            generator& array_close() {
+            void array_close() {
                 m_status = yajl_gen_array_close(m_gen);
-                return *this;
             }
 
             ///@}
@@ -328,17 +324,6 @@ namespace yajlpp {
              * \name Insertion of values into the JSON stream.
              */
             ///@{
-
-            /*!
-             * This allows to chain calls when using special JSON values, e.g.,
-             * map_open() or map_close(). Example:
-             *
-             *     gen << "empty object" << gen.map_open() << gen.map_close();
-             */
-            inline
-            generator& operator<<(generator&) {
-                return *this;
-            }
 
             /*!
              * Insert an unsigned short in the output stream. See \ref
