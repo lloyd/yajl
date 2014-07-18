@@ -53,6 +53,9 @@ extern "C" {
      *  pointer, this is a void * that is passed into the yajl_parse
      *  function which the client code may use to pass around context.
      *
+     *  Members of the struct may be NULL to signify "no callback set".
+     *  Parsing will continue after matching elements are encountered.
+     *
      *  All callbacks return an integer.  If non-zero, the parse will
      *  continue.  If zero, the parse will be canceled and
      *  yajl_status_client_canceled will be returned from the parse.
