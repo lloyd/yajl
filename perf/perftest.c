@@ -15,6 +15,8 @@
  */
 
 #include <yajl/yajl_parse.h>
+#include <yajl/yajl_tree.h>
+#include <yajl/yajl_gen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,24 +46,57 @@ static double mygettime(void) {
 }
 #endif
 
-#define PARSE_TIME_SECS 3
+#define TEST_TIME_SECS 3
+
+/* if sample documents have been parsed `times` times, what
+ * throughput does this represent?  print to stdout */
+static void
+print_throughput(long long times, double starttime)
+{
+    double throughput;
+    double now;
+    const char * all_units[] = { "B/s", "KB/s", "MB/s", (char *) 0 };
+    const char ** units = all_units;
+    int i, avg_doc_size = 0;
+
+    now = mygettime();
+
+    for (i = 0; i < num_docs(); i++) avg_doc_size += doc_size(i);
+    avg_doc_size /= num_docs();
+
+    throughput = (times * avg_doc_size) / (now - starttime);
+
+    while (*(units + 1) && throughput > 1024) {
+        throughput /= 1024;
+        units++;
+    }
+
+    printf("%g %s", throughput, *units);
+}
+
 
 static int
-run(int validate_utf8)
+parse(int validate_utf8)
 {
     long long times = 0;
     double starttime;
 
     starttime = mygettime();
 
-    /* allocate a parser */
+    printf("Parsing speed (with%s UTF8 validation): ",
+           validate_utf8 ? "" : "out");
+    fflush(stdout);
+
     for (;;) {
 		int i;
         {
+            /* we'll run this test for no less than 3 seconds. */
             double now = mygettime();
-            if (now - starttime >= PARSE_TIME_SECS) break;
+            if (now - starttime >= TEST_TIME_SECS) break;
         }
 
+        /* parse through 100 documents at a time before kicking out and
+         * checking if time has elapsed */
         for (i = 0; i < 100; i++) {
             yajl_handle hand = yajl_alloc(NULL, NULL, NULL);
             yajl_status stat;
@@ -90,31 +125,144 @@ run(int validate_utf8)
         }
     }
 
-    /* parsed doc 'times' times */
-    {
-        double throughput;
-        double now;
-        const char * all_units[] = { "B/s", "KB/s", "MB/s", (char *) 0 };
-        const char ** units = all_units;
-        int i, avg_doc_size = 0;
+    print_throughput(times, starttime);
+    printf("\n");
 
-        now = mygettime();
+    return 0;
+}
 
-        for (i = 0; i < num_docs(); i++) avg_doc_size += doc_size(i);
-        avg_doc_size /= num_docs();
-
-        throughput = (times * avg_doc_size) / (now - starttime);
-
-        while (*(units + 1) && throughput > 1024) {
-            throughput /= 1024;
-            units++;
-        }
-
-        printf("Parsing speed: %g %s\n", throughput, *units);
+static int
+genRecurse(yajl_gen yg, yajl_val v)
+{
+    switch (v->type) {
+        case yajl_t_string:
+            yajl_gen_string(yg, (unsigned char *) v->u.string, strlen(v->u.string));
+            break;
+        case yajl_t_number:
+            yajl_gen_number(yg, v->u.number.r, strlen(v->u.number.r));
+            break;
+        case yajl_t_object:
+            yajl_gen_map_open(yg);
+            {
+                int i;
+                for (i=0; i < v->u.object.len; i++) {
+                    const unsigned char * key = (unsigned char *) v->u.object.keys[i];
+                    yajl_gen_string(yg, key, strlen((char *) key));
+                    genRecurse(yg, v->u.object.values[i]);
+                }
+            }
+            yajl_gen_map_close(yg);
+            break;
+        case yajl_t_array:
+            yajl_gen_array_open(yg);
+            {
+                int i;
+                for (i=0; i < v->u.array.len; i++) {
+                    genRecurse(yg, v->u.array.values[i]);
+                }
+            }
+            yajl_gen_array_close(yg);
+            break;
+        case yajl_t_true:
+            yajl_gen_bool(yg, 1);
+            break;
+        case yajl_t_false:
+            yajl_gen_bool(yg, 0);
+            break;
+        case yajl_t_null:
+            yajl_gen_null(yg);
+            break;
+        default:
+            break;
     }
 
     return 0;
 }
+
+static void
+noopYAJLPrintFunc(void * v, const char * c, size_t s)
+{
+    return;
+}
+
+static int
+doGen(yajl_val n)
+{
+    yajl_gen yg;
+
+    yg = yajl_gen_alloc(NULL);
+    yajl_gen_config(yg, yajl_gen_print_callback, noopYAJLPrintFunc, NULL);
+    genRecurse(yg, n);
+    yajl_gen_free(yg);
+
+    return 0;
+}
+
+
+static int
+gen(void)
+{
+    long long times = 0;
+    double starttime;
+    yajl_val * forest;
+    int i;
+    char ebuf[256];
+
+    starttime = mygettime();
+
+    printf("Stringify speed: ");
+
+    /* first we'll parse all three documents into a trees */
+    forest = (yajl_val *) calloc(sizeof(yajl_val *), num_docs());
+
+    for (i=0; i<num_docs(); i++) {
+        char * buf;
+        const char ** doc;
+        int j;
+        int used = 0;
+
+        buf = (char *) calloc(1, doc_size(i));
+        doc = get_doc(i);
+        for (j=0; doc[j] != NULL; j++) {
+            memcpy(buf + used, doc[j], strlen(doc[j]));
+            used += strlen(doc[j]);
+        }
+        buf[used] = 0;
+        forest[i] = yajl_tree_parse(buf, ebuf, sizeof(ebuf));
+        free(buf);
+    }
+
+    /* now we'll start stringifying these memory representations of
+     * documents */
+    for (;;) {
+        int i;
+        {
+            /* we'll run this test for no less than 3 seconds. */
+            double now = mygettime();
+            if (now - starttime >= TEST_TIME_SECS) break;
+        }
+
+        /* parse through 100 documents at a time before kicking out and
+         * checking if time has elapsed */
+        for (i = 0; i < 100; i++) {
+            doGen(forest[times % num_docs()]);
+            times++;
+        }
+    }
+
+
+    /* free up the parsed documents when we're done */
+    for (i=0; i<num_docs(); i++) {
+        yajl_tree_free(forest[i]);
+    }
+    free(forest);
+
+    print_throughput(times, starttime);
+    printf("\n");
+
+    return 0;
+}
+
 
 int
 main(void)
@@ -124,11 +272,12 @@ main(void)
     printf("-- speed tests determine parsing throughput given %d different sample documents --\n",
            num_docs());
 
-    printf("With UTF-8 validation:\n");
-    rv = run(1);
+    rv = parse(1);
     if (rv != 0) return rv;
-    printf("Without UTF-8 validation:\n");
-    rv = run(0);
+    rv = parse(0);
+    if (rv != 0) return rv;
+    rv = gen();
+
     return rv;
 }
 

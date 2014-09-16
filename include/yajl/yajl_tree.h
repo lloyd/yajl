@@ -137,7 +137,7 @@ YAJL_API void yajl_tree_free (yajl_val v);
  * \param type the yajl_type of the object you seek, or yajl_t_any if any will do.
  *
  * \returns a pointer to the found value, or NULL if we came up empty.
- * 
+ *
  * Future Ideas:  it'd be nice to move path to a string and implement support for
  * a teeny tiny micro language here, so you can extract array elements, do things
  * like .first and .last, even .length.  Inspiration from JSONPath and css selectors?
