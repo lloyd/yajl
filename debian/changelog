@@ -1,3 +1,9 @@
+yajl (2.1.0-1) unstable; urgency=low
+
+  * Merge from upstream.
+
+ -- Like Ma <likemartinma@gmail.com>  Tue, 16 Sep 2014 20:13:07 +0800
+
 yajl (2.0.5-6) unstable; urgency=low
 
   * Make libyajl.so.* executable for rpmbuild in Ubuntu 12.04.
