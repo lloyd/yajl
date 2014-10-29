@@ -51,6 +51,7 @@ run(int validate_utf8)
 {
     long long times = 0; 
     double starttime;
+    unsigned long long sumsize = 0;
 
     starttime = mygettime();
 
@@ -70,7 +71,9 @@ run(int validate_utf8)
             yajl_config(hand, yajl_dont_validate_strings, validate_utf8 ? 0 : 1);
 
             for (d = get_doc(times % num_docs()); *d; d++) {
-                stat = yajl_parse(hand, (unsigned char *) *d, strlen(*d));
+                size_t size = strlen(*d);
+                sumsize += size;
+                stat = yajl_parse(hand, (unsigned char *) *d, size);
                 if (stat != yajl_status_ok) break;
             }
             
@@ -96,14 +99,10 @@ run(int validate_utf8)
         double now;
         const char * all_units[] = { "B/s", "KB/s", "MB/s", (char *) 0 };
         const char ** units = all_units;
-        int i, avg_doc_size = 0;
 
         now = mygettime();
 
-        for (i = 0; i < num_docs(); i++) avg_doc_size += doc_size(i);
-        avg_doc_size /= num_docs();
-
-        throughput = (times * avg_doc_size) / (now - starttime);
+        throughput = sumsize / (now - starttime);
         
         while (*(units + 1) && throughput > 1024) {
             throughput /= 1024;
