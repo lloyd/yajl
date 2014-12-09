@@ -4,8 +4,7 @@ Short story (If you already have ruby and cmake):
 
 When things go wrong:
 
-attain CMake (http://www.cmake.org) and ruby (http://ruby-lang.org) and
-try again.
+attain CMake (http://www.cmake.org) and try again.
 
 OR, attain CMake and build by hand:
 
