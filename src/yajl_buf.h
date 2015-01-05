@@ -40,7 +40,7 @@ yajl_buf yajl_buf_alloc(yajl_alloc_funcs * alloc);
 void yajl_buf_free(yajl_buf buf);
 
 /* append a number of bytes to the buffer */
-void yajl_buf_append(yajl_buf buf, const void * data, size_t len);
+int yajl_buf_append(yajl_buf buf, const void * data, size_t len);
 
 /* empty the buffer */
 void yajl_buf_clear(yajl_buf buf);
