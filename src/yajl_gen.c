@@ -269,7 +269,7 @@ yajl_gen_string(yajl_gen g, const unsigned char * str, size_t len
 #ifdef YAJL_ALLOW_SINGLE_QUOTES
     char *qstr = (quote == yajl_single_quote) ? "'" : "\"";
 #else
-    char *qstr = "\"";
+    static char * const qstr = "\"";
 #endif
     g->print(g->ctx, qstr, 1);
     yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
