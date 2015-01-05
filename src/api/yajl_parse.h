@@ -168,7 +168,7 @@ extern "C" {
          */
         yajl_allow_partial_values = 0x10,
         /**
-         * Allow the trailing comma in array or map
+         * Allow a comma trailing in the last element of array (or map)
          */
         yajl_allow_trailing_separator = 0x20
     } yajl_option;
