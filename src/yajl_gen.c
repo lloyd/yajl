@@ -150,12 +150,6 @@ yajl_gen_free(yajl_gen g)
         if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);                \
    }
 
-#define INSERT_EMPTY_TAIL \
-    if (g->state[g->depth] == yajl_gen_map_key ||               \
-        g->state[g->depth] == yajl_gen_in_array) {              \
-        g->print(g->ctx, ",", 1);                               \
-    }
-
 #define INSERT_WHITESPACE                                               \
     if ((g->flags & yajl_gen_beautify)) {                                                    \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
