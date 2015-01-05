@@ -269,7 +269,11 @@ static int context_add_value (context_t *ctx, yajl_val v)
 }
 
 static int handle_string (void *ctx,
-                          const unsigned char *string, size_t string_length)
+                          const unsigned char *string, size_t string_length
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+                          , yajl_quote_type quote
+#endif
+)
 {
     yajl_val v;
 

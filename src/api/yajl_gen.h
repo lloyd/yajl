@@ -128,9 +128,16 @@ extern "C" {
     YAJL_API yajl_gen_status yajl_gen_number(yajl_gen hand,
                                              const char * num,
                                              size_t len);
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+    YAJL_API yajl_gen_status yajl_gen_string(yajl_gen hand,
+                                             const unsigned char * str,
+                                             size_t len,
+                                             yajl_quote_type quote);
+#else
     YAJL_API yajl_gen_status yajl_gen_string(yajl_gen hand,
                                              const unsigned char * str,
                                              size_t len);
+#endif
     YAJL_API yajl_gen_status yajl_gen_null(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_bool(yajl_gen hand, int boolean);
     YAJL_API yajl_gen_status yajl_gen_map_open(yajl_gen hand);
