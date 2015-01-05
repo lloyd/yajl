@@ -349,11 +349,6 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         (s == yajl_state_array_need_val &&
                          (hand->flags & yajl_allow_trailing_separator)))
                     {
-                        if (s == yajl_state_array_need_val &&
-                            hand->callbacks && hand->callbacks->yajl_empty_tail)
-                        {
-                            _CC_CHK(hand->callbacks->yajl_empty_tail(hand->ctx));
-                        }
                         if (hand->callbacks && hand->callbacks->yajl_end_array) {
                             _CC_CHK(hand->callbacks->yajl_end_array(hand->ctx));
                         }
@@ -430,11 +425,6 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     if (!(s == yajl_state_map_need_key &&
                           !(hand->flags & yajl_allow_trailing_separator)))
                     {
-                        if (s == yajl_state_map_need_key &&
-                            hand->callbacks && hand->callbacks->yajl_empty_tail)
-                        {
-                            _CC_CHK(hand->callbacks->yajl_empty_tail(hand->ctx));
-                        }
                         if (hand->callbacks && hand->callbacks->yajl_end_map) {
                             _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
                         }
