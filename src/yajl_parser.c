@@ -247,8 +247,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 case yajl_tok_string_with_escapes:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
                         yajl_buf_clear(hand->decodeBuf);
-                        if (-1 == yajl_string_decode(hand->decodeBuf, buf,
-                                                     bufLen))
+                        if (yajl_string_decode(hand->decodeBuf, buf, bufLen) < 0)
                             goto err;
 
                         _CC_CHK(hand->callbacks->yajl_string(
@@ -312,8 +311,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         } else if (hand->callbacks->yajl_double) {
                             double d = 0.0;
                             yajl_buf_clear(hand->decodeBuf);
-                            if (-1 == yajl_buf_append(hand->decodeBuf, buf,
-                                                      bufLen))
+                            if (yajl_buf_append(hand->decodeBuf, buf, bufLen) < 0)
                                 return yajl_status_error;
 
                             buf = yajl_buf_data(hand->decodeBuf);
@@ -395,8 +393,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 case yajl_tok_string_with_escapes:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
                         yajl_buf_clear(hand->decodeBuf);
-                        if (-1 == yajl_string_decode(hand->decodeBuf, buf,
-                                                     bufLen))
+                        if (yajl_string_decode(hand->decodeBuf, buf, bufLen) < 0)
                             goto err;
 
                         buf = yajl_buf_data(hand->decodeBuf);

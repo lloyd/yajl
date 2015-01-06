@@ -82,7 +82,7 @@ void yajl_buf_free(yajl_buf buf)
 
 int yajl_buf_append(yajl_buf buf, const void * data, size_t len)
 {
-    if (-1 == yajl_buf_ensure_available(buf, len))
+    if (yajl_buf_ensure_available(buf, len) < 0)
         return -1;
 
     if (len > 0) {
