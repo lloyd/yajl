@@ -655,8 +655,8 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     if (tok == yajl_tok_eof || lexer->bufInUse) {
         if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
         lexer->bufInUse = 1;
-        if (-1 == yajl_buf_append(lexer->buf, jsonText + startOffset,
-                                  *offset - startOffset)) {
+        if (yajl_buf_append(lexer->buf, jsonText + startOffset,
+                            *offset - startOffset) < 0) {
             *outBuf = NULL;
             *outLen = 0;
             return yajl_tok_eof;
