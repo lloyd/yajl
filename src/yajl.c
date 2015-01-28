@@ -63,6 +63,8 @@ yajl_alloc(const yajl_callbacks * callbacks,
 
     hand = (yajl_handle) YA_MALLOC(afs, sizeof(struct yajl_handle_t));
 
+    if (!hand)
+        return NULL;
     /* copy in pointers to allocation routines */
     memcpy((void *) &(hand->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
 
