@@ -120,6 +120,10 @@ yajl_gen_alloc(const yajl_alloc_funcs * afs)
 
     g->print = (yajl_print_t)&yajl_buf_append;
     g->ctx = yajl_buf_alloc(&(g->alloc));
+    if (!g->ctx) {
+        YA_FREE(afs, g);
+        return NULL;
+    }
     g->indentString = "    ";
 
     return g;
