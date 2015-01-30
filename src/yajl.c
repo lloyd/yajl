@@ -127,6 +127,8 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
         hand->lexer = yajl_lex_alloc(&(hand->alloc),
                                      hand->flags & yajl_allow_comments,
                                      !(hand->flags & yajl_dont_validate_strings));
+        if (!hand->lexer)
+            return yajl_status_error;
     }
 
     status = yajl_do_parse(hand, jsonText, jsonTextLen);
