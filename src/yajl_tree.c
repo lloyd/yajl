@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "api/yajl_tree.h"
 #include "api/yajl_parse.h"
+#include "api/yajl_tree.h"
 
 #include "yajl_parser.h"
 
@@ -400,57 +400,6 @@ static int handle_null (void *ctx)
 /*
  * Public functions
  */
-yajl_val yajl_tree_parse (const char *input,
-                          char *error_buffer, size_t error_buffer_size)
-{
-    static const yajl_callbacks callbacks =
-        {
-            /* null        = */ handle_null,
-            /* boolean     = */ handle_boolean,
-            /* integer     = */ NULL,
-            /* double      = */ NULL,
-            /* number      = */ handle_number,
-            /* string      = */ handle_string,
-            /* start map   = */ handle_start_map,
-            /* map key     = */ handle_string,
-            /* end map     = */ handle_end_map,
-            /* start array = */ handle_start_array,
-            /* end array   = */ handle_end_array
-        };
-
-    yajl_handle handle;
-    yajl_status status;
-    char * internal_err_str;
-	context_t ctx = { NULL, NULL, NULL, 0 };
-
-	ctx.errbuf = error_buffer;
-	ctx.errbuf_size = error_buffer_size;
-
-    if (error_buffer != NULL)
-        memset (error_buffer, 0, error_buffer_size);
-
-    handle = yajl_alloc (&callbacks, NULL, &ctx);
-    yajl_config(handle, yajl_allow_comments, 1);
-
-    status = yajl_parse(handle,
-                        (unsigned char *) input,
-                        strlen (input));
-    status = yajl_complete_parse (handle);
-    if (status != yajl_status_ok) {
-        if (error_buffer != NULL && error_buffer_size > 0) {
-               internal_err_str = (char *) yajl_get_error(handle, 1,
-                     (const unsigned char *) input,
-                     strlen(input));
-             snprintf(error_buffer, error_buffer_size, "%s", internal_err_str);
-             YA_FREE(&(handle->alloc), internal_err_str);
-        }
-        yajl_free (handle);
-        return NULL;
-    }
-
-    yajl_free (handle);
-    return (ctx.root);
-}
 
 yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
 {
@@ -500,4 +449,125 @@ void yajl_tree_free (yajl_val v)
     {
         free(v);
     }
+}
+
+// Neal Horman
+
+static const yajl_callbacks yajl_std_callbacks =
+{
+    /* null        = */ handle_null,
+    /* boolean     = */ handle_boolean,
+    /* integer     = */ NULL,
+    /* double      = */ NULL,
+    /* number      = */ handle_number,
+    /* string      = */ handle_string,
+    /* start map   = */ handle_start_map,
+    /* map key     = */ handle_string,
+    /* end map     = */ handle_end_map,
+    /* start array = */ handle_start_array,
+    /* end array   = */ handle_end_array
+};
+
+// yajl_tree_parse_read() based on the original yajl_tree_parse()
+// but uses a callback function to read contents instead of being
+// hard coded for a single input buffer string.
+yajl_val yajl_tree_parse_read(void (*pCallbackFn)(ytprc_t *), ytprc_t *pYtprc,
+                              char *error_buffer, size_t error_buffer_size)
+{
+	yajl_status status = yajl_status_ok;
+	context_t ctx = { NULL, NULL, error_buffer, error_buffer_size };
+	yajl_handle handle = yajl_alloc (pYtprc->callbacks, pYtprc->allocfuncs, &ctx);
+	size_t rd = -1;
+
+	if (error_buffer != NULL)
+		memset (error_buffer, 0, error_buffer_size);
+
+	while(!pYtprc->eof && rd != 0 && status == yajl_status_ok)
+	{
+
+		pCallbackFn(pYtprc);
+		rd = pYtprc->buflen;
+
+		if (rd != 0)
+		{
+			pYtprc->buffer[rd] = 0;
+			status = yajl_parse(handle, pYtprc->buffer, rd);
+			pYtprc->buflen = 0;
+		}
+	}
+
+	status = yajl_complete_parse (handle);
+	if (status != yajl_status_ok)
+	{
+		if (error_buffer != NULL && error_buffer_size > 0)
+		{	char * internal_err_str = (char *) yajl_get_error(handle, 1, pYtprc->buffer, strlen((char *)pYtprc->buffer));
+
+			snprintf(error_buffer, error_buffer_size, "%s", internal_err_str);
+			YA_FREE(&(handle->alloc), internal_err_str);
+		}
+		yajl_tree_free(ctx.root);
+		ctx.root = NULL;
+	}
+
+	yajl_free (handle);
+	return ctx.root;
+}
+
+static void ytpr_callback_parse(ytprc_t *pYtprc)
+{
+	pYtprc->buflen = 0;
+	pYtprc->eof = 1;
+}
+
+yajl_val yajl_tree_parse(const char *input,
+                          char *error_buffer, size_t error_buffer_size)
+{
+	ytprc_t ytprc;
+
+	ytprc.callbacks = &yajl_std_callbacks;
+	ytprc.allocfuncs = NULL;
+	ytprc.buffer = (unsigned char *)input;
+	ytprc.bufmax = strlen(input)+1;
+	ytprc.buflen = ytprc.bufmax-1;
+	ytprc.eof = 0;
+	ytprc.ctx = NULL;
+
+	return yajl_tree_parse_read(&ytpr_callback_parse, &ytprc, error_buffer, error_buffer_size);
+}
+
+static void ytpr_callback_FILE(ytprc_t *pYtprc)
+{
+	if(!feof((FILE *)pYtprc->ctx))
+	{	size_t rd = fread(&pYtprc->buffer[pYtprc->buflen], 1, (pYtprc->bufmax - pYtprc->buflen) - 1, (FILE *)pYtprc->ctx);
+
+		if(rd != 0)
+			pYtprc->buflen += rd;
+		else
+			pYtprc->eof = 1;
+	}
+	else
+		pYtprc->eof = 1;
+}
+
+yajl_val yajl_tree_parse_file(FILE *fin, size_t bufSize,
+                              yajl_callbacks *callbacks,
+                              char *error_buffer, size_t error_buffer_size)
+{
+	ytprc_t ytprc;
+
+	if(callbacks == NULL)
+		ytprc.callbacks = &yajl_std_callbacks;
+	else
+		ytprc.callbacks = callbacks;
+
+	ytprc.allocfuncs = NULL;
+	ytprc.buffer = calloc(1, bufSize);
+	ytprc.bufmax = bufSize;
+	ytprc.buflen = 0;
+	ytprc.eof = 0;
+	ytprc.ctx = fin;
+
+	free(ytprc.buffer);
+
+	return yajl_tree_parse_read(&ytpr_callback_FILE, &ytprc, error_buffer, error_buffer_size);
 }

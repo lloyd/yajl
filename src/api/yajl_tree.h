@@ -32,6 +32,7 @@
 #define YAJL_TREE_H 1
 
 #include <yajl/yajl_common.h>
+#include "yajl_parse.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -121,6 +122,47 @@ struct yajl_val_s
 YAJL_API yajl_val yajl_tree_parse (const char *input,
                                    char *error_buffer, size_t error_buffer_size);
 
+typedef struct _ytprc_t
+{
+	const yajl_callbacks *callbacks; // parser callbacks structure pointer
+	yajl_alloc_funcs *allocfuncs; // alloc functions structure pointer
+	unsigned char *buffer; // buffer to read into, starting at offset buflen
+	size_t bufmax; // size of buffer
+	size_t buflen; // amount of data in buffer
+	int eof; // unable to read more
+	void *ctx; // caller context data
+}ytprc_t; // Yajl Tree Parse Read Context Type
+
+yajl_val yajl_tree_parse_read(void (*pCallbackFn)(ytprc_t *), ytprc_t *pYtprc,
+                              char *error_buffer, size_t error_buffer_size);
+
+/**
+ * Parse a FILE stream.
+ *
+ * Parses an on disk file containing JSON data and returns a pointer
+ * to the top-level value (root of the parse tree).
+ *
+ * \param fin                Pointer to a FILE stream containing a utf8 JSON
+ *                           data stream.
+ * \param bufSize            Size of buffer to use for read operations.
+ * \param callbacks          Pointer to a callbacks structure.
+ * \param error_buffer       Pointer to a buffer in which an error message will
+ *                           be stored if \em yajl_tree_parse fails, or
+ *                           \c NULL. The buffer will be initialized before
+ *                           parsing, so its content will be destroyed even if
+ *                           \em yajl_tree_parse succeeds.
+ * \param error_buffer_size  Size of the memory area pointed to by
+ *                           \em error_buffer_size. If \em error_buffer_size is
+ *                           \c NULL, this argument is ignored.
+ *
+ * \returns Pointer to the top-level value or \c NULL on error. The memory
+ * pointed to must be freed using \em yajl_tree_free. In case of an error, a
+ * null terminated message describing the error in more detail is stored in
+ * \em error_buffer if it is not \c NULL.
+ */
+yajl_val yajl_tree_parse_file(FILE *fin, size_t bufSize,
+                              yajl_callbacks *callbacks,
+                              char *error_buffer, size_t error_buffer_size);
 
 /**
  * Free a parse tree returned by "yajl_tree_parse".
