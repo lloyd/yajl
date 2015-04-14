@@ -62,9 +62,11 @@ ELSE (WIN32)
   SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2 -Wuninitialized")
 ENDIF (WIN32)
 
+option(YAJL_WITHOUT_TESTS "Don't build the tests" OFF)
+
+message(" YAJL_WITHOUT_TESTS = ${YAJL_WITHOUT_TESTS}")
 
 ADD_SUBDIRECTORY(src)
-ADD_SUBDIRECTORY(test)
 ADD_SUBDIRECTORY(reformatter)
 ADD_SUBDIRECTORY(verify)
 ADD_SUBDIRECTORY(example)
@@ -72,10 +74,13 @@ ADD_SUBDIRECTORY(perf)
 
 INCLUDE(YAJLDoc.cmake)
 
-# a test target
-ADD_CUSTOM_TARGET(test
-                  ./run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/parsing/yajl_test
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/parsing)
-
-ADD_CUSTOM_TARGET(test-api ${CMAKE_CURRENT_SOURCE_DIR}/test/api/run_tests.sh
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test/api)
+IF (NOT YAJL_WITHOUT_TESTS)
+  ADD_SUBDIRECTORY(test)
+  # a test target
+  ADD_CUSTOM_TARGET(test
+                    ./run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/parsing/yajl_test
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/parsing)
+  
+  ADD_CUSTOM_TARGET(test-api ${CMAKE_CURRENT_SOURCE_DIR}/test/api/run_tests.sh
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test/api)
+ENDIF(NOT YAJL_WITHOUT_TESTS)
