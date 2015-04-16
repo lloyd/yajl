@@ -515,7 +515,6 @@ yajl_val yajl_tree_parse_read(void (*pCallbackFn)(ytprc_t *), ytprc_t *pYtprc,
 
 static void ytpr_callback_parse(ytprc_t *pYtprc)
 {
-	pYtprc->buflen = 0;
 	pYtprc->eof = 1;
 }
 
