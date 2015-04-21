@@ -1,3 +1,9 @@
+yajl (2.1.0-2) unstable; urgency=low
+
+  * Support Multiarch.
+
+ -- Like Ma <likemartinma@gmail.com>  Wed, 22 Apr 2015 02:57:00 +0800
+
 yajl (2.1.0-1) unstable; urgency=low
 
   * Merge from upstream.
