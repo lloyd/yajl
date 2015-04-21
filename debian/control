@@ -10,6 +10,7 @@ Vcs-Git: git://github.com/lloyd/yajl
 
 Package: libyajl2
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Yet Another JSON Library
  A small, fast library for parsing JavaScript Object Notation (JSON).  It
@@ -19,6 +20,7 @@ Description: Yet Another JSON Library
 Package: libyajl-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: libyajl2 (= ${binary:Version})
 Description: Yet Another JSON Library - development files
  A small, fast library for parsing JavaScript Object Notation (JSON).  It
@@ -40,6 +42,7 @@ Description: Yet Another JSON Library - library documentation
 
 Package: libyajl2-dbg
 Architecture: any
+Multi-Arch: same
 Section: debug
 Depends: libyajl2 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: Yet Another JSON Library - debugging symbols
@@ -51,6 +54,7 @@ Description: Yet Another JSON Library - debugging symbols
 
 Package: yajl-tools
 Architecture: any
+Multi-Arch: same
 Section: utils
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Yet Another JSON Library - tools
