@@ -377,24 +377,29 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     unsigned char c;
 
-    yajl_tok tok = yajl_tok_integer;
+    yajl_tok tok = yajl_tok_eof;
 
-    RETURN_IF_EOF;
+#define RETURN_IF_EOF_NUM if (*offset >= jsonTextLen) return tok;
+
+    RETURN_IF_EOF_NUM;
+
+    tok = yajl_tok_integer;
+
     c = readChar(lexer, jsonText, offset);
 
     /* optional leading minus */
     if (c == '-') {
-        RETURN_IF_EOF;
+        RETURN_IF_EOF_NUM;
         c = readChar(lexer, jsonText, offset);
     }
 
     /* a single zero, or a series of integers */
     if (c == '0') {
-        RETURN_IF_EOF;
+        RETURN_IF_EOF_NUM;
         c = readChar(lexer, jsonText, offset);
     } else if (c >= '1' && c <= '9') {
         do {
-            RETURN_IF_EOF;
+            RETURN_IF_EOF_NUM;
             c = readChar(lexer, jsonText, offset);
         } while (c >= '0' && c <= '9');
     } else {
@@ -407,12 +412,12 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
     if (c == '.') {
         int numRd = 0;
 
-        RETURN_IF_EOF;
+        RETURN_IF_EOF_NUM;
         c = readChar(lexer, jsonText, offset);
 
         while (c >= '0' && c <= '9') {
             numRd++;
-            RETURN_IF_EOF;
+            RETURN_IF_EOF_NUM;
             c = readChar(lexer, jsonText, offset);
         }
 
@@ -426,18 +431,18 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     /* optional exponent (indicates this is floating point) */
     if (c == 'e' || c == 'E') {
-        RETURN_IF_EOF;
+        RETURN_IF_EOF_NUM;
         c = readChar(lexer, jsonText, offset);
 
         /* optional sign */
         if (c == '+' || c == '-') {
-            RETURN_IF_EOF;
+            RETURN_IF_EOF_NUM;
             c = readChar(lexer, jsonText, offset);
         }
 
         if (c >= '0' && c <= '9') {
             do {
-                RETURN_IF_EOF;
+                RETURN_IF_EOF_NUM;
                 c = readChar(lexer, jsonText, offset);
             } while (c >= '0' && c <= '9');
         } else {
