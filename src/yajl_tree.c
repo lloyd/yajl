@@ -444,6 +444,9 @@ yajl_val yajl_tree_parse (const char *input,
              snprintf(error_buffer, error_buffer_size, "%s", internal_err_str);
              YA_FREE(&(handle->alloc), internal_err_str);
         }
+        while (ctx.stack) {
+            yajl_tree_free(context_pop(&ctx));
+        }
         yajl_free (handle);
         return NULL;
     }
