@@ -15,9 +15,6 @@
 # set up some paths
 SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/bin)
 
-# create some directories
-FILE(MAKE_DIRECTORY ${binDir})
-
 SET (SRCS json_verify.c)
 
 # use the library we build, duh.
@@ -28,10 +25,7 @@ ADD_EXECUTABLE(json_verify ${SRCS})
 
 TARGET_LINK_LIBRARIES(json_verify yajl_s)
 
-# copy in the binary
-GET_TARGET_PROPERTY(binPath json_verify LOCATION)
-
-ADD_CUSTOM_COMMAND(TARGET json_verify POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
+SET_TARGET_PROPERTIES(json_verify PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${binDir})
 
 INSTALL(TARGETS json_verify RUNTIME DESTINATION bin)

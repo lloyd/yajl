@@ -15,9 +15,6 @@
 # set up a paths
 SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/bin)
 
-# create a directories
-FILE(MAKE_DIRECTORY ${binDir})
-
 SET (SRCS json_reformat.c)
 
 # use the library we build, duh.
@@ -34,10 +31,7 @@ IF (NOT WIN32)
     TARGET_LINK_LIBRARIES(json_reformat m)
 ENDIF (NOT WIN32)
 
-# copy the binary into the output directory
-GET_TARGET_PROPERTY(binPath json_reformat LOCATION)
-
-ADD_CUSTOM_COMMAND(TARGET json_reformat POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
+SET_TARGET_PROPERTIES(json_reformat PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${binDir})
 
 INSTALL(TARGETS json_reformat RUNTIME DESTINATION bin)
