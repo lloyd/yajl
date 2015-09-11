@@ -64,17 +64,9 @@ yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
         case yajl_gen_indent_string: {
             const char *indent = va_arg(ap, const char *);
             g->indentString = indent;
-            for (; *indent; indent++) {
-                if (*indent != '\n'
-                    && *indent != '\v'
-                    && *indent != '\f'
-                    && *indent != '\t'
-                    && *indent != '\r'
-                    && *indent != ' ')
-                {
-                    g->indentString = NULL;
-                    rv = 0;
-                }
+            if (indent[strspn(indent, "\n\v\f\t\r ")]) {
+                g->indentString = NULL;
+                rv = 0;
             }
             break;
         }
