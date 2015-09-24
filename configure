@@ -15,18 +15,18 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 prefix="/usr/local"
-if [ "$1" = "--help" ]
-then
-    cat <<EOS
-Usage: configure [options]
+usage="Usage: configure [options]
     -p, --prefix PATH                Set installation prefix
-    -h, --help                       Output usage summary
-EOS
+    -h, --help                       Output usage summary"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]
+then
+    echo "$usage"
     exit 0
 fi
-if [ "$1" = "-p" ]; then
+if [ "$1" = "-p" ] || [ "$1" = "--prefix" ]
+then
     if [ "$#" != 2 ]; then
-        ./configure.sh --help
+        echo "$usage"
         exit 1
     fi
     prefix="$2"
