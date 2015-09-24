@@ -108,6 +108,11 @@ extern "C" {
                                     yajl_alloc_funcs * afs,
                                     void * ctx);
 
+    /** reset a parser handle to a pristine state.  the parser will be minimally
+     *  re-initialized.  This should be faster when parsing multiple documents
+     *  than freeing and re-allocating a YAJL parser.
+     */
+    YAJL_API void yajl_reset(yajl_handle h);
 
     /** configuration parameters for the parser, these may be passed to
      *  yajl_config() along with option specific argument(s).  In general,
