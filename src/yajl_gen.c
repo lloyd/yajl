@@ -120,6 +120,10 @@ yajl_gen_alloc(const yajl_alloc_funcs * afs)
 
     g->print = (yajl_print_t)&yajl_buf_append;
     g->ctx = yajl_buf_alloc(&(g->alloc));
+    if (!g->ctx) {
+        YA_FREE(afs, g);
+        return NULL;
+    }
     g->indentString = "    ";
 
     return g;
@@ -265,6 +269,7 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, "\"", 1);
     yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
+
     g->print(g->ctx, "\"", 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;

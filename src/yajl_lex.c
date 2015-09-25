@@ -105,8 +105,14 @@ yajl_lex_alloc(yajl_alloc_funcs * alloc,
                unsigned int allowComments, unsigned int validateUTF8)
 {
     yajl_lexer lxr = (yajl_lexer) YA_MALLOC(alloc, sizeof(struct yajl_lexer_t));
+    if (!lxr)
+        return NULL;
     memset((void *) lxr, 0, sizeof(struct yajl_lexer_t));
     lxr->buf = yajl_buf_alloc(alloc);
+    if (!lxr->buf) {
+            YA_FREE(alloc, lxr);
+            return NULL;
+    }
     lxr->allowComments = allowComments;
     lxr->validateUTF8 = validateUTF8;
     lxr->alloc = alloc;
@@ -649,7 +655,13 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     if (tok == yajl_tok_eof || lexer->bufInUse) {
         if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
         lexer->bufInUse = 1;
-        yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
+        if (yajl_buf_append(lexer->buf, jsonText + startOffset,
+                            *offset - startOffset) < 0) {
+            *outBuf = NULL;
+            *outLen = 0;
+            return yajl_tok_eof;
+        }
+
         lexer->bufOff = 0;
 
         if (tok != yajl_tok_eof) {
