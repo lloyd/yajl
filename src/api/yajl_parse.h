@@ -113,12 +113,13 @@ extern "C" {
      *  yajl_config() along with option specific argument(s).  In general,
      *  all configuration parameters default to *off*. */
     typedef enum {
-        /** Ignore javascript style comments present in
-         *  JSON input.  Non-standard, but rather fun
-         *  arguments: toggled off with integer zero, on otherwise.
+        /**
+         * Ignore javascript style comments present in
+         * JSON input.  Non-standard, but rather fun
+         * arguments: toggled off with integer zero, on otherwise.
          *
-         *  example:
-         *    yajl_config(h, yajl_allow_comments, 1); // turn comment support on
+         * example:
+         *   yajl_config(h, yajl_allow_comments, 1); // turn comment support on
          */
         yajl_allow_comments = 0x01,
         /**
@@ -128,15 +129,16 @@ extern "C" {
          * on processor and compiler in use)
          *
          * example:
-         *   yajl_config(h, yajl_dont_validate_strings, 1); // disable utf8 checking
+         *   // disable utf8 checking
+         *   yajl_config(h, yajl_dont_validate_strings, 1);
          */
         yajl_dont_validate_strings     = 0x02,
         /**
          * By default, upon calls to yajl_complete_parse(), yajl will
          * ensure the entire input text was consumed and will raise an error
          * otherwise.  Enabling this flag will cause yajl to disable this
-         * check.  This can be useful when parsing json out of a that contains more
-         * than a single JSON document.
+         * check.  This can be useful when parsing json out of a that contains
+         * more than a single JSON document.
          */
         yajl_allow_trailing_garbage = 0x04,
         /**

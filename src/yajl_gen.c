@@ -144,14 +144,14 @@ yajl_gen_free(yajl_gen g)
     if (g->state[g->depth] == yajl_gen_map_key ||               \
         g->state[g->depth] == yajl_gen_in_array) {              \
         g->print(g->ctx, ",", 1);                               \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);               \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);  \
     } else if (g->state[g->depth] == yajl_gen_map_val) {        \
         g->print(g->ctx, ":", 1);                               \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);                \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);   \
    }
 
 #define INSERT_WHITESPACE                                               \
-    if ((g->flags & yajl_gen_beautify)) {                                                    \
+    if ((g->flags & yajl_gen_beautify)) {                               \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
             for (_i=0;_i<g->depth;_i++)                                 \

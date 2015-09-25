@@ -29,36 +29,40 @@
 #include <assert.h>
 #include <math.h>
 
-#define MAX_VALUE_TO_MULTIPLY ((LLONG_MAX / 10) + (LLONG_MAX % 10))
-
- /* same semantics as strtol */
+ /* Assuming this function is called only with valid JSON integer from lexer,
+  * checks that shouldn't trigger left as assertions.
+  */
 long long
 yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
-    long long ret  = 0;
-    long sign = 1;
+    int neg = 0;
     const unsigned char *pos = number;
-    if (*pos == '-') { pos++; sign = -1; }
-    if (*pos == '+') { pos++; }
-
-    while (pos < number + length) {
-        if ( ret > MAX_VALUE_TO_MULTIPLY ) {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        ret *= 10;
-        if (LLONG_MAX - ret < (*pos - '0')) {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        if (*pos < '0' || *pos > '9') {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        ret += (*pos++ - '0');
+    long long ret = *pos - '0';
+    if (ret < 0) {
+        assert(*pos == '-' || *pos == '+');
+        if (*pos == '-') neg = 1;
+        pos++;
+        ret = *pos - '0';
+    } else if (ret == 0) {
+        assert(length == 1);
+        return 0;
+    } else {
+        assert(ret > 0 && ret <= 9);
     }
-
-    return sign * ret;
+    pos++;
+    ret = -ret;
+    long long cutoff = (-LLONG_MAX) / 10;
+    int cutlim = ((LLONG_MAX) % 10) + neg;
+    while (pos < number + length) {
+        int c = *pos++ - '0';
+        assert(0 <= c && c <= 9);
+        if (ret < cutoff || (ret == cutoff && c > cutlim)) {
+            errno = ERANGE;
+            return !neg ? LLONG_MAX : LLONG_MIN;
+        }
+        ret = 10 * ret - c;
+    }
+    return !neg ? -ret : ret;
 }
 
 unsigned char *
@@ -223,7 +227,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             /* for arrays and maps, we advance the state for this
              * depth, then push the state of the next depth.
              * If an error occurs during the parsing of the nesting
-             * enitity, the state at this level will not matter.
+             * entity, the state at this level will not matter.
              * a state that needs pushing will be anything other
              * than state_start */
 
@@ -411,6 +415,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         yajl_bs_pop(hand->stateStack);
                         goto around_again;
                     }
+                    /* intentional fall-through */
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =

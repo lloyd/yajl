@@ -56,7 +56,7 @@ void yajl_lex_free(yajl_lexer lexer);
 /**
  * run/continue a lex. "offset" is an input/output parameter.
  * It should be initialized to zero for a
- * new chunk of target text, and upon subsetquent calls with the same
+ * new chunk of target text, and upon subsequent calls with the same
  * target text should passed with the value of the previous invocation.
  *
  * the client may be interested in the value of offset when an error is

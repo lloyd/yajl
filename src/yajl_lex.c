@@ -66,7 +66,7 @@ tokToStr(yajl_tok tok)
  */
 
 struct yajl_lexer_t {
-    /* the overal line and char offset into the data */
+    /* the overall line and char offset into the data */
     size_t lineOff;
     size_t charOff;
 
@@ -137,45 +137,45 @@ yajl_lex_free(yajl_lexer lxr)
 
 static const char charLookupTable[256] =
 {
-/*00*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
-/*08*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
-/*10*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
-/*18*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
+     /*00*/ IJC, IJC, IJC        , IJC, IJC        , IJC, IJC    , IJC,
+     /*08*/ IJC, IJC, IJC        , IJC, IJC        , IJC, IJC    , IJC,
+     /*10*/ IJC, IJC, IJC        , IJC, IJC        , IJC, IJC    , IJC,
+     /*18*/ IJC, IJC, IJC        , IJC, IJC        , IJC, IJC    , IJC,
 
-/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0      ,
-/*28*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , VEC    ,
-/*30*/ VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    ,
-/*38*/ VHC    , VHC    , 0      , 0      , 0      , 0      , 0      , 0      ,
+     /*20*/ 0  , 0  , NFP|VEC|IJC, 0  , 0          , 0  , 0      , 0  ,
+     /*28*/ 0  , 0  , 0          , 0  , 0          , 0  , 0      , VEC,
+     /*30*/ VHC, VHC, VHC        , VHC, VHC        , VHC, VHC    , VHC,
+     /*38*/ VHC, VHC, 0          , 0  , 0          , 0  , 0      , 0  ,
 
-/*40*/ 0      , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , 0      ,
-/*48*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
-/*50*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
-/*58*/ 0      , 0      , 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      ,
+     /*40*/ 0  , VHC, VHC        , VHC, VHC        , VHC, VHC    , 0  ,
+     /*48*/ 0  , 0  , 0          , 0  , 0          , 0  , 0      , 0  ,
+     /*50*/ 0  , 0  , 0          , 0  , 0          , 0  , 0      , 0  ,
+     /*58*/ 0  , 0  , 0          , 0  , NFP|VEC|IJC, 0  , 0      , 0  ,
 
-/*60*/ 0      , VHC    , VEC|VHC, VHC    , VHC    , VHC    , VEC|VHC, 0      ,
-/*68*/ 0      , 0      , 0      , 0      , 0      , 0      , VEC    , 0      ,
-/*70*/ 0      , 0      , VEC    , 0      , VEC    , 0      , 0      , 0      ,
-/*78*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
+     /*60*/ 0  , VHC, VEC|VHC    , VHC, VHC        , VHC, VEC|VHC, 0  ,
+     /*68*/ 0  , 0  , 0          , 0  , 0          , 0  , VEC    , 0  ,
+     /*70*/ 0  , 0  , VEC        , 0  , VEC        , 0  , 0      , 0  ,
+     /*78*/ 0  , 0  , 0          , 0  , 0          , 0  , 0      , 0  ,
 
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
 
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
 
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
 
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
-       NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC,
+            NUC, NUC, NUC        , NUC, NUC        , NUC, NUC    , NUC
 };
 
 /** process a variable length utf8 encoded codepoint.
@@ -280,8 +280,8 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
             const unsigned char * p;
             size_t len;
 
-            if ((lexer->bufInUse && yajl_buf_len(lexer->buf) &&
-                 lexer->bufOff < yajl_buf_len(lexer->buf)))
+            if (lexer->bufInUse && yajl_buf_len(lexer->buf) &&
+                 lexer->bufOff < yajl_buf_len(lexer->buf))
             {
                 p = ((const unsigned char *) yajl_buf_data(lexer->buf) +
                      (lexer->bufOff));
@@ -356,7 +356,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
         /* accept it, and move on */
     }
   finish_string_lex:
-    /* tell our buddy, the parser, wether he needs to process this string
+    /* tell our buddy, the parser, whether he needs to process this string
      * again */
     if (hasEscapes && tok == yajl_tok_string) {
         tok = yajl_tok_string_with_escapes;
@@ -500,7 +500,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
              size_t jsonTextLen, size_t * offset,
              const unsigned char ** outBuf, size_t * outLen)
 {
-    yajl_tok tok = yajl_tok_error;
+    yajl_tok tok;
     unsigned char c;
     size_t startOffset = *offset;
 
@@ -625,9 +625,6 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 tok = yajl_lex_comment(lexer, (const unsigned char *) jsonText,
                                        jsonTextLen, offset);
                 if (tok == yajl_tok_comment) {
-                    /* "error" is silly, but that's the initial
-                     * state of tok.  guilty until proven innocent. */
-                    tok = yajl_tok_error;
                     yajl_buf_clear(lexer->buf);
                     lexer->bufInUse = 0;
                     startOffset = *offset;
@@ -647,8 +644,10 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     /* need to append to buffer if the buffer is in use or
      * if it's an EOF token */
     if (tok == yajl_tok_eof || lexer->bufInUse) {
-        if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
-        lexer->bufInUse = 1;
+        if (!lexer->bufInUse) {
+            yajl_buf_clear(lexer->buf);
+            lexer->bufInUse = 1;
+        }
         yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
         lexer->bufOff = 0;
 
