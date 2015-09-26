@@ -98,7 +98,10 @@ main(int argc, char ** argv)
     }
 
     /* parse any remaining buffered data */
-    stat = yajl_complete_parse(hand);
+    if (stat == yajl_status_ok) 
+    {
+        stat = yajl_complete_parse(hand);
+    }
 
     if (stat != yajl_status_ok)
     {
