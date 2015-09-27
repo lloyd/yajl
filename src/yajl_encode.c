@@ -113,17 +113,19 @@ static void Utf32toUtf8(unsigned int codepoint, char * utf8Buf)
     }
 }
 
-void yajl_string_decode(yajl_buf buf, const unsigned char * str,
-                        size_t len)
+int yajl_string_decode(yajl_buf buf, const unsigned char * str,
+                       size_t len)
 {
     size_t beg = 0;
-    size_t end = 0;    
+    size_t end = 0;
 
     while (end < len) {
         if (str[end] == '\\') {
             char utf8Buf[5];
             const char * unescaped = "?";
-            yajl_buf_append(buf, str + beg, end - beg);
+            if (yajl_buf_append(buf, str + beg, end - beg) < 0)
+                goto err;
+
             switch (str[++end]) {
                 case 'r': unescaped = "\r"; break;
                 case 'n': unescaped = "\n"; break;
@@ -144,8 +146,8 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                             unsigned int surrogate = 0;
                             hexToDigit(&surrogate, str + end + 2);
                             codepoint =
-                                (((codepoint & 0x3F) << 10) | 
-                                 ((((codepoint >> 6) & 0xF) + 1) << 16) | 
+                                (((codepoint & 0x3F) << 10) |
+                                 ((((codepoint >> 6) & 0xF) + 1) << 16) |
                                  (surrogate & 0x3FF));
                             end += 5;
                         } else {
@@ -153,12 +155,14 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                             break;
                         }
                     }
-                    
+
                     Utf32toUtf8(codepoint, utf8Buf);
                     unescaped = utf8Buf;
 
                     if (codepoint == 0) {
-                        yajl_buf_append(buf, unescaped, 1);
+                        if (yajl_buf_append(buf, unescaped, 1) < 0)
+                            goto err;
+
                         beg = ++end;
                         continue;
                     }
@@ -168,13 +172,22 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                 default:
                     assert("this should never happen" == NULL);
             }
-            yajl_buf_append(buf, unescaped, (unsigned int)strlen(unescaped));
+            if (yajl_buf_append(buf, unescaped,
+                                (unsigned int)strlen(unescaped)) < 0)
+                goto err;
+
             beg = ++end;
         } else {
             end++;
         }
     }
-    yajl_buf_append(buf, str + beg, end - beg);
+
+    if (yajl_buf_append(buf, str + beg, end - beg) < 0)
+      goto err;
+
+    return 0;
+ err:
+    return -1;
 }
 
 #define ADV_PTR s++; if (!(len--)) return 0;

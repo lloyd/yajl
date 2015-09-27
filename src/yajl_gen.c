@@ -265,6 +265,7 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, "\"", 1);
     yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
+
     g->print(g->ctx, "\"", 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;
