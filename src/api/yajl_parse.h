@@ -219,6 +219,9 @@ extern "C" {
     /** free an error returned from yajl_get_error */
     YAJL_API void yajl_free_error(yajl_handle hand, unsigned char * str);
 
+    /** Returns 1 if the yajl_handle is in a terminal state. 0 otherwise */
+    YAJL_API int yajl_is_terminal(yajl_handle hand);
+
 #ifdef __cplusplus
 }
 #endif
