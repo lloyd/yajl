@@ -102,8 +102,8 @@ struct yajl_val_s
  * Parses an null-terminated string containing JSON data and returns a pointer
  * to the top-level value (root of the parse tree).
  *
- * \param input              Pointer to a null-terminated utf8 string containing
- *                           JSON data.
+ * \param input              Pointer to a utf8 string containing JSON data.
+ * \param size               Size of the JSON string
  * \param error_buffer       Pointer to a buffer in which an error message will
  *                           be stored if \em yajl_tree_parse fails, or
  *                           \c NULL. The buffer will be initialized before
@@ -118,8 +118,10 @@ struct yajl_val_s
  * null terminated message describing the error in more detail is stored in
  * \em error_buffer if it is not \c NULL.
  */
-YAJL_API yajl_val yajl_tree_parse (const char *input,
+YAJL_API yajl_val yajl_tree_nparse (const char *input, size_t size,
                                    char *error_buffer, size_t error_buffer_size);
+#define yajl_tree_parse(input, error_buffer, error_buffer_size) \
+    yajl_tree_nparse((input), strlen(input), (error_buffer), (error_buffer_size))
 
 
 /**
