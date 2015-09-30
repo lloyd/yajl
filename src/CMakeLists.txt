@@ -66,8 +66,9 @@ CONFIGURE_FILE(yajl.pc.cmake ${shareDir}/yajl.pc)
 # copy public headers to output directory
 FOREACH (header ${PUB_HDRS})
   SET (header ${CMAKE_CURRENT_SOURCE_DIR}/${header})
+  GET_FILENAME_COMPONENT(headerName ${header} NAME)
 
-  EXEC_PROGRAM(${CMAKE_COMMAND} ARGS -E copy_if_different ${header} ${incDir})
+  CONFIGURE_FILE(${header} ${incDir}/${headerName} COPYONLY)
 
   ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
