@@ -64,7 +64,7 @@ small, and flexible.  My hope is that YAJL will perform comparably to
 the fastest JSON parser out there.
 
 YAJL should impose both minimal CPU and memory requirements on your
-application.
+application, and it is thread-safe.
 
 ## YAJL is tiny.
 
