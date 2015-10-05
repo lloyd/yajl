@@ -218,9 +218,13 @@ yajl_gen_integer(yajl_gen g, long long int number)
 }
 
 #if defined(_WIN32) || defined(WIN32)
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+// isnan() and isinf() are already included
+#else
 #include <float.h>
 #define isnan _isnan
 #define isinf !_finite
+#endif
 #endif
 
 yajl_gen_status

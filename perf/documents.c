@@ -1411,7 +1411,7 @@ const char ** get_doc(int i)
 
 unsigned int doc_size(int i) 
 {
-    int sz = 0;
+    size_t sz = 0;
     const char ** p = get_doc(i);
     do { sz += strlen(*p); } while(*(++p));
     return sz;
