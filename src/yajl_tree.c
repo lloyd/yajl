@@ -242,8 +242,8 @@ static int context_add_value (context_t *ctx, yajl_val v)
                               "Object key is not a string (%#04x)",
                               v->type);
 
-            ctx->stack->key = v->u.string;
-            v->u.string = NULL;
+            ctx->stack->key = v->u.string.s;
+            v->u.string.s = NULL;
             free(v);
             return (0);
         }
@@ -277,14 +277,15 @@ static int handle_string (void *ctx,
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    v->u.string = malloc (string_length + 1);
-    if (v->u.string == NULL)
+    v->u.string.s = malloc (string_length + 1);
+    if (v->u.string.s == NULL)
     {
         free (v);
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
     }
-    memcpy(v->u.string, string, string_length);
-    v->u.string[string_length] = 0;
+    memcpy(v->u.string.s, string, string_length);
+    v->u.string.s[string_length] = 0;
+    v->u.string.len = string_length;
 
     return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
@@ -480,7 +481,7 @@ void yajl_tree_free (yajl_val v)
 
     if (YAJL_IS_STRING(v))
     {
-        free(v->u.string);
+        free(v->u.string.s);
         free(v);
     }
     else if (YAJL_IS_NUMBER(v))
