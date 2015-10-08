@@ -68,6 +68,13 @@ typedef struct
     void * ctx;
 } yajl_alloc_funcs;
 
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+typedef enum {
+    yajl_double_quote = 1,
+    yajl_single_quote
+} yajl_quote_type;
+#endif
+
 #ifdef __cplusplus
 }
 #endif

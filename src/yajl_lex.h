@@ -114,4 +114,8 @@ size_t yajl_lex_current_line(yajl_lexer lexer);
  *  \n or \r */
 size_t yajl_lex_current_char(yajl_lexer lexer);
 
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+yajl_quote_type yajl_lex_current_quote(yajl_lexer lexer);
+#endif
+
 #endif

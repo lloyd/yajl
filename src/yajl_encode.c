@@ -54,6 +54,9 @@ yajl_string_encode(const yajl_print_t print,
              */
             case '/': if (escape_solidus) escaped = "\\/"; break;
             case '"': escaped = "\\\""; break;
+            #ifdef YAJL_ALLOW_SINGLE_QUOTES
+            case '\'': escaped = "\\'"; break;
+            #endif
             case '\f': escaped = "\\f"; break;
             case '\b': escaped = "\\b"; break;
             case '\t': escaped = "\\t"; break;
@@ -130,6 +133,9 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                 case '\\': unescaped = "\\"; break;
                 case '/': unescaped = "/"; break;
                 case '"': unescaped = "\""; break;
+                #ifdef YAJL_ALLOW_SINGLE_QUOTES
+                case '\'': unescaped = "\'"; break;
+                #endif
                 case 'f': unescaped = "\f"; break;
                 case 'b': unescaped = "\b"; break;
                 case 't': unescaped = "\t"; break;

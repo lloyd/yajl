@@ -251,8 +251,11 @@ yajl_gen_number(yajl_gen g, const char * s, size_t l)
 }
 
 yajl_gen_status
-yajl_gen_string(yajl_gen g, const unsigned char * str,
-                size_t len)
+yajl_gen_string(yajl_gen g, const unsigned char * str, size_t len
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+                , yajl_quote_type quote
+#endif
+)
 {
     // if validation is enabled, check that the string is valid utf8
     // XXX: This checking could be done a little faster, in the same pass as
@@ -263,9 +266,14 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
         }
     }
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
-    g->print(g->ctx, "\"", 1);
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+    char *qstr = (quote == yajl_single_quote) ? "'" : "\"";
+#else
+    static char * const qstr = "\"";
+#endif
+    g->print(g->ctx, qstr, 1);
     yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
-    g->print(g->ctx, "\"", 1);
+    g->print(g->ctx, qstr, 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -286,7 +294,7 @@ yajl_gen_bool(yajl_gen g, int boolean)
 {
     const char * val = boolean ? "true" : "false";
 
-	ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, val, (unsigned int)strlen(val));
     APPENDED_ATOM;
     FINAL_NEWLINE;

@@ -91,6 +91,11 @@ struct yajl_lexer_t {
     unsigned int validateUTF8;
 
     yajl_alloc_funcs * alloc;
+    
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+    /* current quote type */
+    yajl_quote_type quote;
+#endif
 };
 
 #define readChar(lxr, txt, off)                      \
@@ -99,6 +104,17 @@ struct yajl_lexer_t {
      ((txt)[(*(off))++]))
 
 #define unreadChar(lxr, off) ((*(off) > 0) ? (*(off))-- : ((lxr)->bufOff--))
+
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+    #define isQuote(ch) (ch == '"' || ch == '\'')
+    #define quoteType(ch) ((ch == '"') ? yajl_double_quote : yajl_single_quote)
+#endif
+
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+    #define isClosingQuote(ch) (isQuote(ch) && quoteType(ch) == lexer->quote)
+#else
+    #define isClosingQuote(ch) (ch == '"')
+#endif
 
 yajl_lexer
 yajl_lex_alloc(yajl_alloc_funcs * alloc,
@@ -141,8 +157,11 @@ static const char charLookupTable[256] =
 /*08*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*10*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*18*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
-
-/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0      ,
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , NFP|VEC|IJC,
+#else
+/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0,
+#endif
 /*28*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , VEC    ,
 /*30*/ VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    ,
 /*38*/ VHC    , VHC    , 0      , 0      , 0      , 0      , 0      , 0      ,
@@ -252,11 +271,20 @@ if (*offset >= jsonTextLen) { \
  *  be skipped.
  * (lth) hi world, any thoughts on how to make this routine faster? */
 static size_t
-yajl_string_scan(const unsigned char * buf, size_t len, int utf8check)
+yajl_string_scan(const unsigned char * buf, size_t len, int utf8check
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+                 , yajl_quote_type quote
+#endif
+)
 {
     unsigned char mask = IJC|NFP|(utf8check ? NUC : 0);
     size_t skip = 0;
+    #ifdef YAJL_ALLOW_SINGLE_QUOTES
+    while (skip < len && (!(charLookupTable[*buf] & mask) ||
+                          (isQuote(*buf) && quoteType(*buf) != quote)))
+    #else
     while (skip < len && !(charLookupTable[*buf] & mask))
+    #endif
     {
         skip++;
         buf++;
@@ -286,13 +314,23 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
                 p = ((const unsigned char *) yajl_buf_data(lexer->buf) +
                      (lexer->bufOff));
                 len = yajl_buf_len(lexer->buf) - lexer->bufOff;
+                #ifdef YAJL_ALLOW_SINGLE_QUOTES
+                lexer->bufOff += yajl_string_scan(p, len, lexer->validateUTF8,
+                                                  lexer->quote);
+                #else
                 lexer->bufOff += yajl_string_scan(p, len, lexer->validateUTF8);
+                #endif
             }
             else if (*offset < jsonTextLen)
             {
                 p = jsonText + *offset;
                 len = jsonTextLen - *offset;
+                #ifdef YAJL_ALLOW_SINGLE_QUOTES
+                *offset += yajl_string_scan(p, len, lexer->validateUTF8,
+                                            lexer->quote);
+                #else
                 *offset += yajl_string_scan(p, len, lexer->validateUTF8);
+                #endif
             }
         }
 
@@ -301,7 +339,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
         curChar = readChar(lexer, jsonText, offset);
 
         /* quote terminates */
-        if (curChar == '"') {
+        if (isClosingQuote(curChar)) {
             tok = yajl_tok_string;
             break;
         }
@@ -510,6 +548,9 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     for (;;) {
         assert(*offset <= jsonTextLen);
 
+        #ifdef YAJL_ALLOW_SINGLE_QUOTES
+        lexer->quote = 0;
+        #endif
         if (*offset >= jsonTextLen) {
             tok = yajl_tok_eof;
             goto lexed;
@@ -593,7 +634,13 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 tok = yajl_tok_null;
                 goto lexed;
             }
+            #ifdef YAJL_ALLOW_SINGLE_QUOTES
+            case '\'':
+            #endif
             case '"': {
+                #ifdef YAJL_ALLOW_SINGLE_QUOTES
+                lexer->quote = quoteType(c);
+                #endif
                 tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
                                       jsonTextLen, offset);
                 goto lexed;
@@ -761,3 +808,10 @@ yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
 
     return tok;
 }
+
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+yajl_quote_type yajl_lex_current_quote(yajl_lexer lexer)
+{
+    return lexer->quote;
+}
+#endif

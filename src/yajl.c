@@ -71,7 +71,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
     hand->lexer = NULL; 
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
-    hand->flags	    = 0;
+    hand->flags = 0;
     yajl_bs_init(hand->stateStack, &(hand->alloc));
     yajl_bs_push(hand->stateStack, yajl_state_start);
 
@@ -91,6 +91,7 @@ yajl_config(yajl_handle h, yajl_option opt, ...)
         case yajl_allow_trailing_garbage:
         case yajl_allow_multiple_values:
         case yajl_allow_partial_values:
+        case yajl_allow_trailing_separator:
             if (va_arg(ap, int)) h->flags |= opt;
             else h->flags &= ~opt;
             break;

@@ -83,12 +83,22 @@ extern "C" {
 
         /** strings are returned as pointers into the JSON text when,
          * possible, as a result, they are _not_ null padded */
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+        int (* yajl_string)(void * ctx, const unsigned char * stringVal,
+                            size_t stringLen, yajl_quote_type quote);
+#else
         int (* yajl_string)(void * ctx, const unsigned char * stringVal,
                             size_t stringLen);
+#endif
 
         int (* yajl_start_map)(void * ctx);
+#ifdef YAJL_ALLOW_SINGLE_QUOTES
+        int (* yajl_map_key)(void * ctx, const unsigned char * key,
+                             size_t stringLen, yajl_quote_type quote);
+#else
         int (* yajl_map_key)(void * ctx, const unsigned char * key,
                              size_t stringLen);
+#endif
         int (* yajl_end_map)(void * ctx);
 
         int (* yajl_start_array)(void * ctx);
@@ -156,7 +166,11 @@ extern "C" {
          * yajl will enter an error state (premature EOF).  Setting this
          * flag suppresses that check and the corresponding error.
          */
-        yajl_allow_partial_values = 0x10
+        yajl_allow_partial_values = 0x10,
+        /**
+         * Allow a comma trailing in the last element of array (or map)
+         */
+        yajl_allow_trailing_separator = 0x20
     } yajl_option;
 
     /** allow the modification of parser options subsequent to handle
