@@ -142,7 +142,7 @@ static const char charLookupTable[256] =
 /*10*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*18*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 
-/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0      ,
+/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , NFP|VEC|IJC      ,
 /*28*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , VEC    ,
 /*30*/ VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    ,
 /*38*/ VHC    , VHC    , 0      , 0      , 0      , 0      , 0      , 0      ,
@@ -301,7 +301,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
         curChar = readChar(lexer, jsonText, offset);
 
         /* quote terminates */
-        if (curChar == '"') {
+        if (curChar == '"' || curChar == '\'') {
             tok = yajl_tok_string;
             break;
         }
@@ -594,6 +594,11 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 goto lexed;
             }
             case '"': {
+                tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
+                                      jsonTextLen, offset);
+                goto lexed;
+            }
+            case '\'': {
                 tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
                                       jsonTextLen, offset);
                 goto lexed;
