@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\yajl.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_alloc.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_buf.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_encode.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_gen.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_lex.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_parser.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_tree.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\yajl_version.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\api\yajl_common.h">
+      <Filter>headers\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\api\yajl_gen.h">
+      <Filter>headers\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\api\yajl_parse.h">
+      <Filter>headers\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\api\yajl_tree.h">
+      <Filter>headers\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\yajl_alloc.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\yajl_buf.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\yajl_encode.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\yajl_lex.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\yajl_parser.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{59fbff77-85c8-4478-b904-18265db276c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{70671fc0-6f54-4f0e-b0ee-3aecc18ff4f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\api">
+      <UniqueIdentifier>{37d633ed-0d7f-488e-8f78-aaf790d6e1a1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
