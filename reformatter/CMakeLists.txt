@@ -26,7 +26,7 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(json_reformat ${SRCS})
 
-TARGET_LINK_LIBRARIES(json_reformat yajl_s)
+TARGET_LINK_LIBRARIES(json_reformat yajl_s m)
 
 # In some environments, we must explicitly link libm (like qnx,
 # thanks @shahbag)
