@@ -38,6 +38,7 @@ SET(LIBRARY_OUTPUT_PATH ${libDir})
 ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
 SET_TARGET_PROPERTIES(yajl_s PROPERTIES OUTPUT_NAME yajl)
 
+IF(BUILD_SHARED_LIBS)
 ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
 
 #### setup shared library version number
@@ -45,6 +46,7 @@ SET_TARGET_PROPERTIES(yajl PROPERTIES
                       DEFINE_SYMBOL YAJL_SHARED
                       SOVERSION ${YAJL_MAJOR}
                       VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
+ENDIF(BUILD_SHARED_LIBS)
 
 #### ensure a .dylib has correct absolute installation paths upon installation
 IF(APPLE)
@@ -78,10 +80,12 @@ INCLUDE_DIRECTORIES(${incDir}/..)
 
 # at build time you may specify the cmake variable LIB_SUFFIX to handle
 # 64-bit systems which use 'lib64'
+IF(BUILD_SHARED_LIBS)
 INSTALL(TARGETS yajl
         RUNTIME DESTINATION lib${LIB_SUFFIX}
         LIBRARY DESTINATION lib${LIB_SUFFIX}
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
+ENDIF(BUILD_SHARED_LIBS)
 INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
 INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
 INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
