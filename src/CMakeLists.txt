@@ -30,13 +30,15 @@ ADD_DEFINITIONS(-DYAJL_BUILD)
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include/yajl)
-SET (shareDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/share/pkgconfig)
+SET (pcDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib${LIB_SUFFIX}/pkgconfig)
 
 # set the output path for libraries
 SET(LIBRARY_OUTPUT_PATH ${libDir})
 
 ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
+SET_TARGET_PROPERTIES(yajl_s PROPERTIES OUTPUT_NAME yajl)
 
+IF(BUILD_SHARED_LIBS)
 ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
 
 #### setup shared library version number
@@ -51,6 +53,7 @@ IF(APPLE)
   SET_TARGET_PROPERTIES(yajl PROPERTIES
                         INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 ENDIF(APPLE)
+ENDIF(BUILD_SHARED_LIBS)
 
 #### build up an sdk as a post build step
 
@@ -61,7 +64,7 @@ FILE(MAKE_DIRECTORY ${incDir})
 # generate build-time source
 SET(dollar $)
 CONFIGURE_FILE(api/yajl_version.h.cmake ${incDir}/yajl_version.h)
-CONFIGURE_FILE(yajl.pc.cmake ${shareDir}/yajl.pc)
+CONFIGURE_FILE(yajl.pc.cmake ${pcDir}/yajl.pc)
 
 # copy public headers to output directory
 FOREACH (header ${PUB_HDRS})
@@ -77,11 +80,13 @@ INCLUDE_DIRECTORIES(${incDir}/..)
 
 # at build time you may specify the cmake variable LIB_SUFFIX to handle
 # 64-bit systems which use 'lib64'
+IF(BUILD_SHARED_LIBS)
 INSTALL(TARGETS yajl
         RUNTIME DESTINATION lib${LIB_SUFFIX}
         LIBRARY DESTINATION lib${LIB_SUFFIX}
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
+ENDIF(BUILD_SHARED_LIBS)
 INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
 INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
 INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
-INSTALL(FILES ${shareDir}/yajl.pc DESTINATION share/pkgconfig)
+INSTALL(FILES ${pcDir}/yajl.pc DESTINATION lib${LIB_SUFFIX}/pkgconfig)
