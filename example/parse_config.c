@@ -38,13 +38,13 @@ main(void)
     if (rd == 0 && !feof(stdin)) {
         fprintf(stderr, "error encountered on file read\n");
         return 1;
-    } else if (rd >= sizeof(fileData) - 1) {
+    } else if (rd >= sizeof(fileData)) {
         fprintf(stderr, "config file too big\n");
         return 1;
     }
 
     /* we have the whole config file in memory.  let's parse it ... */
-    node = yajl_tree_parse((const char *) fileData, errbuf, sizeof(errbuf));
+    node = yajl_tree_parse_with_len((const char *)fileData, rd, errbuf, sizeof(errbuf));
 
     /* parse error handling */
     if (node == NULL) {
