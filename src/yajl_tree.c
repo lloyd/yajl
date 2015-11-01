@@ -456,7 +456,7 @@ yajl_val yajl_tree_get(yajl_val n, const char ** path, yajl_type type)
 {
     if (!path) return NULL;
     while (n && *path) {
-        size_t i;
+        unsigned int i;
         size_t len;
 
         if (n->type != yajl_t_object) return NULL;
