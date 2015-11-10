@@ -22,7 +22,7 @@
 
 /*
  * Implementation/performance notes.  If this were moved to a header
- * only implementation using #define's where possible we might be 
+ * only implementation using #define's where possible we might be
  * able to sqeeze a little performance out of the guy by killing function
  * call overhead.  YMMV.
  */
@@ -38,6 +38,9 @@ yajl_buf yajl_buf_alloc(yajl_alloc_funcs * alloc);
 
 /* free the buffer */
 void yajl_buf_free(yajl_buf buf);
+
+/* reset the buffer */
+void yajl_buf_reset(yajl_buf buf);
 
 /* append a number of bytes to the buffer */
 void yajl_buf_append(yajl_buf buf, const void * data, size_t len);

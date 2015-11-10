@@ -68,7 +68,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = NULL; 
+    hand->lexer = NULL;
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
     hand->flags	    = 0;
@@ -112,6 +112,17 @@ yajl_free(yajl_handle handle)
         handle->lexer = NULL;
     }
     YA_FREE(&(handle->alloc), handle);
+}
+
+void
+yajl_reset(yajl_handle handle)
+{
+    yajl_bs_reset(handle->stateStack);
+    yajl_bs_push(handle->stateStack, yajl_state_start);
+    yajl_buf_reset(handle->decodeBuf);
+    handle->bytesConsumed = 0;
+    if (handle->lexer != NULL)
+        yajl_lex_reset(handle->lexer);
 }
 
 yajl_status

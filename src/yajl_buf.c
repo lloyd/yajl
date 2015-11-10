@@ -33,7 +33,7 @@ static
 void yajl_buf_ensure_available(yajl_buf buf, size_t want)
 {
     size_t need;
-    
+
     assert(buf != NULL);
 
     /* first call */
@@ -66,6 +66,12 @@ void yajl_buf_free(yajl_buf buf)
     assert(buf != NULL);
     if (buf->data) YA_FREE(buf->alloc, buf->data);
     YA_FREE(buf->alloc, buf);
+}
+
+void yajl_buf_reset(yajl_buf buf)
+{
+    assert(buf != NULL);
+    buf->used = 0;
 }
 
 void yajl_buf_append(yajl_buf buf, const void * data, size_t len)
