@@ -121,6 +121,17 @@ yajl_lex_free(yajl_lexer lxr)
     return;
 }
 
+void
+yajl_lex_reset(yajl_lexer lxr)
+{
+    yajl_buf_reset(lxr->buf);
+    lxr->lineOff = 0;
+    lxr->charOff = 0;
+    lxr->bufOff = 0;
+    lxr->bufInUse = 0;
+    lxr->error = yajl_lex_e_ok;
+}
+
 /* a lookup table which lets us quickly determine three things:
  * VEC - valid escaped control char
  * note.  the solidus '/' may be escaped or not.
