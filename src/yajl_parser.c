@@ -39,7 +39,6 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
     long sign = 1;
     const unsigned char *pos = number;
     if (*pos == '-') { pos++; sign = -1; }
-    if (*pos == '+') { pos++; }
 
     while (pos < number + length) {
         if ( ret > MAX_VALUE_TO_MULTIPLY ) {
