@@ -214,6 +214,7 @@ yajl_gen_integer(yajl_gen g, long long int number)
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -237,6 +238,7 @@ yajl_gen_double(yajl_gen g, double number)
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -247,6 +249,7 @@ yajl_gen_number(yajl_gen g, const char * s, size_t l)
     g->print(g->ctx, s, l);
     APPENDED_ATOM;
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -268,6 +271,7 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
     g->print(g->ctx, "\"", 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -278,6 +282,7 @@ yajl_gen_null(yajl_gen g)
     g->print(g->ctx, "null", strlen("null"));
     APPENDED_ATOM;
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -290,6 +295,7 @@ yajl_gen_bool(yajl_gen g, int boolean)
     g->print(g->ctx, val, (unsigned int)strlen(val));
     APPENDED_ATOM;
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -303,6 +309,7 @@ yajl_gen_map_open(yajl_gen g)
     g->print(g->ctx, "{", 1);
     if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -317,6 +324,7 @@ yajl_gen_map_close(yajl_gen g)
     INSERT_WHITESPACE;
     g->print(g->ctx, "}", 1);
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -329,6 +337,7 @@ yajl_gen_array_open(yajl_gen g)
     g->print(g->ctx, "[", 1);
     if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
@@ -342,6 +351,7 @@ yajl_gen_array_close(yajl_gen g)
     INSERT_WHITESPACE;
     g->print(g->ctx, "]", 1);
     FINAL_NEWLINE;
+    ENSURE_VALID_STATE;
     return yajl_gen_status_ok;
 }
 
