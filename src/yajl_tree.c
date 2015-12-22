@@ -553,6 +553,7 @@ yajl_val yajl_tree_parse_file(FILE *fin, size_t bufSize,
                               char *error_buffer, size_t error_buffer_size)
 {
 	ytprc_t ytprc;
+	yajl_val root;
 
 	if(callbacks == NULL)
 		ytprc.callbacks = &yajl_std_callbacks;
@@ -566,7 +567,9 @@ yajl_val yajl_tree_parse_file(FILE *fin, size_t bufSize,
 	ytprc.eof = 0;
 	ytprc.ctx = fin;
 
+	root = yajl_tree_parse_read(&ytpr_callback_FILE, &ytprc, error_buffer, error_buffer_size);
+
 	free(ytprc.buffer);
 
-	return yajl_tree_parse_read(&ytpr_callback_FILE, &ytprc, error_buffer, error_buffer_size);
+	return root;
 }
