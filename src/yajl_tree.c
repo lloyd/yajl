@@ -496,12 +496,17 @@ yajl_val yajl_tree_parse_read(void (*pCallbackFn)(ytprc_t *), ytprc_t *pYtprc,
 		}
 	}
 
+	// In error case it keeps place where error was found.
+	size_t error_offset = yajl_get_bytes_consumed(handle);
+
 	status = yajl_complete_parse (handle);
 	if (status != yajl_status_ok)
 	{
 		if (error_buffer != NULL && error_buffer_size > 0)
-		{	char * internal_err_str = (char *) yajl_get_error(handle, 1, pYtprc->buffer, strlen((char *)pYtprc->buffer));
-
+		{
+			// Restore place where error was found.
+			handle->bytesConsumed = error_offset;
+			char * internal_err_str = (char *) yajl_get_error(handle, 1, pYtprc->buffer, strlen((char *) pYtprc->buffer));
 			snprintf(error_buffer, error_buffer_size, "%s", internal_err_str);
 			YA_FREE(&(handle->alloc), internal_err_str);
 		}
