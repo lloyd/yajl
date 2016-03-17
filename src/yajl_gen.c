@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 typedef enum {
     yajl_gen_start,
@@ -210,7 +211,11 @@ yajl_gen_integer(yajl_gen g, long long int number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+#ifdef _WIN32
+    sprintf(i, "%" PRId64, (int64_t) number);
+#else
     sprintf(i, "%lld", number);
+#endif
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
@@ -219,8 +224,12 @@ yajl_gen_integer(yajl_gen g, long long int number)
 
 #if defined(_WIN32) || defined(WIN32)
 #include <float.h>
+#ifndef isnan
 #define isnan _isnan
+#endif
+#ifndef isinf
 #define isinf !_finite
+#endif
 #endif
 
 yajl_gen_status
