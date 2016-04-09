@@ -26,7 +26,11 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(json_verify ${SRCS})
 
-TARGET_LINK_LIBRARIES(json_verify yajl_s)
+IF(BUILD_SHARED_LIBS)
+  TARGET_LINK_LIBRARIES(json_verify yajl)
+ELSE()
+  TARGET_LINK_LIBRARIES(json_verify yajl_s)
+ENDIF()
 
 # copy in the binary
 GET_TARGET_PROPERTY(binPath json_verify LOCATION)
