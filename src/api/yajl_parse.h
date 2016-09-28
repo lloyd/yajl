@@ -46,6 +46,28 @@ extern "C" {
     /** an opaque handle to a parser */
     typedef struct yajl_handle_t * yajl_handle;
 
+    /** callback type definitions */
+    typedef int (* yajl_null_t)(void * ctx);
+    typedef int (* yajl_boolean_t)(void * ctx, int boolVal);
+    typedef int (* yajl_integer_t)(void * ctx, long long integerVal);
+    typedef int (* yajl_double_t)(void * ctx, double doubleVal);
+    /** A callback which passes the string representation of the number
+     *  back to the client.  Will be used for all numbers when present */
+    typedef int (* yajl_number_t)(void * ctx, const char * numberVal,
+                                  size_t numberLen);
+    /** strings are returned as pointers into the JSON text when,
+     * possible, as a result, they are _not_ null padded */
+    typedef int (* yajl_string_t)(void * ctx,
+                                  const unsigned char * stringVal,
+                                  size_t stringLen);
+    typedef int (* yajl_start_map_t)(void * ctx);
+    typedef int (* yajl_map_key_t)(void * ctx, const unsigned char * key,
+                                   size_t stringLen);
+    typedef int (* yajl_end_map_t)(void * ctx);
+
+    typedef int (* yajl_start_array_t)(void * ctx);
+    typedef int (* yajl_end_array_t)(void * ctx);
+
     /** yajl is an event driven parser.  this means as json elements are
      *  parsed, you are called back to do something with the data.  The
      *  functions in this table indicate the various events for which
@@ -72,27 +94,22 @@ extern "C" {
      *  }
      */
     typedef struct {
-        int (* yajl_null)(void * ctx);
-        int (* yajl_boolean)(void * ctx, int boolVal);
-        int (* yajl_integer)(void * ctx, long long integerVal);
-        int (* yajl_double)(void * ctx, double doubleVal);
-        /** A callback which passes the string representation of the number
-         *  back to the client.  Will be used for all numbers when present */
-        int (* yajl_number)(void * ctx, const char * numberVal,
-                            size_t numberLen);
-
+        yajl_null_t yajl_null;
+        yajl_boolean_t yajl_boolean;
+        yajl_integer_t yajl_integer;
+        yajl_double_t yajl_double;
+        /** A callback which passes the string representation of the
+         * number back to the client.  Will be used for all numbers when
+         * present */
+        yajl_number_t yajl_number;
         /** strings are returned as pointers into the JSON text when,
          * possible, as a result, they are _not_ null padded */
-        int (* yajl_string)(void * ctx, const unsigned char * stringVal,
-                            size_t stringLen);
-
-        int (* yajl_start_map)(void * ctx);
-        int (* yajl_map_key)(void * ctx, const unsigned char * key,
-                             size_t stringLen);
-        int (* yajl_end_map)(void * ctx);
-
-        int (* yajl_start_array)(void * ctx);
-        int (* yajl_end_array)(void * ctx);
+        yajl_string_t yajl_string;
+        yajl_start_map_t yajl_start_map;
+        yajl_map_key_t yajl_map_key;
+        yajl_end_map_t yajl_end_map;
+        yajl_start_array_t yajl_start_array;
+        yajl_end_array_t yajl_end_array;
     } yajl_callbacks;
 
     /** allocate a parser handle
