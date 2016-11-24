@@ -43,9 +43,12 @@ typedef struct yajl_bytestack_t
     }                                           \
 
 
-/* initialize a bytestack */
+/* free dynamically allocated memory inside a byte stack */
 #define yajl_bs_free(obs)                 \
     if ((obs).stack) (obs).yaf->free((obs).yaf->ctx, (obs).stack);
+
+#define yajl_bs_flush(obs)                                         \
+    (obs).used = 0;
 
 #define yajl_bs_current(obs)               \
     (assert((obs).used > 0), (obs).stack[(obs).used - 1])

@@ -68,7 +68,7 @@ yajl_alloc(const yajl_callbacks * callbacks,
 
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = NULL; 
+    hand->lexer = NULL;
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
     hand->flags	    = 0;
@@ -76,6 +76,26 @@ yajl_alloc(const yajl_callbacks * callbacks,
     yajl_bs_push(hand->stateStack, yajl_state_start);
 
     return hand;
+}
+
+void
+yajl_reset(yajl_handle h)
+{
+    // reset the state stack to start
+    yajl_bs_flush(h->stateStack);
+    yajl_bs_push(h->stateStack, yajl_state_start);
+
+    // reset bytesConsumed
+    h->bytesConsumed = 0;
+
+    // clear decoding buf (note: not strictly neccesary, as
+    // this buffer is cleared on demand and reused)
+    yajl_buf_clear(h->decodeBuf);
+
+    // reset lexer state
+    if (h->lexer != NULL) {
+        yajl_lex_reset(h->lexer);
+    }
 }
 
 int
