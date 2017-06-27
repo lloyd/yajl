@@ -524,16 +524,16 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
 
         switch (c) {
             case '{':
-                tok = yajl_tok_left_bracket;
-                goto lexed;
-            case '}':
-                tok = yajl_tok_right_bracket;
-                goto lexed;
-            case '[':
                 tok = yajl_tok_left_brace;
                 goto lexed;
-            case ']':
+            case '}':
                 tok = yajl_tok_right_brace;
+                goto lexed;
+            case '[':
+                tok = yajl_tok_left_bracket;
+                goto lexed;
+            case ']':
+                tok = yajl_tok_right_bracket;
                 goto lexed;
             case ',':
                 tok = yajl_tok_comma;
