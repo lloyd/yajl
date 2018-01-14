@@ -107,10 +107,6 @@ struct yajl_lexer_t {
      * multiple chunks */
     yajl_buf buf;
 
-    /* in the case where we have data in the lexBuf, bufOff holds
-     * the current offset into the lexBuf. */
-    size_t bufOff;
-
     /* instead of former bufInUse flag, remember what we did so far */
     yajl_lex_state state;
     unsigned int substate;
@@ -730,8 +726,6 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             yajl_buf_clear(lexer->buf);
         }
         yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
-        lexer->bufOff = 0;
-
         if (tok != yajl_tok_eof) {
             if (tok != yajl_tok_error) { /* Nick added this test, see below */
                 *outBuf = yajl_buf_data(lexer->buf);
@@ -833,7 +827,6 @@ yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
     const unsigned char * outBuf;
     size_t outLen;
     size_t bufLen = yajl_buf_len(lexer->buf);
-    size_t bufOff = lexer->bufOff;
     yajl_lex_state state = lexer->state;
     int substate = lexer->substate;
     int subsubstate = lexer->subsubstate;
@@ -842,7 +835,6 @@ yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
     tok = yajl_lex_lex(lexer, jsonText, jsonTextLen, &offset,
                        &outBuf, &outLen);
 
-    lexer->bufOff = bufOff;
     lexer->state = state;
     lexer->substate = substate;
     lexer->subsubstate = subsubstate;
