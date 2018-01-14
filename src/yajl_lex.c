@@ -60,10 +60,40 @@ tokToStr(yajl_tok tok)
  * When we lex to end of input string before end of token is hit, we
  * copy all of the input text composing the token into our lexBuf.
  *
- * Every time we read a character, we do so through the readChar function.
- * readChar's responsibility is to handle pulling all chars from the buffer
- * before pulling chars from input text
+ * Every time we read a character, we first check for end of input, and if
+ * so we return yajl_tok_eof after setting up some state so we can continue.
+ * The outer lexer routine is responsible for the lexBuf copying and trying
+ * to avoid the lexBuf copy in the common case where no end of input seen.
+ * It is also responsible for resetting stale states after a complete token.
+ *
+ * There are 3 levels: state (an enum), substate and subsubstate (integers).
+ * This roughly corresponds to the amount of subroutine nesting in the lexer,
+ * but an extra level of state can be used as a loop counter instead of a
+ * subroutine state where necessary (in the expect and the uNNNN routines).
+ *
+ * Parsing the state is done on entry to the subroutine using switch / goto.
+ * A convenience macro CHECK_EOF() is provided, similar to the macros used
+ * when it was done the old way (by re-scanning the text instead of by state),
+ * it sets the given state variable on EOF, and defines a label for re-entry.
+ *
+ * Be careful that the subroutines don't rely on any local variable state.
  */
+
+typedef enum {
+    state_start,
+    state_expect,
+    state_string,
+    state_number,
+    state_comment
+} yajl_lex_state;
+
+#define CHECK_EOF(state, n) \
+if (*offset >= jsonTextLen) { \
+    (state) = n; \
+    return yajl_tok_eof; \
+entry_##n: \
+    ; \
+}
 
 struct yajl_lexer_t {
     /* the overal line and char offset into the data */
@@ -81,8 +111,11 @@ struct yajl_lexer_t {
      * the current offset into the lexBuf. */
     size_t bufOff;
 
-    /* are we using the lex buf? */
-    unsigned int bufInUse;
+    /* instead of former bufInUse flag, remember what we did so far */
+    yajl_lex_state state;
+    unsigned int substate;
+    unsigned int subsubstate;
+    yajl_tok resultTok; /* optional scratch area to track tok to return */
 
     /* shall we allow comments? */
     unsigned int allowComments;
@@ -93,12 +126,8 @@ struct yajl_lexer_t {
     yajl_alloc_funcs * alloc;
 };
 
-#define readChar(lxr, txt, off)                      \
-    (((lxr)->bufInUse && yajl_buf_len((lxr)->buf) && lxr->bufOff < yajl_buf_len((lxr)->buf)) ? \
-     (*((const unsigned char *) yajl_buf_data((lxr)->buf) + ((lxr)->bufOff)++)) : \
-     ((txt)[(*(off))++]))
-
-#define unreadChar(lxr, off) ((*(off) > 0) ? (*(off))-- : ((lxr)->bufOff--))
+#define readChar(lxr, txt, off) ((txt)[(*(off))++])
+#define unreadChar(lxr, off) ((*(off))--)
 
 yajl_lexer
 yajl_lex_alloc(yajl_alloc_funcs * alloc,
@@ -189,45 +218,64 @@ static const char charLookupTable[256] =
  *
  *  NOTE: on error the offset will point to the first char of the
  *  invalid utf8 */
-#define UTF8_CHECK_EOF if (*offset >= jsonTextLen) { return yajl_tok_eof; }
 
 static yajl_tok
 yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
                    size_t jsonTextLen, size_t * offset,
                    unsigned char curChar)
 {
+    switch (lexer->subsubstate) {
+    case 0:
+        break;
+    case 1:
+        goto entry_1;
+    case 2:
+        goto entry_2;
+    case 3:
+        goto entry_3;
+    case 4:
+        goto entry_4;
+    case 5:
+        goto entry_5;
+    case 6:
+        goto entry_6;
+    default:
+        assert(false);
+    }
+
     if (curChar <= 0x7f) {
         /* single byte */
         return yajl_tok_string;
     } else if ((curChar >> 5) == 0x6) {
         /* two byte */
-        UTF8_CHECK_EOF;
+        CHECK_EOF(lexer->subsubstate, 1);
         curChar = readChar(lexer, jsonText, offset);
         if ((curChar >> 6) == 0x2) return yajl_tok_string;
     } else if ((curChar >> 4) == 0x0e) {
         /* three byte */
-        UTF8_CHECK_EOF;
+        CHECK_EOF(lexer->subsubstate, 2);
         curChar = readChar(lexer, jsonText, offset);
         if ((curChar >> 6) == 0x2) {
-            UTF8_CHECK_EOF;
+            CHECK_EOF(lexer->subsubstate, 3);
             curChar = readChar(lexer, jsonText, offset);
             if ((curChar >> 6) == 0x2) return yajl_tok_string;
         }
     } else if ((curChar >> 3) == 0x1e) {
         /* four byte */
-        UTF8_CHECK_EOF;
+        CHECK_EOF(lexer->subsubstate, 4);
         curChar = readChar(lexer, jsonText, offset);
         if ((curChar >> 6) == 0x2) {
-            UTF8_CHECK_EOF;
+            CHECK_EOF(lexer->subsubstate, 5);
             curChar = readChar(lexer, jsonText, offset);
             if ((curChar >> 6) == 0x2) {
-                UTF8_CHECK_EOF;
+                CHECK_EOF(lexer->subsubstate, 6);
                 curChar = readChar(lexer, jsonText, offset);
                 if ((curChar >> 6) == 0x2) return yajl_tok_string;
             }
         }
     }
 
+    lexer->error = yajl_lex_string_invalid_utf8;
     return yajl_tok_error;
 }
 
@@ -241,11 +289,6 @@ yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
  * yajl_tok_error: embedded in the string were unallowable chars.  offset
  *               points to the offending char
  */
-#define STR_CHECK_EOF \
-if (*offset >= jsonTextLen) { \
-   tok = yajl_tok_eof; \
-   goto finish_string_lex; \
-}
 
 /** scan a string for interesting characters that might need further
  *  review.  return the number of chars that are uninteresting and can
@@ -268,27 +311,38 @@ static yajl_tok
 yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
                 size_t jsonTextLen, size_t * offset)
 {
-    yajl_tok tok = yajl_tok_error;
-    int hasEscapes = 0;
+    /*
+     * compiler isn't smart enough to figure out that yajl_lex_utf8_char()
+     * will not access curChar when we jump in from case 4 below, so we'll
+     * just initialize it here, it would be better to unread the first char
+     * of the UTF-8 sequence and let yajl_lex_utf8_char() read it by itself
+     */
+    unsigned char curChar = 0;
+
+    switch (lexer->substate) {
+    case 0:
+        break;
+    case 1:
+        goto entry_1;
+    case 2:
+        goto entry_2;
+    case 3:
+        goto entry_3;
+    case 4:
+        goto entry_utf8_char;
+    default:
+        assert(false);
+    }
+    lexer->resultTok = yajl_tok_string;
 
     for (;;) {
-        unsigned char curChar;
-
         /* now jump into a faster scanning routine to skip as much
          * of the buffers as possible */
         {
             const unsigned char * p;
             size_t len;
 
-            if ((lexer->bufInUse && yajl_buf_len(lexer->buf) &&
-                 lexer->bufOff < yajl_buf_len(lexer->buf)))
-            {
-                p = ((const unsigned char *) yajl_buf_data(lexer->buf) +
-                     (lexer->bufOff));
-                len = yajl_buf_len(lexer->buf) - lexer->bufOff;
-                lexer->bufOff += yajl_string_scan(p, len, lexer->validateUTF8);
-            }
-            else if (*offset < jsonTextLen)
+            if (*offset < jsonTextLen)
             {
                 p = jsonText + *offset;
                 len = jsonTextLen - *offset;
@@ -296,40 +350,40 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
             }
         }
 
-        STR_CHECK_EOF;
-
+        CHECK_EOF(lexer->substate, 1);
         curChar = readChar(lexer, jsonText, offset);
 
         /* quote terminates */
         if (curChar == '"') {
-            tok = yajl_tok_string;
-            break;
+            return lexer->resultTok; /* string with or without escapes */
         }
         /* backslash escapes a set of control chars, */
         else if (curChar == '\\') {
-            hasEscapes = 1;
-            STR_CHECK_EOF;
+            lexer->resultTok = yajl_tok_string_with_escapes;
 
             /* special case \u */
+            CHECK_EOF(lexer->substate, 2);
             curChar = readChar(lexer, jsonText, offset);
             if (curChar == 'u') {
-                unsigned int i = 0;
-
-                for (i=0;i<4;i++) {
-                    STR_CHECK_EOF;
+                for (
+                    lexer->subsubstate = 0;
+                    lexer->subsubstate < 4;
+                    lexer->subsubstate++
+                ) {
+                    CHECK_EOF(lexer->substate, 3);
                     curChar = readChar(lexer, jsonText, offset);
                     if (!(charLookupTable[curChar] & VHC)) {
                         /* back up to offending char */
                         unreadChar(lexer, offset);
                         lexer->error = yajl_lex_string_invalid_hex_char;
-                        goto finish_string_lex;
+                        return yajl_tok_error;
                     }
                 }
             } else if (!(charLookupTable[curChar] & VEC)) {
                 /* back up to offending char */
                 unreadChar(lexer, offset);
                 lexer->error = yajl_lex_string_invalid_escaped_char;
-                goto finish_string_lex;
+                return yajl_tok_error;
             }
         }
         /* when not validating UTF8 it's a simple table lookup to determine
@@ -338,34 +392,23 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
             /* back up to offending char */
             unreadChar(lexer, offset);
             lexer->error = yajl_lex_string_invalid_json_char;
-            goto finish_string_lex;
+            return yajl_tok_error;
         }
         /* when in validate UTF8 mode we need to do some extra work */
         else if (lexer->validateUTF8) {
+            lexer->substate = 4;
+            lexer->subsubstate = 0;
+        entry_utf8_char:
+            ;
             yajl_tok t = yajl_lex_utf8_char(lexer, jsonText, jsonTextLen,
                                             offset, curChar);
-
-            if (t == yajl_tok_eof) {
-                tok = yajl_tok_eof;
-                goto finish_string_lex;
-            } else if (t == yajl_tok_error) {
-                lexer->error = yajl_lex_string_invalid_utf8;
-                goto finish_string_lex;
+            if (t != yajl_tok_string) {
+                return t;
             }
         }
         /* accept it, and move on */
     }
-  finish_string_lex:
-    /* tell our buddy, the parser, wether he needs to process this string
-     * again */
-    if (hasEscapes && tok == yajl_tok_string) {
-        tok = yajl_tok_string_with_escapes;
-    }
-
-    return tok;
 }
-
-#define RETURN_IF_EOF if (*offset >= jsonTextLen) return yajl_tok_eof;
 
 static yajl_tok
 yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
@@ -377,24 +420,48 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     unsigned char c;
 
-    yajl_tok tok = yajl_tok_integer;
+    switch (lexer->substate) {
+    case 0:
+        break;
+    case 1:
+        goto entry_1;
+    case 2:
+        goto entry_2;
+    case 3:
+        goto entry_3;
+    case 4:
+        goto entry_4;
+    case 5:
+        goto entry_5;
+    case 6:
+        goto entry_6;
+    case 7:
+        goto entry_7;
+    case 8:
+        goto entry_8;
+    case 9:
+        goto entry_9;
+    default:
+        assert(false);
+    }
+    lexer->resultTok = yajl_tok_integer;
 
-    RETURN_IF_EOF;
+    CHECK_EOF(lexer->substate, 1);
     c = readChar(lexer, jsonText, offset);
 
     /* optional leading minus */
     if (c == '-') {
-        RETURN_IF_EOF;
+        CHECK_EOF(lexer->substate, 2);
         c = readChar(lexer, jsonText, offset);
     }
 
     /* a single zero, or a series of integers */
     if (c == '0') {
-        RETURN_IF_EOF;
+        CHECK_EOF(lexer->substate, 3);
         c = readChar(lexer, jsonText, offset);
     } else if (c >= '1' && c <= '9') {
         do {
-            RETURN_IF_EOF;
+            CHECK_EOF(lexer->substate, 4);
             c = readChar(lexer, jsonText, offset);
         } while (c >= '0' && c <= '9');
     } else {
@@ -405,39 +472,35 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     /* optional fraction (indicates this is floating point) */
     if (c == '.') {
-        int numRd = 0;
-
-        RETURN_IF_EOF;
+        CHECK_EOF(lexer->substate, 5);
         c = readChar(lexer, jsonText, offset);
-
-        while (c >= '0' && c <= '9') {
-            numRd++;
-            RETURN_IF_EOF;
-            c = readChar(lexer, jsonText, offset);
-        }
-
-        if (!numRd) {
+        if (c < '0' || c > '9') {
             unreadChar(lexer, offset);
             lexer->error = yajl_lex_missing_integer_after_decimal;
             return yajl_tok_error;
         }
-        tok = yajl_tok_double;
+
+        do {
+            CHECK_EOF(lexer->substate, 6);
+            c = readChar(lexer, jsonText, offset);
+        } while (c >= '0' && c <= '9');
+        lexer->resultTok = yajl_tok_double;
     }
 
     /* optional exponent (indicates this is floating point) */
     if (c == 'e' || c == 'E') {
-        RETURN_IF_EOF;
+        CHECK_EOF(lexer->substate, 7);
         c = readChar(lexer, jsonText, offset);
 
         /* optional sign */
         if (c == '+' || c == '-') {
-            RETURN_IF_EOF;
+            CHECK_EOF(lexer->substate, 8);
             c = readChar(lexer, jsonText, offset);
         }
 
         if (c >= '0' && c <= '9') {
             do {
-                RETURN_IF_EOF;
+                CHECK_EOF(lexer->substate, 9);
                 c = readChar(lexer, jsonText, offset);
             } while (c >= '0' && c <= '9');
         } else {
@@ -445,13 +508,13 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
             lexer->error = yajl_lex_missing_integer_after_exponent;
             return yajl_tok_error;
         }
-        tok = yajl_tok_double;
+        lexer->resultTok = yajl_tok_double;
     }
 
     /* we always go "one too far" */
     unreadChar(lexer, offset);
 
-    return tok;
+    return lexer->resultTok; /* integer or double */
 }
 
 static yajl_tok
@@ -460,25 +523,38 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
 {
     unsigned char c;
 
-    yajl_tok tok = yajl_tok_comment;
+    switch (lexer->substate) {
+    case 0:
+        break;
+    case 1:
+        goto entry_1;
+    case 2:
+        goto entry_2;
+    case 3:
+        goto entry_3;
+    case 4:
+        goto entry_4;
+    default:
+        assert(false);
+    }
 
-    RETURN_IF_EOF;
+    CHECK_EOF(lexer->substate, 1);
     c = readChar(lexer, jsonText, offset);
 
     /* either slash or star expected */
     if (c == '/') {
         /* now we throw away until end of line */
         do {
-            RETURN_IF_EOF;
+            CHECK_EOF(lexer->substate, 2);
             c = readChar(lexer, jsonText, offset);
         } while (c != '\n');
     } else if (c == '*') {
         /* now we throw away until end of comment */
         for (;;) {
-            RETURN_IF_EOF;
+            CHECK_EOF(lexer->substate, 3);
             c = readChar(lexer, jsonText, offset);
             if (c == '*') {
-                RETURN_IF_EOF;
+                CHECK_EOF(lexer->substate, 4);
                 c = readChar(lexer, jsonText, offset);
                 if (c == '/') {
                     break;
@@ -489,10 +565,10 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
         }
     } else {
         lexer->error = yajl_lex_invalid_char;
-        tok = yajl_tok_error;
+        return yajl_tok_error;
     }
 
-    return tok;
+    return yajl_tok_comment;
 }
 
 yajl_tok
@@ -503,9 +579,27 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     yajl_tok tok = yajl_tok_error;
     unsigned char c;
     size_t startOffset = *offset;
+    static unsigned char expect[] = "rue\0alse\0ull";
 
     *outBuf = NULL;
     *outLen = 0;
+
+    /* if entryState != state_start then buffer is in use */
+    yajl_lex_state entryState = lexer->state;
+    switch (entryState) {
+    case state_start:
+        break;
+    case state_expect:
+        goto entry_expect;
+    case state_string:
+        goto entry_string;
+    case state_number:
+        goto entry_number;
+    case state_comment:
+        goto entry_comment;
+    default:
+        assert(false);
+    }
 
     for (;;) {
         assert(*offset <= jsonTextLen);
@@ -539,61 +633,40 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
                 startOffset++;
                 break;
-            case 't': {
-                const char * want = "rue";
+            case 't':
+                lexer->state = state_expect;
+                lexer->substate = 0; /* offset into expect[] string above */
+                lexer->resultTok = yajl_tok_bool;
+                goto entry_expect;
+            case 'f':
+                lexer->state = state_expect;
+                lexer->substate = 4; /* offset into expect[] string above */
+                lexer->resultTok = yajl_tok_bool;
+                goto entry_expect;
+            case 'n':
+                lexer->state = state_expect;
+                lexer->substate = 9; /* offset into expect[] string above */
+                lexer->resultTok = yajl_tok_null;
+            entry_expect:
                 do {
                     if (*offset >= jsonTextLen) {
                         tok = yajl_tok_eof;
                         goto lexed;
                     }
                     c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
+                    if (c != expect[lexer->substate]) {
                         unreadChar(lexer, offset);
                         lexer->error = yajl_lex_invalid_string;
                         tok = yajl_tok_error;
                         goto lexed;
                     }
-                } while (*(++want));
-                tok = yajl_tok_bool;
+                } while (expect[++lexer->substate]);
+                tok = lexer->resultTok;
                 goto lexed;
-            }
-            case 'f': {
-                const char * want = "alse";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = yajl_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
-                tok = yajl_tok_bool;
-                goto lexed;
-            }
-            case 'n': {
-                const char * want = "ull";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = yajl_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
-                tok = yajl_tok_null;
-                goto lexed;
-            }
             case '"': {
+                lexer->state = state_string;
+                lexer->substate = 0;
+            entry_string:
                 tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
                                       jsonTextLen, offset);
                 goto lexed;
@@ -603,6 +676,9 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             case '5': case '6': case '7': case '8': case '9': {
                 /* integer parsing wants to start from the beginning */
                 unreadChar(lexer, offset);
+                lexer->state = state_number;
+                lexer->substate = 0;
+            entry_number:
                 tok = yajl_lex_number(lexer, (const unsigned char *) jsonText,
                                       jsonTextLen, offset);
                 goto lexed;
@@ -622,14 +698,17 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                  * - malformed comment opening (slash not followed by
                  *   '*' or '/') (tok_error)
                  * - eof hit. (tok_eof) */
+                lexer->state = state_comment;
+                lexer->substate = 0;
+            entry_comment:
                 tok = yajl_lex_comment(lexer, (const unsigned char *) jsonText,
                                        jsonTextLen, offset);
                 if (tok == yajl_tok_comment) {
-                    /* "error" is silly, but that's the initial
-                     * state of tok.  guilty until proven innocent. */
+                    /* behave as if we had returned a token then re-entered */
                     tok = yajl_tok_error;
                     yajl_buf_clear(lexer->buf);
-                    lexer->bufInUse = 0;
+                    lexer->state = state_start;
+                    entryState = state_start;
                     startOffset = *offset;
                     break;
                 }
@@ -646,20 +725,26 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
   lexed:
     /* need to append to buffer if the buffer is in use or
      * if it's an EOF token */
-    if (tok == yajl_tok_eof || lexer->bufInUse) {
-        if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
-        lexer->bufInUse = 1;
+    if (tok == yajl_tok_eof || entryState != state_start) {
+        if (entryState == state_start) {
+            yajl_buf_clear(lexer->buf);
+        }
         yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
         lexer->bufOff = 0;
 
         if (tok != yajl_tok_eof) {
-            *outBuf = yajl_buf_data(lexer->buf);
-            *outLen = yajl_buf_len(lexer->buf);
-            lexer->bufInUse = 0;
+            if (tok != yajl_tok_error) { /* Nick added this test, see below */
+                *outBuf = yajl_buf_data(lexer->buf);
+                *outLen = yajl_buf_len(lexer->buf);
+            }
+            lexer->state = state_start;
         }
-    } else if (tok != yajl_tok_error) {
-        *outBuf = jsonText + startOffset;
-        *outLen = *offset - startOffset;
+    } else {
+        if (tok != yajl_tok_error) {
+            *outBuf = jsonText + startOffset;
+            *outLen = *offset - startOffset;
+        }
+        lexer->state = state_start;
     }
 
     /* special case for strings. skip the quotes. */
@@ -749,14 +834,18 @@ yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
     size_t outLen;
     size_t bufLen = yajl_buf_len(lexer->buf);
     size_t bufOff = lexer->bufOff;
-    unsigned int bufInUse = lexer->bufInUse;
+    yajl_lex_state state = lexer->state;
+    int substate = lexer->substate;
+    int subsubstate = lexer->subsubstate;
     yajl_tok tok;
 
     tok = yajl_lex_lex(lexer, jsonText, jsonTextLen, &offset,
                        &outBuf, &outLen);
 
     lexer->bufOff = bufOff;
-    lexer->bufInUse = bufInUse;
+    lexer->state = state;
+    lexer->substate = substate;
+    lexer->subsubstate = subsubstate;
     yajl_buf_truncate(lexer->buf, bufLen);
 
     return tok;
