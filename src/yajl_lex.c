@@ -295,11 +295,8 @@ yajl_string_scan(const unsigned char * buf, size_t len, int utf8check)
 {
     unsigned char mask = IJC|NFP|(utf8check ? NUC : 0);
     size_t skip = 0;
-    while (skip < len && !(charLookupTable[*buf] & mask))
-    {
-        skip++;
-        buf++;
-    }
+    for (; skip < len && !(charLookupTable[buf[skip]] & mask); skip++)
+        ;
     return skip;
 }
 
@@ -307,8 +304,7 @@ static yajl_tok
 yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
                 size_t jsonTextLen, size_t * offset)
 {
-    /*
-     * compiler isn't smart enough to figure out that yajl_lex_utf8_char()
+    /* compiler isn't smart enough to figure out that yajl_lex_utf8_char()
      * will not access curChar when we jump in from case 4 below, so we'll
      * just initialize it here, it would be better to unread the first char
      * of the UTF-8 sequence and let yajl_lex_utf8_char() read it by itself
@@ -597,6 +593,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
         assert(false);
     }
 
+    yajl_buf_clear(lexer->buf);
     for (;;) {
         assert(*offset <= jsonTextLen);
 
@@ -663,7 +660,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 lexer->state = state_string;
                 lexer->substate = 0;
             entry_string:
-                tok = yajl_lex_string(lexer, (const unsigned char *) jsonText,
+                tok = yajl_lex_string(lexer, jsonText,
                                       jsonTextLen, offset);
                 goto lexed;
             }
@@ -675,7 +672,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 lexer->state = state_number;
                 lexer->substate = 0;
             entry_number:
-                tok = yajl_lex_number(lexer, (const unsigned char *) jsonText,
+                tok = yajl_lex_number(lexer, jsonText,
                                       jsonTextLen, offset);
                 goto lexed;
             }
@@ -697,7 +694,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 lexer->state = state_comment;
                 lexer->substate = 0;
             entry_comment:
-                tok = yajl_lex_comment(lexer, (const unsigned char *) jsonText,
+                tok = yajl_lex_comment(lexer, jsonText,
                                        jsonTextLen, offset);
                 if (tok == yajl_tok_comment) {
                     /* behave as if we had returned a token then re-entered */
@@ -722,10 +719,8 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     /* need to append to buffer if the buffer is in use or
      * if it's an EOF token */
     if (tok == yajl_tok_eof || entryState != state_start) {
-        if (entryState == state_start) {
-            yajl_buf_clear(lexer->buf);
-        }
-        yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
+        yajl_buf_append(lexer->buf, jsonText + startOffset,
+                        *offset - startOffset);
         if (tok != yajl_tok_eof) {
             if (tok != yajl_tok_error) { /* Nick added this test, see below */
                 *outBuf = yajl_buf_data(lexer->buf);
@@ -797,6 +792,18 @@ yajl_lex_error_to_string(yajl_lex_error error)
         case yajl_lex_unallowed_comment:
             return "probable comment found in input text, comments are "
                    "not enabled.";
+#if 1 /* temporary */
+        case yajl_lex_missing_integer_before_exponent:
+            return "malformed number, a digit is required before the exponent.";
+        case yajl_lex_missing_integer_before_decimal:
+            return "malformed number, a digit is required before the "
+                   "decimal point.";
+        case yajl_lex_missing_exponent_before_plus:
+            return "malformed number, an exponent is required before the "
+                   "plus sign.";
+        case yajl_lex_leading_zeros:
+            return "malformed number, extra leading zeros are not allowed.";
+#endif 
     }
     return "unknown error code";
 }

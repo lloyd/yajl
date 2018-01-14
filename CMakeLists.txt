@@ -77,5 +77,9 @@ ADD_CUSTOM_TARGET(test
                   ./run_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/parsing/yajl_test
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/parsing)
 
+ADD_CUSTOM_TARGET(rev_test
+                  ./run_rev_tests.sh ${CMAKE_CURRENT_BINARY_DIR}/test/parsing/yajl_rev_test
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test/parsing)
+
 ADD_CUSTOM_TARGET(test-api ${CMAKE_CURRENT_SOURCE_DIR}/test/api/run_tests.sh
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test/api)

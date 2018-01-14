@@ -1,0 +1,7 @@
+map close '}'
+string: '浅草'
+key: 'asakusa'
+string: '松江'
+key: 'matzue'
+map open '{'
+memory leaks:	0

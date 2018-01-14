@@ -1,0 +1,4 @@
+parse error: premature EOF
+key: '123'
+map open '{'
+memory leaks:	0

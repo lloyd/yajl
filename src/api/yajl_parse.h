@@ -176,6 +176,9 @@ extern "C" {
     YAJL_API yajl_status yajl_parse(yajl_handle hand,
                                     const unsigned char * jsonText,
                                     size_t jsonTextLength);
+    YAJL_API yajl_status yajl_rev_parse(yajl_handle hand,
+                                        const unsigned char * jsonText,
+                                        size_t jsonTextLength);
 
     /** Parse any remaining buffered json.
      *  Since yajl is a stream-based parser, without an explicit end of
@@ -187,6 +190,7 @@ extern "C" {
      *  \param hand - a handle to the json parser allocated with yajl_alloc
      */
     YAJL_API yajl_status yajl_complete_parse(yajl_handle hand);
+    YAJL_API yajl_status yajl_rev_complete_parse(yajl_handle hand);
 
     /** get an error string describing the state of the
      *  parse.

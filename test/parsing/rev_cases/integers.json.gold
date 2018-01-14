@@ -1,0 +1,14 @@
+array close ']'
+integer: -2147483647
+integer: 2147483647
+integer: -123456789
+integer: 123456789
+integer: 7
+integer: 6
+integer: 5
+integer: 4
+integer: 3
+integer: 2
+integer: 1
+array open '['
+memory leaks:	0

@@ -1,0 +1,5 @@
+map close '}'
+string: '􊯍'
+key: 'U+10ABCD'
+map open '{'
+memory leaks:	0

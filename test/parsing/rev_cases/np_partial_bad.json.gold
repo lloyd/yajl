@@ -1,0 +1,5 @@
+parse error: premature EOF
+string: 'bar'
+string: 'foo'
+array open '['
+memory leaks:	0

@@ -1,0 +1,8 @@
+lexical error: invalid bytes in UTF8 string.
+key: 'documentation'
+string: 'standalone'
+key: 'CoreletType'
+integer: 2
+key: 'CoreletAPIVersion'
+map open '{'
+memory leaks:	0

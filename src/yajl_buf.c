@@ -37,7 +37,7 @@ void yajl_buf_ensure_available(yajl_buf buf, size_t want)
     assert(buf != NULL);
 
     /* first call */
-    if (buf->data == NULL) {
+    if (buf->len == 0) {
         buf->len = YAJL_BUF_INIT_SIZE;
         buf->data = (unsigned char *) YA_MALLOC(buf->alloc, buf->len);
         buf->data[0] = 0;
@@ -58,13 +58,14 @@ yajl_buf yajl_buf_alloc(yajl_alloc_funcs * alloc)
     yajl_buf b = YA_MALLOC(alloc, sizeof(struct yajl_buf_t));
     memset((void *) b, 0, sizeof(struct yajl_buf_t));
     b->alloc = alloc;
+    b->data = (unsigned char *) "";
     return b;
 }
 
 void yajl_buf_free(yajl_buf buf)
 {
     assert(buf != NULL);
-    if (buf->data) YA_FREE(buf->alloc, buf->data);
+    if (buf->len) YA_FREE(buf->alloc, buf->data);
     YA_FREE(buf->alloc, buf);
 }
 
@@ -82,7 +83,7 @@ void yajl_buf_append(yajl_buf buf, const void * data, size_t len)
 void yajl_buf_clear(yajl_buf buf)
 {
     buf->used = 0;
-    if (buf->data) buf->data[buf->used] = 0;
+    if (buf->len) buf->data[buf->used] = 0;
 }
 
 const unsigned char * yajl_buf_data(yajl_buf buf)

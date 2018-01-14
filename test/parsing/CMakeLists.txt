@@ -13,11 +13,14 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 SET (SRCS yajl_test.c)
+SET (SRCS_REV yajl_rev_test.c)
 
 # use the library we build, duh.
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../../${YAJL_DIST_NAME}/include)
 LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../../${YAJL_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(yajl_test ${SRCS})
+ADD_EXECUTABLE(yajl_rev_test ${SRCS_REV})
 
 TARGET_LINK_LIBRARIES(yajl_test yajl_s)
+TARGET_LINK_LIBRARIES(yajl_rev_test yajl_s)
