@@ -1,5 +1,5 @@
 {
-	"boolean, true": true,
-	"boolean, false": false,
-	"null": null
+null :"null"	
+,false :"boolean, false"	
+,true :"boolean, true"	
 }

@@ -1,11 +1,11 @@
 {
-ignore this // "this": "is",
-  "really": "simple",
-  /* ignore
-this
-too * / 
-** //
-(/
-******/
-  "json": "right?"
+"right?" :"json"  
+/******
+/(
+// **
+ / * oot
+siht
+erongi */  
+,"simple" :"really"  
+siht erongi // ,"is" :"this"  
 }

@@ -109,7 +109,7 @@ struct yajl_lexer_t/*yajl_rev_lexer_t*/ {
     size_t charOff;
 
     /* error */
-    yajl_rev_lex_error error;
+    yajl_lex_error error;
 
     /* a input buffer to handle the case where a token is spread over
      * multiple chunks */
@@ -242,12 +242,6 @@ yajl_rev_lex_utf8_char(yajl_rev_lexer rev_lexer,
         goto entry_2;
     case 3:
         goto entry_3;
-    case 4:
-        goto entry_4;
-    case 5:
-        goto entry_5;
-    case 6:
-        goto entry_6;
     default:
         assert(false);
     }
@@ -255,36 +249,30 @@ yajl_rev_lex_utf8_char(yajl_rev_lexer rev_lexer,
     if (curChar <= 0x7f) {
         /* single byte */
         return yajl_tok_string;
-    } else if ((curChar >> 5) == 0x6) {
-        /* two byte */
+    } else if ((curChar >> 6) == 0x2) {
         CHECK_EOF(rev_lexer->subsubstate, 1);
         curChar = readChar(rev_lexer, jsonText, offset);
-        if ((curChar >> 6) == 0x2) return yajl_tok_string;
-    } else if ((curChar >> 4) == 0x0e) {
-        /* three byte */
-        CHECK_EOF(rev_lexer->subsubstate, 2);
-        curChar = readChar(rev_lexer, jsonText, offset);
-        if ((curChar >> 6) == 0x2) {
-            CHECK_EOF(rev_lexer->subsubstate, 3);
+        if ((curChar >> 5) == 0x6) {
+            /* two byte */
+            return yajl_tok_string;
+        } else if ((curChar >> 6) == 0x2) {
+            CHECK_EOF(rev_lexer->subsubstate, 2);
             curChar = readChar(rev_lexer, jsonText, offset);
-            if ((curChar >> 6) == 0x2) return yajl_tok_string;
-        }
-    } else if ((curChar >> 3) == 0x1e) {
-        /* four byte */
-        CHECK_EOF(rev_lexer->subsubstate, 4);
-        curChar = readChar(rev_lexer, jsonText, offset);
-        if ((curChar >> 6) == 0x2) {
-            CHECK_EOF(rev_lexer->subsubstate, 5);
-            curChar = readChar(rev_lexer, jsonText, offset);
-            if ((curChar >> 6) == 0x2) {
-                CHECK_EOF(rev_lexer->subsubstate, 6);
+            if ((curChar >> 4) == 0x0e) {
+                /* three byte */
+                return yajl_tok_string;
+            } else if ((curChar >> 6) == 0x2) {
+                CHECK_EOF(rev_lexer->subsubstate, 3);
                 curChar = readChar(rev_lexer, jsonText, offset);
-                if ((curChar >> 6) == 0x2) return yajl_tok_string;
+                if ((curChar >> 3) == 0x1e) {
+                    /* four byte */
+                    return yajl_tok_string;
+                }
             }
         }
     }
 
-    rev_lexer->error = yajl_rev_lex_string_invalid_utf8;
+    rev_lexer->error = yajl_lex_string_invalid_utf8;
     return yajl_tok_error;
 }
 
@@ -360,35 +348,64 @@ yajl_rev_lex_string(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
 
         /* quote terminates */
         if (curChar == '"') {
-            return rev_lexer->resultTok; /* string with or without escapes */
+            /* count backslashes before quote */
+            rev_lexer->subsubstate = 0;
+            while (1) {
+                CHECK_EOF(rev_lexer->substate, 2);
+                curChar = readChar(rev_lexer, jsonText, offset);
+                if (curChar != '\\') {
+                    break;
+                }
+                rev_lexer->subsubstate++;
+            }
+            unreadChar(rev_lexer, offset);
+
+            /* no backslashes means opening quote of string */
+            if (rev_lexer->subsubstate == 0) {
+                return rev_lexer->resultTok; /* string with or without escapes */
+            }
+
+            /* even number of backslashes means garbage before string */
+            if ((rev_lexer->subsubstate & 1) == 0) {
+                rev_lexer->error = yajl_lex_invalid_char;
+                return yajl_tok_error;
+            }
+
+            /* odd number of backslashes means had escaped quote */
+            rev_lexer->resultTok = yajl_tok_string_with_escapes;
         }
         /* backslash escapes a set of control chars, */
         else if (curChar == '\\') {
             rev_lexer->resultTok = yajl_tok_string_with_escapes;
 
-            /* special case \u */
-            CHECK_EOF(rev_lexer->substate, 2);
-            curChar = readChar(rev_lexer, jsonText, offset);
-            if (curChar == 'u') {
-                for (
-                    rev_lexer->subsubstate = 0;
-                    rev_lexer->subsubstate < 4;
-                    rev_lexer->subsubstate++
-                ) {
-                    CHECK_EOF(rev_lexer->substate, 3);
-                    curChar = readChar(rev_lexer, jsonText, offset);
-                    if (!(charLookupTable[curChar] & VHC)) {
-                        /* back up to offending char */
-                        unreadChar(rev_lexer, offset);
-                        rev_lexer->error = yajl_rev_lex_string_invalid_hex_char;
-                        return yajl_tok_error;
-                    }
+            /* count backslashes including this one */
+            rev_lexer->subsubstate = 1;
+            while (1) {
+                CHECK_EOF(rev_lexer->substate, 3);
+                curChar = readChar(rev_lexer, jsonText, offset);
+                if (curChar != '\\') {
+                    break;
                 }
-            } else if (!(charLookupTable[curChar] & VEC)) {
-                /* back up to offending char */
-                unreadChar(rev_lexer, offset);
-                rev_lexer->error = yajl_rev_lex_string_invalid_escaped_char;
-                return yajl_tok_error;
+                rev_lexer->subsubstate++;
+            }
+            unreadChar(rev_lexer, offset);
+
+            /* odd number of backslashes means had escape sequence */
+            if (rev_lexer->subsubstate & 1) {
+                /* special case \u */
+                curChar = lookback(rev_lexer->subsubstate);
+                if (curChar == 'u') {
+                    for (int i = 0; i < 4; i++) {
+                        curChar = lookback(rev_lexer->subsubstate + 1 + i);
+                        if (!(charLookupTable[curChar] & VHC)) {
+                            rev_lexer->error = yajl_lex_string_invalid_hex_char;
+                            return yajl_tok_error;
+                        }
+                    }
+                } else if (!(charLookupTable[curChar] & VEC)) {
+                    rev_lexer->error = yajl_lex_string_invalid_escaped_char;
+                    return yajl_tok_error;
+                }
             }
         }
         /* when not validating UTF8 it's a simple table lookup to determine
@@ -396,7 +413,7 @@ yajl_rev_lex_string(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
         else if(charLookupTable[curChar] & IJC) {
             /* back up to offending char */
             unreadChar(rev_lexer, offset);
-            rev_lexer->error = yajl_rev_lex_string_invalid_json_char;
+            rev_lexer->error = yajl_lex_string_invalid_json_char;
             return yajl_tok_error;
         }
         /* when in validate UTF8 mode we need to do some extra work */
@@ -473,7 +490,7 @@ yajl_rev_lex_number(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
                 } while (c >= '0' && c <= '9');
             } else {
                 unreadChar(rev_lexer, offset);
-                rev_lexer->error = yajl_rev_lex_missing_integer_before_exponent;
+                rev_lexer->error = yajl_lex_missing_integer_before_exponent;
                 return yajl_tok_error;
             }
             rev_lexer->resultTok = yajl_tok_double;
@@ -483,7 +500,7 @@ yajl_rev_lex_number(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
             if (rev_lexer->subsubstate == '-') {
                 return yajl_tok_integer;
             }
-            rev_lexer->error = yajl_rev_lex_missing_exponent_before_plus;
+            rev_lexer->error = yajl_lex_missing_exponent_before_plus;
             return yajl_tok_error;
         }
     }
@@ -494,7 +511,7 @@ yajl_rev_lex_number(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
         c = readChar(rev_lexer, jsonText, offset);
         if (c < '0' || c > '9') {
             unreadChar(rev_lexer, offset);
-            rev_lexer->error = yajl_rev_lex_missing_integer_before_decimal;
+            rev_lexer->error = yajl_lex_missing_integer_before_decimal;
             return yajl_tok_error;
         }
 
@@ -507,7 +524,7 @@ yajl_rev_lex_number(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
 
     if (lookback(1) == '0' && lookback(2) >= '0' && lookback(2) <= '9') {
         unreadChar(rev_lexer, offset);
-        rev_lexer->error = yajl_rev_lex_leading_zeros;
+        rev_lexer->error = yajl_lex_leading_zeros;
         return yajl_tok_error;
     }
 
@@ -570,7 +587,7 @@ yajl_rev_lex_comment(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
             }
         }
     } else {
-        rev_lexer->error = yajl_rev_lex_invalid_char;
+        rev_lexer->error = yajl_lex_invalid_char;
         return yajl_tok_error;
     }
 
@@ -668,7 +685,7 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
                     goto entry_expect;
                 default:
                     unreadChar(rev_lexer, offset);
-                    rev_lexer->error = yajl_rev_lex_invalid_string;
+                    rev_lexer->error = yajl_lex_invalid_string;
                     tok = yajl_tok_error;
                     goto lexed;
                 }
@@ -685,7 +702,7 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
                     c = readChar(rev_lexer, jsonText, offset);
                     if (c != expect[rev_lexer->substate]) {
                         unreadChar(rev_lexer, offset);
-                        rev_lexer->error = yajl_rev_lex_invalid_string;
+                        rev_lexer->error = yajl_lex_invalid_string;
                         tok = yajl_tok_error;
                         goto lexed;
                     }
@@ -700,6 +717,11 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
                                           jsonTextLen, offset);
                 goto lexed;
             }
+            case '-':
+                unreadChar(rev_lexer, offset);
+                rev_lexer->error = yajl_lex_missing_integer_after_minus;
+                tok = yajl_tok_error;
+                goto lexed;
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9': {
                 /* integer parsing wants to start from the beginning */
@@ -716,7 +738,7 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
                  * it's an error. */
                 if (!rev_lexer->allowComments) {
                     unreadChar(rev_lexer, offset);
-                    rev_lexer->error = yajl_rev_lex_unallowed_comment;
+                    rev_lexer->error = yajl_lex_unallowed_comment;
                     tok = yajl_tok_error;
                     goto lexed;
                 }
@@ -743,7 +765,7 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
                 /* hit error or eof, bail */
                 goto lexed;
             default:
-                rev_lexer->error = yajl_rev_lex_invalid_char;
+                rev_lexer->error = yajl_lex_invalid_char;
                 tok = yajl_tok_error;
                 goto lexed;
         }
@@ -762,6 +784,8 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
             if (tok != yajl_tok_error) { /* Nick added this test, see below */
                 *outBuf = yajl_rev_buf_data(rev_lexer->rev_buf);
                 *outLen = yajl_rev_buf_len(rev_lexer->rev_buf);
+ /*fwrite(*outBuf, *outLen, 1, stderr);
+ fputc('\n', stderr);*/
             }
             rev_lexer->state = state_start;
         }
@@ -769,6 +793,8 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
         if (tok != yajl_tok_error) {
             *outBuf = jsonText + *offset;
             *outLen = startOffset - *offset;
+ /*fwrite(*outBuf, *outLen, 1, stderr);
+ fputc('\n', stderr);*/
         }
         rev_lexer->state = state_start;
     }
@@ -785,7 +811,7 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
 #ifdef YAJL_LEXER_DEBUG
     if (tok == yajl_tok_error) {
         printf("lexical error: %s\n",
-               yajl_rev_lex_error_to_string(yajl_rev_lex_get_error(rev_lexer)));
+               yajl_lex_error_to_string(yajl_rev_lex_get_error(rev_lexer)));
     } else if (tok == yajl_tok_eof) {
         printf("EOF hit\n");
     } else {
@@ -804,50 +830,49 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
 
 #if 0
 const char *
-yajl_rev_lex_error_to_string(yajl_rev_lex_error error)
+yajl_rev_lex_error_to_string(yajl_lex_error error)
 {
     switch (error) {
-        case yajl_rev_lex_e_ok:
+        case yajl_lex_e_ok:
             return "ok, no error";
-        case yajl_rev_lex_string_invalid_utf8:
+        case yajl_lex_string_invalid_utf8:
             return "invalid bytes in UTF8 string.";
-        case yajl_rev_lex_string_invalid_escaped_char:
+        case yajl_lex_string_invalid_escaped_char:
             return "inside a string, '\\' occurs before a character "
                    "which it may not.";
-        case yajl_rev_lex_string_invalid_json_char:
+        case yajl_lex_string_invalid_json_char:
             return "invalid character inside string.";
-        case yajl_rev_lex_string_invalid_hex_char:
+        case yajl_lex_string_invalid_hex_char:
             return "invalid (non-hex) character occurs after '\\u' inside "
                    "string.";
-        case yajl_rev_lex_invalid_char:
+        case yajl_lex_invalid_char:
             return "invalid char in json text.";
-        case yajl_rev_lex_invalid_string:
+        case yajl_lex_invalid_string:
             return "invalid string in json text.";
-        case yajl_rev_lex_missing_integer_before_exponent:
-            return "malformed number, a digit is required before the exponent.";
-        case yajl_rev_lex_missing_integer_before_decimal:
-            return "malformed number, a digit is required before the "
-                   "decimal point.";
-        case yajl_rev_lex_missing_exponent_before_plus:
-            return "malformed number, an exponent is required before the "
-                   "plus sign.";
-        case yajl_rev_lex_leading_zeros:
+        case yajl_lex_leading_zeros:
             return "malformed number, extra leading zeros are not allowed.";
-        case yajl_rev_lex_unallowed_comment:
+        case yajl_lex_missing_integer_after_exponent:
+            return "malformed number, a digit is required after the exponent.";
+        case yajl_lex_missing_integer_after_decimal:
+            return "malformed number, a digit is required after the "
+                   "decimal point.";
+        case yajl_lex_missing_integer_after_minus:
+            return "malformed number, a digit is required after the "
+                   "minus sign.";
+        case yajl_lex_unallowed_comment:
             return "probable comment found in input text, comments are "
                    "not enabled.";
     }
     return "unknown error code";
 }
-#endif
 
 
-/** allows access to more specific information about the rev_lexical
+/** allows access to more specific information about the lexical
  *  error when yajl_rev_lex_lex returns yajl_tok_error. */
-yajl_rev_lex_error
+yajl_lex_error
 yajl_rev_lex_get_error(yajl_rev_lexer rev_lexer)
 {
-    if (rev_lexer == NULL) return (yajl_rev_lex_error) -1;
+    if (rev_lexer == NULL) return (yajl_lex_error) -1;
     return rev_lexer->error;
 }
 
@@ -860,6 +885,7 @@ size_t yajl_rev_lex_current_char(yajl_rev_lexer rev_lexer)
 {
     return rev_lexer->charOff;
 }
+#endif
 
 yajl_tok yajl_rev_lex_peek(yajl_rev_lexer rev_lexer,
                            const unsigned char * jsonText,

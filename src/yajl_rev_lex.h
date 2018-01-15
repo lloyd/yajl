@@ -95,25 +95,21 @@ yajl_tok yajl_rev_lex_peek(yajl_rev_lexer rev_lexer,
                            ssize_t jsonTextLen, ssize_t offset);
 
 
+#if 0
 typedef enum {
-    yajl_rev_lex_e_ok = 0,
-    yajl_rev_lex_string_invalid_utf8,
-    yajl_rev_lex_string_invalid_escaped_char,
-    yajl_rev_lex_string_invalid_json_char,
-    yajl_rev_lex_string_invalid_hex_char,
-    yajl_rev_lex_invalid_char,
-    yajl_rev_lex_invalid_string,
-    /* forward messages (not used except as placeholders) */
-    yajl_rev_lex_missing_integer_after_decimal,
-    yajl_rev_lex_missing_integer_after_exponent,
-    yajl_rev_lex_missing_integer_after_minus,
-    yajl_rev_lex_unallowed_comment,
-    /* backward messages (add at end for compatibility) */ 
-    yajl_rev_lex_missing_integer_before_exponent,
-    yajl_rev_lex_missing_integer_before_decimal,
-    yajl_rev_lex_missing_exponent_before_plus,
-    yajl_rev_lex_leading_zeros
-} yajl_rev_lex_error;
+    yajl_lex_e_ok = 0,
+    yajl_lex_string_invalid_utf8,
+    yajl_lex_string_invalid_escaped_char,
+    yajl_lex_string_invalid_json_char,
+    yajl_lex_string_invalid_hex_char,
+    yajl_lex_invalid_char,
+    yajl_lex_invalid_string,
+    yajl_lex_leading_zeros,
+    yajl_lex_missing_integer_after_decimal,
+    yajl_lex_missing_integer_after_exponent,
+    yajl_lex_missing_integer_after_minus,
+    yajl_lex_unallowed_comment
+} yajl_lex_error;
 
 const char * yajl_rev_lex_error_to_string(yajl_rev_lex_error error);
 
@@ -130,5 +126,6 @@ size_t yajl_rev_lex_current_line(yajl_rev_lexer rev_lexer);
 /** get the number of chars lexed by this rev_lexer instance since the last
  *  \n or \r */
 size_t yajl_rev_lex_current_char(yajl_rev_lexer rev_lexer);
+#endif
 
 #endif

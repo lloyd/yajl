@@ -1,7 +1,7 @@
 array close ']'
-string: 'Майката'
-string: 'Еба'
-string: 'Му'
 string: 'Да'
+string: 'Му'
+string: 'Еба'
+string: 'Майката'
 array open '['
 memory leaks:	0

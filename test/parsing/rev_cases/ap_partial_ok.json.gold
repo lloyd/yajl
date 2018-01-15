@@ -1,4 +1,4 @@
-string: 'bar'
+array close ']'
 string: 'foo'
-array open '['
+string: 'bar'
 memory leaks:	0

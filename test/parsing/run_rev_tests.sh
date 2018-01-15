@@ -64,21 +64,20 @@ for file in rev_cases/*.json ; do
   iter=1
   success="SUCCESS"
 
-  # ${ECHO} -n "$testBinShort $allowPartials$allowComments$allowGarbage$allowMultiple-b $iter $fileShort > ${fileShort}.test : "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while [ $iter -lt 32  ] && [ $success = "SUCCESS" ] ; do
-    $testBin $allowPartials $allowComments $allowGarbage $allowMultiple -b $iter $file > ${file}.test  2>&1
-    diff ${DIFF_FLAGS} ${file}.gold ${file}.test > ${file}.out
+    $testBin $allowPartials $allowComments $allowGarbage $allowMultiple -b $iter $file >${file}.out 2>${file}.err
+    diff ${DIFF_FLAGS} ${file}.gold ${file}.out >${file}.diff
     if [ $? -eq 0 ] ; then
       if [ $iter -eq 31 ] ; then testsSucceeded=$(( $testsSucceeded + 1 )) ; fi
     else
       success="FAILURE"
       iter=32
       ${ECHO}
-      cat ${file}.out
+      cat ${file}.diff
     fi
     iter=$(( iter + 1 ))
-    rm ${file}.test ${file}.out
+    rm ${file}.out ${file}.err ${file}.diff
   done
 
   ${ECHO} $success

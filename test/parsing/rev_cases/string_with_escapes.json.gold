@@ -1,7 +1,7 @@
 array close ']'
-string: 'and this string has no escapes'
-string: '"and this string has an escape at the beginning'
- foo / bar \￿	"\'
 string: '
+ foo / bar \￿	"\'
+string: '"and this string has an escape at the beginning'
+string: 'and this string has no escapes'
 array open '['
 memory leaks:	0

@@ -1,5 +1,4 @@
 map open '{'
 key: 'bad thing'
-integer: 0
-parse error: after key and value, inside map, I expect ',' or '}'
+lexical error: malformed number, extra leading zeros are not allowed.
 memory leaks:	0

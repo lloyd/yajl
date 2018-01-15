@@ -1,9 +1,9 @@
 map close '}'
-null
-key: 'null'
-bool: false
-key: 'boolean, false'
-bool: true
 key: 'boolean, true'
+bool: true
+key: 'boolean, false'
+bool: false
+key: 'null'
+null
 map open '{'
 memory leaks:	0

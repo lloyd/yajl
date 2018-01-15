@@ -1,6 +1,6 @@
-["foo",
- "bar", "baz",
- true,false,null,{"key":"value"},
- [null,null,null,[]],
- "\n\r\\"
-]
+[
+"\n\r\\" 
+,[[],null,null,null] 
+,{"value":"key"},null,false,true 
+,"baz" ,"bar" 
+,"foo"]

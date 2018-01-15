@@ -451,6 +451,11 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
     if (c == '0') {
         CHECK_EOF(lexer->substate, 3);
         c = readChar(lexer, jsonText, offset);
+        if (c >= '0' && c <= '9') {
+            unreadChar(lexer, offset);
+            lexer->error = yajl_lex_leading_zeros;
+            return yajl_tok_error;
+        }
     } else if (c >= '1' && c <= '9') {
         do {
             CHECK_EOF(lexer->substate, 4);
@@ -725,6 +730,8 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
             if (tok != yajl_tok_error) { /* Nick added this test, see below */
                 *outBuf = yajl_buf_data(lexer->buf);
                 *outLen = yajl_buf_len(lexer->buf);
+ /*fwrite(*outBuf, *outLen, 1, stderr);
+ fputc('\n', stderr);*/
             }
             lexer->state = state_start;
         }
@@ -732,6 +739,8 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
         if (tok != yajl_tok_error) {
             *outBuf = jsonText + startOffset;
             *outLen = *offset - startOffset;
+ /*fwrite(*outBuf, *outLen, 1, stderr);
+ fputc('\n', stderr);*/
         }
         lexer->state = state_start;
     }
@@ -781,6 +790,8 @@ yajl_lex_error_to_string(yajl_lex_error error)
             return "invalid char in json text.";
         case yajl_lex_invalid_string:
             return "invalid string in json text.";
+        case yajl_lex_leading_zeros:
+            return "malformed number, extra leading zeros are not allowed.";
         case yajl_lex_missing_integer_after_exponent:
             return "malformed number, a digit is required after the exponent.";
         case yajl_lex_missing_integer_after_decimal:
@@ -792,7 +803,7 @@ yajl_lex_error_to_string(yajl_lex_error error)
         case yajl_lex_unallowed_comment:
             return "probable comment found in input text, comments are "
                    "not enabled.";
-#if 1 /* temporary */
+        /* yajl_rev_lex_lex() specific error messages: */
         case yajl_lex_missing_integer_before_exponent:
             return "malformed number, a digit is required before the exponent.";
         case yajl_lex_missing_integer_before_decimal:
@@ -801,9 +812,6 @@ yajl_lex_error_to_string(yajl_lex_error error)
         case yajl_lex_missing_exponent_before_plus:
             return "malformed number, an exponent is required before the "
                    "plus sign.";
-        case yajl_lex_leading_zeros:
-            return "malformed number, extra leading zeros are not allowed.";
-#endif 
     }
     return "unknown error code";
 }

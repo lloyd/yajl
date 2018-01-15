@@ -1,5 +1,5 @@
-parse error: premature EOF
-string: 'bar'
+array close ']'
 string: 'foo'
-array open '['
+string: 'bar'
+parse error: premature EOF
 memory leaks:	0

@@ -1,4 +1,4 @@
-parse error: premature EOF
+map close '}'
 key: '123'
-map open '{'
+parse error: premature EOF
 memory leaks:	0

@@ -1,2 +1,2 @@
-map open '{'
+map close '}'
 memory leaks:	0

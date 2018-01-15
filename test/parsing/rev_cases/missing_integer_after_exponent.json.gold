@@ -1,2 +1,2 @@
-lexical error: invalid string in json text.
+lexical error: malformed number, a digit is required before the exponent.
 memory leaks:	0

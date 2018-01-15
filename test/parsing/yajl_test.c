@@ -150,18 +150,17 @@ static yajl_callbacks callbacks = {
 
 static void usage(const char * progname)
 {
-    fprintf(stderr,
-            "usage:  %s [options] [filename]\n"
-            "Parse input from file or stdin as JSON and output parsing "
-                                                          "details to stdout\n"
-            "   -b  set the read buffer size\n"
-            "   -c  allow comments\n"
-            "   -g  allow *g*arbage after valid JSON text\n"
-            "   -m  allows the parser to consume multiple JSON values\n"
-            "       from a single string separated by whitespace\n"
-            "   -p  partial JSON documents should not cause errors\n"
-            "   -v  verbose error messages\n",
-            progname);
+    printf("usage:  %s [options] [filename]\n"
+           "Parse input from file or stdin as JSON and output parsing "
+                                                         "details to stdout\n"
+           "   -b  set the read buffer size\n"
+           "   -c  allow comments\n"
+           "   -g  allow *g*arbage after valid JSON text\n"
+           "   -m  allows the parser to consume multiple JSON values\n"
+           "       from a single string separated by whitespace\n"
+           "   -p  partial JSON documents should not cause errors\n"
+           "   -v  verbose error messages\n",
+           progname);
     exit(1);
 }
 
@@ -275,7 +274,7 @@ main(int argc, char ** argv)
     {
         unsigned char * str = yajl_get_error(hand, verbose, fileData, rd);
         fflush(stdout);
-        fprintf(stderr, "%s", (char *) str);
+        printf(/*fprintf(stderr,*/ "%s", (char *) str);
         yajl_free_error(hand, str);
     }
 

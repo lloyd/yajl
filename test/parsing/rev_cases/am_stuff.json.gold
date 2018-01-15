@@ -1,14 +1,14 @@
-double: 3.1e+124
 map close '}'
-integer: 123
-key: '123'
 map open '{'
-integer: 123
+array close ']'
+array open '['
+array close ']'
+array open '['
 string: 'sdfasd'
-array close ']'
-array open '['
-array close ']'
-array open '['
+integer: 123
 map close '}'
+key: '123'
+integer: 123
 map open '{'
+double: 3.1e+124
 memory leaks:	0

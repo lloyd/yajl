@@ -92,17 +92,15 @@ typedef enum {
     yajl_lex_string_invalid_hex_char,
     yajl_lex_invalid_char,
     yajl_lex_invalid_string,
+    yajl_lex_leading_zeros,
     yajl_lex_missing_integer_after_decimal,
     yajl_lex_missing_integer_after_exponent,
     yajl_lex_missing_integer_after_minus,
-    yajl_lex_unallowed_comment
-#if 1 /* temporary */
-    ,
+    yajl_lex_unallowed_comment,
+    /* yajl_rev_lex_lex() specific error messages: */
     yajl_lex_missing_integer_before_exponent,
     yajl_lex_missing_integer_before_decimal,
-    yajl_lex_missing_exponent_before_plus,
-    yajl_lex_leading_zeros
-#endif
+    yajl_lex_missing_exponent_before_plus
 } yajl_lex_error;
 
 const char * yajl_lex_error_to_string(yajl_lex_error error);
