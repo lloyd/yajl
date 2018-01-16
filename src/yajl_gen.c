@@ -58,6 +58,7 @@ yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
         case yajl_gen_beautify:
         case yajl_gen_validate_utf8:
         case yajl_gen_escape_solidus:
+        case yajl_gen_no_final_newline:
             if (va_arg(ap, int)) g->flags |= opt;
             else g->flags &= ~opt;
             break;
@@ -141,17 +142,17 @@ yajl_gen_free(yajl_gen g)
 }
 
 #define INSERT_SEP \
-    if (g->state[g->depth] == yajl_gen_map_key ||               \
-        g->state[g->depth] == yajl_gen_in_array) {              \
-        g->print(g->ctx, ",", 1);                               \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);               \
-    } else if (g->state[g->depth] == yajl_gen_map_val) {        \
-        g->print(g->ctx, ":", 1);                               \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);                \
-   }
+    if (g->state[g->depth] == yajl_gen_map_key ||                       \
+        g->state[g->depth] == yajl_gen_in_array) {                      \
+        g->print(g->ctx, ",", 1);                                       \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);  \
+    } else if (g->state[g->depth] == yajl_gen_map_val) {                \
+        g->print(g->ctx, ":", 1);                                       \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);   \
+    }
 
 #define INSERT_WHITESPACE                                               \
-    if ((g->flags & yajl_gen_beautify)) {                                                    \
+    if ((g->flags & yajl_gen_beautify)) {                               \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
             for (_i=0;_i<g->depth;_i++)                                 \
@@ -170,8 +171,8 @@ yajl_gen_free(yajl_gen g)
 /* check that we're not complete, or in error state.  in a valid state
  * to be generating */
 #define ENSURE_VALID_STATE \
-    if (g->state[g->depth] == yajl_gen_error) {   \
-        return yajl_gen_in_error_state;\
+    if (g->state[g->depth] == yajl_gen_error) {             \
+        return yajl_gen_in_error_state;                     \
     } else if (g->state[g->depth] == yajl_gen_complete) {   \
         return yajl_gen_generation_complete;                \
     }
@@ -202,7 +203,8 @@ yajl_gen_free(yajl_gen g)
     }                                               \
 
 #define FINAL_NEWLINE                                        \
-    if ((g->flags & yajl_gen_beautify) && g->state[g->depth] == yajl_gen_complete) \
+    if (((g->flags & (yajl_gen_beautify | yajl_gen_no_final_newline)) == \
+         yajl_gen_beautify) && g->state[g->depth] == yajl_gen_complete) \
         g->print(g->ctx, "\n", 1);
 
 yajl_gen_status
@@ -286,12 +288,100 @@ yajl_gen_bool(yajl_gen g, int boolean)
 {
     const char * val = boolean ? "true" : "false";
 
-	ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, val, (unsigned int)strlen(val));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
+
+#ifdef YAJL_SUPPLEMENTARY
+#define ENSURE_VALID_STATE_SUP \
+    if (g->state[g->depth] != yajl_gen_map_key &&               \
+        g->state[g->depth] != yajl_gen_in_array &&              \
+        g->state[g->depth] != yajl_gen_complete) {              \
+        return yajl_gen_invalid_sup_item;                       \
+    }
+
+#define INSERT_WHITESPACE_SUP \
+    g->print(g->ctx, " ", 1);
+
+yajl_gen_status
+yajl_gen_sup_integer(yajl_gen g, long long int number)
+{
+    char i[32];
+    ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    sprintf(i, "%lld", number);
+    g->print(g->ctx, i, (unsigned int)strlen(i));
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+
+yajl_gen_status
+yajl_gen_sup_double(yajl_gen g, double number)
+{
+    char i[32];
+    ENSURE_VALID_STATE_SUP;
+    if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
+    INSERT_WHITESPACE_SUP;
+    sprintf(i, "%.20g", number);
+    if (strspn(i, "0123456789-") == strlen(i)) {
+        strcat(i, ".0");
+    }
+    g->print(g->ctx, i, (unsigned int)strlen(i));
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+
+yajl_gen_status
+yajl_gen_sup_number(yajl_gen g, const char * s, size_t l)
+{
+    ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    g->print(g->ctx, s, l);
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+
+yajl_gen_status
+yajl_gen_sup_string(yajl_gen g, const unsigned char * str,
+                size_t len)
+{
+    // if validation is enabled, check that the string is valid utf8
+    // XXX: This checking could be done a little faster, in the same pass as
+    // the string encoding
+    if (g->flags & yajl_gen_validate_utf8) {
+        if (!yajl_string_validate_utf8(str, len)) {
+            return yajl_gen_invalid_string;
+        }
+    }
+    ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    g->print(g->ctx, "\"", 1);
+    yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
+    g->print(g->ctx, "\"", 1);
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+
+yajl_gen_status
+yajl_gen_sup_null(yajl_gen g)
+{
+    ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    g->print(g->ctx, "null", strlen("null"));
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+
+yajl_gen_status
+yajl_gen_sup_bool(yajl_gen g, int boolean)
+{
+    const char * val = boolean ? "true" : "false";
+
+    ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    g->print(g->ctx, val, (unsigned int)strlen(val));
+    FINAL_NEWLINE;
+    return yajl_gen_status_ok;
+}
+#endif
 
 yajl_gen_status
 yajl_gen_map_open(yajl_gen g)
@@ -343,6 +433,12 @@ yajl_gen_array_close(yajl_gen g)
     g->print(g->ctx, "]", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
+}
+
+void
+yajl_gen_print(yajl_gen g, const char * buf, size_t len)
+{
+    g->print(g->ctx, buf, len);
 }
 
 yajl_gen_status

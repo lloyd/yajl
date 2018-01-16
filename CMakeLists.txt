@@ -47,7 +47,9 @@ IF (WIN32)
   SET(CMAKE_C_FLAGS_DEBUG "/D DEBUG /Od /Z7")
   SET(CMAKE_C_FLAGS_RELEASE "/D NDEBUG /O2")
 ELSE (WIN32)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+  # with YAJL_SUPPLEMENTARY defined the clients which don't know about the
+  # extra callback fields will not initialize them, suppress the warnings
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-missing-field-initializers")
   IF(CMAKE_COMPILER_IS_GNUCC)
     INCLUDE(CheckCCompilerFlag)
     CHECK_C_COMPILER_FLAG(-fvisibility=hidden HAVE_GCC_VISIBILITY)

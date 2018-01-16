@@ -93,6 +93,21 @@ extern "C" {
 
         int (* yajl_start_array)(void * ctx);
         int (* yajl_end_array)(void * ctx);
+#ifdef YAJL_SUPPLEMENTARY
+        int (* yajl_sup_null)(void * ctx);
+        int (* yajl_sup_boolean)(void * ctx, int boolVal);
+        int (* yajl_sup_integer)(void * ctx, long long integerVal);
+        int (* yajl_sup_double)(void * ctx, double doubleVal);
+        /** A callback which passes the string representation of the number
+         *  back to the client.  Will be used for all numbers when present */
+        int (* yajl_sup_number)(void * ctx, const char * numberVal,
+                            size_t numberLen);
+
+        /** strings are returned as pointers into the JSON text when,
+         * possible, as a result, they are _not_ null padded */
+        int (* yajl_sup_string)(void * ctx, const unsigned char * stringVal,
+                            size_t stringLen);
+#endif
     } yajl_callbacks;
 
     /** allocate a parser handle

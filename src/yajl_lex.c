@@ -236,7 +236,7 @@ yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,
     case 6:
         goto entry_6;
     default:
-        assert(false);
+        assert(0);
     }
 
     if (curChar <= 0x7f) {
@@ -323,7 +323,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
     case 4:
         goto entry_utf8_char;
     default:
-        assert(false);
+        assert(0);
     }
     lexer->resultTok = yajl_tok_string;
 
@@ -434,7 +434,7 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
     case 9:
         goto entry_9;
     default:
-        assert(false);
+        assert(0);
     }
     lexer->resultTok = yajl_tok_integer;
 
@@ -532,7 +532,7 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
     case 4:
         goto entry_4;
     default:
-        assert(false);
+        assert(0);
     }
 
     CHECK_EOF(lexer->substate, 1);
@@ -595,7 +595,7 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
     case state_comment:
         goto entry_comment;
     default:
-        assert(false);
+        assert(0);
     }
 
     yajl_buf_clear(lexer->buf);

@@ -243,7 +243,7 @@ yajl_rev_lex_utf8_char(yajl_rev_lexer rev_lexer,
     case 3:
         goto entry_3;
     default:
-        assert(false);
+        assert(0);
     }
 
     if (curChar <= 0x7f) {
@@ -324,7 +324,7 @@ yajl_rev_lex_string(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
     case 4:
         goto entry_utf8_char;
     default:
-        assert(false);
+        assert(0);
     }
     rev_lexer->resultTok = yajl_tok_string;
 
@@ -460,7 +460,7 @@ yajl_rev_lex_number(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
     case 7:
         goto entry_7;
     default:
-        assert(false);
+        assert(0);
     }
     rev_lexer->resultTok = yajl_tok_integer;
 
@@ -558,7 +558,7 @@ yajl_rev_lex_comment(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
     case 4:
         goto entry_4;
     default:
-        assert(false);
+        assert(0);
     }
 
     CHECK_EOF(rev_lexer->substate, 1);
@@ -627,7 +627,7 @@ yajl_rev_lex_lex(yajl_rev_lexer rev_lexer, const unsigned char * jsonText,
     case state_comment:
         goto entry_comment;
     default:
-        assert(false);
+        assert(0);
     }
 
     yajl_rev_buf_clear(rev_lexer->rev_buf);

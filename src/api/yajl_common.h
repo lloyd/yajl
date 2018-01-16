@@ -23,7 +23,24 @@
 extern "C" {
 #endif
 
-#define YAJL_MAX_DEPTH 128
+/* the default setting is much too low! we should be able to handle more! */
+/*#define YAJL_MAX_DEPTH 128*/
+#define YAJL_MAX_DEPTH 0x10000
+
+/* when defined, the following provides additional callbacks to receive
+ * extra primitive data items (only separated by whitespace) after each
+ * data item allowed by JSON, they are normally syntax errors and will
+ * still be syntax errors if the callback for a given item type is NULL
+ *
+ * note: if allowing multiple values then supplementary items cannot be
+ * received after the root element, they will be treated as extra values
+ *
+ * note: if allowing trailing garbage then parsing normally quits straight
+ * after the root element is parsed, but with this defined it will at least
+ * skip whitespace after the root element, since it will continue looking
+ * for supplementary items before checking whether any callbacks are set
+ */
+#define YAJL_SUPPLEMENTARY 1
 
 /* msft dll export gunk.  To build a DLL on windows, you
  * must define WIN32, YAJL_SHARED, and YAJL_BUILD.  To use a shared
