@@ -122,6 +122,7 @@ extern "C" {
     YAJL_API yajl_handle yajl_alloc(const yajl_callbacks * callbacks,
                                     yajl_alloc_funcs * afs,
                                     void * ctx);
+    YAJL_API void yajl_reset(yajl_handle hand);
 
 
     /** configuration parameters for the parser, these may be passed to

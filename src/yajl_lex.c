@@ -139,6 +139,13 @@ yajl_lex_alloc(yajl_alloc_funcs * alloc,
 }
 
 void
+yajl_lex_reset(yajl_lexer lxr)
+{
+    lxr->error = yajl_lex_e_ok;
+    lxr->state = state_start;
+}
+
+void
 yajl_lex_free(yajl_lexer lxr)
 {
     yajl_buf_free(lxr->buf);

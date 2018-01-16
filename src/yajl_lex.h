@@ -50,6 +50,7 @@ typedef struct yajl_lexer_t * yajl_lexer;
 yajl_lexer yajl_lex_alloc(yajl_alloc_funcs * alloc,
                           unsigned int allowComments,
                           unsigned int validateUTF8);
+void yajl_lex_reset(yajl_lexer lexer);
 
 void yajl_lex_free(yajl_lexer lexer);
 

@@ -80,6 +80,17 @@ yajl_alloc(const yajl_callbacks * callbacks,
     return hand;
 }
 
+void
+yajl_reset(yajl_handle hand)
+{
+    if (hand->lexer) {
+        yajl_lex_reset(hand->lexer);
+    }
+    hand->bytesConsumed = 0;
+    yajl_bs_init(hand->stateStack, &(hand->alloc));
+    yajl_bs_push(hand->stateStack, yajl_state_start);
+}
+
 int
 yajl_config(yajl_handle h, yajl_option opt, ...)
 {
