@@ -36,7 +36,15 @@ typedef enum {
     yajl_state_array_start,
     yajl_state_array_got_val,
     yajl_state_array_need_val,
-    yajl_state_got_value,
+    yajl_state_got_value
+#ifdef YAJL_SUPPLEMENTARY
+    /* reverse parser looks ahead to determine if item is supplementary */
+    , yajl_state_sup_null,
+    yajl_state_sup_boolean,
+    yajl_state_sup_integer,
+    yajl_state_sup_double,
+    yajl_state_sup_string,
+#endif
 } yajl_state;
 
 struct yajl_handle_t {

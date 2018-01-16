@@ -23,9 +23,8 @@
 extern "C" {
 #endif
 
-/* the default setting is much too low! we should be able to handle more! */
-/*#define YAJL_MAX_DEPTH 128*/
-#define YAJL_MAX_DEPTH 0x10000
+/* note: must match setting in yajl_bytestack.h */
+#define YAJL_MAX_DEPTH 128
 
 /* when defined, the following provides additional callbacks to receive
  * extra primitive data items (only separated by whitespace) after each

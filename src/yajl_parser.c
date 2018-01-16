@@ -777,6 +777,10 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     goto around_again;
             }
         }
+#ifdef YAJL_SUPPLEMENTARY
+        default:
+            break;
+#endif 
     }
 
     abort();
