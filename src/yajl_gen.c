@@ -144,16 +144,28 @@ yajl_gen_free(yajl_gen g)
 }
 
 #define INSERT_SEP \
-    if (g->state[g->depth] == yajl_gen_map_key ||                       \
-        g->state[g->depth] == yajl_gen_in_array) {                      \
-        g->print(g->ctx, ",", 1);                                       \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);  \
-    } else if (g->state[g->depth] == yajl_gen_map_val) {                \
-        g->print(g->ctx, ":", 1);                                       \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);   \
+    switch (g->state[g->depth]) {                                       \
+        case yajl_gen_map_key:                                          \
+        case yajl_gen_in_array:                                         \
+            g->print(g->ctx, ",", 1);                                   \
+            /* intentional fallthru */                                  \
+        case yajl_gen_map_start:                                        \
+        case yajl_gen_array_start:                                      \
+            if ((g->flags & yajl_gen_beautify)) {                       \
+                g->print(g->ctx, "\n", 1);                              \
+            }                                                           \
+            break;                                                      \
+        case yajl_gen_map_val:                                          \
+            g->print(g->ctx, ":", 1);                                   \
+            if ((g->flags & yajl_gen_beautify)) {                       \
+                g->print(g->ctx, " ", 1);                               \
+            }                                                           \
+            break;                                                      \
+        default:                                                        \
+            break;                                                      \
     }
 
-#define INSERT_WHITESPACE                                               \
+#define INSERT_WHITESPACE \
     if ((g->flags & yajl_gen_beautify)) {                               \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
@@ -396,24 +408,25 @@ yajl_gen_map_open(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     INCREMENT_DEPTH;
-
     g->state[g->depth] = yajl_gen_map_start;
     g->print(g->ctx, "{", 1);
-    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
-    FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
 
 yajl_gen_status
 yajl_gen_map_close(yajl_gen g)
 {
-    ENSURE_VALID_STATE;
-    DECREMENT_DEPTH;
+    yajl_gen_state state;
 
-    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
-    APPENDED_ATOM;
-    INSERT_WHITESPACE;
+    ENSURE_VALID_STATE;
+    state = g->state[g->depth];
+    DECREMENT_DEPTH;
+    if (state != yajl_gen_map_start) {
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
+        INSERT_WHITESPACE;
+    }
     g->print(g->ctx, "}", 1);
+    APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -425,20 +438,23 @@ yajl_gen_array_open(yajl_gen g)
     INCREMENT_DEPTH;
     g->state[g->depth] = yajl_gen_array_start;
     g->print(g->ctx, "[", 1);
-    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
-    FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
 
 yajl_gen_status
 yajl_gen_array_close(yajl_gen g)
 {
+    yajl_gen_state state;
+
     ENSURE_VALID_STATE;
+    state = g->state[g->depth];
     DECREMENT_DEPTH;
-    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
-    APPENDED_ATOM;
-    INSERT_WHITESPACE;
+    if (state != yajl_gen_array_start) {
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
+        INSERT_WHITESPACE;
+    }
     g->print(g->ctx, "]", 1);
+    APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
