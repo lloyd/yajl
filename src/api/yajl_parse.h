@@ -171,7 +171,14 @@ extern "C" {
          * yajl will enter an error state (premature EOF).  Setting this
          * flag suppresses that check and the corresponding error.
          */
-        yajl_allow_partial_values = 0x10
+        yajl_allow_partial_values = 0x10,
+        /**
+         * if client returns 0 from a callback the parser returns to the
+         * caller, without this flag it will also clobber the parsing
+         * state with an error state, with this flag it will leave the
+         * parsing state alone so that another call will resume parsing.
+         */
+        yajl_resume_after_cancel = 0x20
     } yajl_option;
 
     /** allow the modification of parser options subsequent to handle

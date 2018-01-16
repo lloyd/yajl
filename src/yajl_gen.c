@@ -45,6 +45,8 @@ struct yajl_gen_t
     void * ctx; /* yajl_buf */
     /* memory allocation routines */
     yajl_alloc_funcs alloc;
+    /* for telling client what was buffer length after whitespace last time */
+    size_t last_offset;
 };
 
 int
@@ -160,6 +162,9 @@ yajl_gen_free(yajl_gen g)
                          g->indentString,                               \
                          (unsigned int)strlen(g->indentString));        \
         }                                                               \
+    }                                                                   \
+    if (g->print == (yajl_print_t)&yajl_buf_append) {                   \
+        g->last_offset = yajl_buf_len((yajl_buf)g->ctx);                \
     }
 
 #define ENSURE_NOT_KEY \
@@ -304,7 +309,10 @@ yajl_gen_bool(yajl_gen g, int boolean)
     }
 
 #define INSERT_WHITESPACE_SUP \
-    g->print(g->ctx, " ", 1);
+    g->print(g->ctx, " ", 1);                                   \
+    if (g->print == (yajl_print_t)&yajl_buf_append) {           \
+        g->last_offset = yajl_buf_len((yajl_buf)g->ctx);        \
+    }
 
 yajl_gen_status
 yajl_gen_sup_integer(yajl_gen g, long long int number)
@@ -435,12 +443,6 @@ yajl_gen_array_close(yajl_gen g)
     return yajl_gen_status_ok;
 }
 
-void
-yajl_gen_print(yajl_gen g, const char * buf, size_t len)
-{
-    g->print(g->ctx, buf, len);
-}
-
 yajl_gen_status
 yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
                  size_t * len)
@@ -449,6 +451,12 @@ yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
     *buf = yajl_buf_data((yajl_buf)g->ctx);
     *len = yajl_buf_len((yajl_buf)g->ctx);
     return yajl_gen_status_ok;
+}
+
+size_t
+yajl_gen_get_last_offset(yajl_gen g)
+{
+    return g->last_offset;
 }
 
 void

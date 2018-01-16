@@ -163,18 +163,13 @@ extern "C" {
     YAJL_API yajl_gen_status yajl_gen_array_open(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_array_close(yajl_gen hand);
 
-    /** intersperse arbitrary text with the generated output stream.
-     *  Useful with YAJL_SUPPLEMENTARY and yajl_gen_no_final_newline. */
-    YAJL_API void yajl_gen_print(yajl_gen hand,
-                                 const char * buf,
-                                 size_t len);
-
     /** access the null terminated generator buffer.  If incrementally
      *  outputing JSON, one should call yajl_gen_clear to clear the
      *  buffer.  This allows stream generation. */
     YAJL_API yajl_gen_status yajl_gen_get_buf(yajl_gen hand,
                                               const unsigned char ** buf,
                                               size_t * len);
+    YAJL_API size_t yajl_gen_get_last_offset(yajl_gen hand);
 
     /** clear yajl's output buffer, but maintain all internal generation
      *  state.  This function will not "reset" the generator state, and is
@@ -185,7 +180,8 @@ extern "C" {
      *  json entities in a stream. The "sep" string will be inserted to
      *  separate the previously generated entity from the current,
      *  NULL means *no separation* of entites (clients beware, generating
-     *  multiple JSON numbers without a separator, for instance, will result in ambiguous output)
+     *  multiple JSON numbers without a separator, for instance, will
+     *  result in ambiguous output)
      *
      *  Note: this call will not clear yajl's output buffer.  This
      *  may be accomplished explicitly by calling yajl_gen_clear() */

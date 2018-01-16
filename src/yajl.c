@@ -93,6 +93,7 @@ yajl_config(yajl_handle h, yajl_option opt, ...)
         case yajl_allow_trailing_garbage:
         case yajl_allow_multiple_values:
         case yajl_allow_partial_values:
+        case yajl_resume_after_cancel:
             if (va_arg(ap, int)) h->flags |= opt;
             else h->flags &= ~opt;
             break;
