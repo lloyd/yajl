@@ -470,6 +470,13 @@ yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
 }
 
 size_t
+yajl_gen_get_offset(yajl_gen g)
+{
+    return (g->print == (yajl_print_t)&yajl_buf_append) ?
+        yajl_buf_len((yajl_buf)g->ctx) : 0;
+}
+
+size_t
 yajl_gen_get_last_offset(yajl_gen g)
 {
     return g->last_offset;

@@ -169,6 +169,7 @@ extern "C" {
     YAJL_API yajl_gen_status yajl_gen_get_buf(yajl_gen hand,
                                               const unsigned char ** buf,
                                               size_t * len);
+    YAJL_API size_t yajl_gen_get_offset(yajl_gen hand);
     YAJL_API size_t yajl_gen_get_last_offset(yajl_gen hand);
 
     /** clear yajl's output buffer, but maintain all internal generation

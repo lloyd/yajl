@@ -208,6 +208,7 @@ around_again:
                     return yajl_status_ok;
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             buf, bufLen);
                         goto around_again;
@@ -217,6 +218,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -225,6 +227,7 @@ around_again:
                     goto root_unallowed;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_sup_boolean) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                             *buf == 't');
                         goto around_again;
@@ -232,6 +235,7 @@ around_again:
                     goto root_unallowed;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_sup_null) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_null(hand->ctx);
                         goto around_again;
                     }
@@ -239,6 +243,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -257,6 +262,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_integer(hand->ctx,
                                 i);
                             goto around_again;
@@ -266,6 +272,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -288,6 +295,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_double(hand->ctx,
                                 d);
                             goto around_again;
@@ -349,6 +357,7 @@ around_again:
                     goto around_again;
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_string(hand->ctx,
                             buf, bufLen);
                     }
@@ -357,6 +366,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -364,23 +374,27 @@ around_again:
                     break;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_boolean) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_boolean(hand->ctx,
                             *buf == 't');
                     }
                     break;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_null) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_null(hand->ctx);
                     }
                     break;
                 case yajl_tok_left_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_start_map) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_start_map(hand->ctx);
                     }
                     stateToPush = yajl_state_map_start;
                     break;
                 case yajl_tok_left_brace:
                     if (hand->callbacks && hand->callbacks->yajl_start_array) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_start_array(hand->ctx);
                     }
                     stateToPush = yajl_state_array_start;
@@ -388,6 +402,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_number(hand->ctx,
                                 (const char *) buf, bufLen);
                         } else if (hand->callbacks->yajl_integer) {
@@ -405,6 +420,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_integer(hand->ctx,
                                 i);
                         }
@@ -413,6 +429,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_number(hand->ctx,
                                 (const char *) buf, bufLen);
                         } else if (hand->callbacks->yajl_double) {
@@ -434,6 +451,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_double(hand->ctx,
                                 d);
                         }
@@ -446,6 +464,7 @@ around_again:
                         if (hand->callbacks &&
                             hand->callbacks->yajl_end_array)
                         {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_end_array(hand->ctx);
                         }
                         yajl_bs_pop(hand->stateStack);
@@ -506,6 +525,7 @@ around_again:
                     /* intentional fall-through */
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_map_key(hand->ctx, buf,
                             bufLen);
                     }
@@ -516,6 +536,7 @@ around_again:
                         yajl_state_map_start)
                     {
                         if (hand->callbacks && hand->callbacks->yajl_end_map) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_end_map(hand->ctx);
                         }
                         yajl_bs_pop(hand->stateStack);
@@ -554,6 +575,7 @@ around_again:
             switch (tok) {
                 case yajl_tok_right_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_end_map) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_end_map(hand->ctx);
                     }
                     yajl_bs_pop(hand->stateStack);
@@ -570,6 +592,7 @@ around_again:
 #ifdef YAJL_SUPPLEMENTARY
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             buf, bufLen);
                         goto around_again;
@@ -579,6 +602,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -587,6 +611,7 @@ around_again:
                     goto map_unallowed;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_sup_boolean) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                             *buf == 't');
                         goto around_again;
@@ -594,6 +619,7 @@ around_again:
                     goto map_unallowed;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_sup_null) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_null(hand->ctx);
                         goto around_again;
                     }
@@ -601,6 +627,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -619,6 +646,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_integer(hand->ctx,
                                 i);
                             goto around_again;
@@ -628,6 +656,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -650,6 +679,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_double(hand->ctx,
                                 d);
                             goto around_again;
@@ -674,6 +704,7 @@ around_again:
             switch (tok) {
                 case yajl_tok_right_brace:
                     if (hand->callbacks && hand->callbacks->yajl_end_array) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_end_array(hand->ctx);
                     }
                     yajl_bs_pop(hand->stateStack);
@@ -690,6 +721,7 @@ around_again:
 #ifdef YAJL_SUPPLEMENTARY
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             buf, bufLen);
                         goto around_again;
@@ -699,6 +731,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -707,6 +740,7 @@ around_again:
                     goto array_unallowed;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_sup_boolean) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                             *buf == 't');
                         goto around_again;
@@ -714,6 +748,7 @@ around_again:
                     goto array_unallowed;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_sup_null) {
+                        hand->bytesConsumed = offset;
                         cont = hand->callbacks->yajl_sup_null(hand->ctx);
                         goto around_again;
                     }
@@ -721,6 +756,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -739,6 +775,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_integer(hand->ctx,
                                 i);
                             goto around_again;
@@ -748,6 +785,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -770,6 +808,7 @@ around_again:
                                 else offset = 0;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = offset;
                             cont = hand->callbacks->yajl_sup_double(hand->ctx,
                                 d);
                             goto around_again;

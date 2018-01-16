@@ -148,6 +148,7 @@ yajl_render_error_string(yajl_handle hand, const unsigned char * jsonText,
 #endif
 
 
+#if 0 /* alternative version with map key *after* value */
 yajl_status
 yajl_rev_do_finish(yajl_handle hand)
 {
@@ -175,7 +176,7 @@ yajl_rev_do_finish(yajl_handle hand)
     }
 }
 
-#if 0 /* alternative version with map key *after* value */
+
 yajl_status
 yajl_rev_do_parse(yajl_handle hand, const unsigned char * jsonText,
                   ssize_t jsonTextLen)
@@ -211,6 +212,7 @@ around_again:
                     return yajl_status_ok;
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             buf, bufLen);
                         goto around_again;
@@ -220,6 +222,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             (const unsigned char *)
                                 yajl_buf_data(hand->decodeBuf),
@@ -229,6 +232,7 @@ around_again:
                     goto root_unallowed;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_sup_boolean) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                             *buf == 't');
                         goto around_again;
@@ -236,6 +240,7 @@ around_again:
                     goto root_unallowed;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_sup_null) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_null(hand->ctx);
                         goto around_again;
                     }
@@ -243,6 +248,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -258,6 +264,7 @@ around_again:
                                 hand->parseError = "integer overflow" ;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_integer(hand->ctx,
                                 i);
                             goto around_again;
@@ -267,6 +274,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -286,6 +294,7 @@ around_again:
                                     "overflow";
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_double(hand->ctx,
                                 d);
                             goto around_again;
@@ -347,6 +356,7 @@ around_again:
                     goto around_again;
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_string(hand->ctx,
                             buf, bufLen);
                     }
@@ -355,6 +365,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -362,23 +373,27 @@ around_again:
                     break;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_boolean) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_boolean(hand->ctx,
                             *buf == 't');
                     }
                     break;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_null) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_null(hand->ctx);
                     }
                     break;
                 case yajl_tok_right_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_end_map) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_end_map(hand->ctx);
                     }
                     stateToPush = yajl_state_map_start;
                     break;
                 case yajl_tok_right_brace:
                     if (hand->callbacks && hand->callbacks->yajl_end_array) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_end_array(hand->ctx);
                     }
                     stateToPush = yajl_state_array_start;
@@ -386,6 +401,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_number(hand->ctx,
                                 (const char *) buf, bufLen);
                         } else if (hand->callbacks->yajl_integer) {
@@ -400,6 +416,7 @@ around_again:
                                 hand->parseError = "integer overflow" ;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_integer(hand->ctx,
                                 i);
                         }
@@ -408,6 +425,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_number(hand->ctx,
                                 (const char *) buf, bufLen);
                         } else if (hand->callbacks->yajl_double) {
@@ -426,6 +444,7 @@ around_again:
                                     "overflow";
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_double(hand->ctx,
                                 d);
                         }
@@ -438,6 +457,7 @@ around_again:
                         if (hand->callbacks &&
                             hand->callbacks->yajl_start_array)
                         {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_start_array(hand->ctx);
                         }
                         yajl_bs_pop(hand->stateStack);
@@ -497,6 +517,7 @@ around_again:
                     /* intentional fall-through */
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_map_key(hand->ctx,
                             buf, bufLen);
                     }
@@ -507,6 +528,7 @@ around_again:
                         yajl_state_map_start)
                     {
                         if (hand->callbacks && hand->callbacks->yajl_start_map) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_start_map(hand->ctx);
                         }
                         yajl_bs_pop(hand->stateStack);
@@ -545,6 +567,7 @@ around_again:
             switch (tok) {
                 case yajl_tok_left_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_start_map) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_start_map(hand->ctx);
                     }
                     yajl_bs_pop(hand->stateStack);
@@ -561,6 +584,7 @@ around_again:
 #ifdef YAJL_SUPPLEMENTARY
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             buf, bufLen);
                         goto around_again;
@@ -570,6 +594,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -578,6 +603,7 @@ around_again:
                     goto map_unallowed;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_sup_boolean) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                             *buf == 't');
                         goto around_again;
@@ -585,6 +611,7 @@ around_again:
                     goto map_unallowed;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_sup_null) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_null(hand->ctx);
                         goto around_again;
                     }
@@ -592,6 +619,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -607,6 +635,7 @@ around_again:
                                 hand->parseError = "integer overflow" ;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_integer(hand->ctx,
                                 i);
                             goto around_again;
@@ -616,6 +645,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -635,6 +665,7 @@ around_again:
                                     "overflow";
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_double(hand->ctx,
                                 d);
                             goto around_again;
@@ -656,6 +687,7 @@ around_again:
             switch (tok) {
                 case yajl_tok_left_brace:
                     if (hand->callbacks && hand->callbacks->yajl_start_array) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_start_array(hand->ctx);
                     }
                     yajl_bs_pop(hand->stateStack);
@@ -672,6 +704,7 @@ around_again:
 #ifdef YAJL_SUPPLEMENTARY
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             buf, bufLen);
                         goto around_again;
@@ -681,6 +714,7 @@ around_again:
                     if (hand->callbacks && hand->callbacks->yajl_sup_string) {
                         yajl_buf_clear(hand->decodeBuf);
                         yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_string(hand->ctx,
                             yajl_buf_data(hand->decodeBuf),
                             yajl_buf_len(hand->decodeBuf));
@@ -689,6 +723,7 @@ around_again:
                     goto array_unallowed;
                 case yajl_tok_bool:
                     if (hand->callbacks && hand->callbacks->yajl_sup_boolean) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                             *buf == 't');
                         goto around_again;
@@ -696,6 +731,7 @@ around_again:
                     goto array_unallowed;
                 case yajl_tok_null:
                     if (hand->callbacks && hand->callbacks->yajl_sup_null) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_sup_null(hand->ctx);
                         goto around_again;
                     }
@@ -703,6 +739,7 @@ around_again:
                 case yajl_tok_integer:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -718,6 +755,7 @@ around_again:
                                 hand->parseError = "integer overflow" ;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_integer(hand->ctx,
                                 i);
                             goto around_again;
@@ -727,6 +765,7 @@ around_again:
                 case yajl_tok_double:
                     if (hand->callbacks) {
                         if (hand->callbacks->yajl_sup_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_number(hand->ctx,
                                 (const char *) buf, bufLen);
                             goto around_again;
@@ -746,6 +785,7 @@ around_again:
                                     "overflow";
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_sup_double(hand->ctx,
                                 d);
                             goto around_again;
@@ -771,6 +811,189 @@ around_again:
     return yajl_status_error;
 }
 #else
+yajl_status
+yajl_rev_do_finish(yajl_handle hand)
+{
+    yajl_status stat;
+#ifdef YAJL_SUPPLEMENTARY
+    int cont = 1;
+#endif
+
+    stat = yajl_rev_do_parse(hand,(const unsigned char *) " " + 1, -1);
+
+    if (stat != yajl_status_ok) return stat;
+
+#ifdef YAJL_SUPPLEMENTARY
+around_again:
+    if (!cont) {
+        if (!(hand->flags & yajl_resume_after_cancel)) {
+            yajl_bs_set(hand->stateStack, yajl_state_parse_error);
+            hand->parseError =
+                "client cancelled parse via callback return value";
+        }
+        hand->bytesConsumed = 0;
+        return yajl_status_client_canceled;
+    }
+#endif
+    switch(yajl_bs_current(hand->stateStack))
+    {
+        case yajl_state_parse_error:
+        case yajl_state_lexical_error:
+            return yajl_status_error;
+        case yajl_state_got_value:
+        case yajl_state_parse_complete:
+            return yajl_status_ok;
+#ifdef YAJL_SUPPLEMENTARY
+        case yajl_state_sup_null: {
+            yajl_bs_pop(hand->stateStack);
+            if (hand->callbacks->yajl_null) {
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_null(hand->ctx);
+            }
+            /* got a value.  transition depends on the state we're in. */
+            {
+                yajl_state s = yajl_bs_current(hand->stateStack);
+                if (s == yajl_state_start || s == yajl_state_got_value) {
+                    yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
+                } else if (s == yajl_state_map_need_val ||
+                           s == yajl_state_map_start) {
+                    yajl_bs_set(hand->stateStack, yajl_state_map_sep);
+                } else {
+                    yajl_bs_set(hand->stateStack, yajl_state_array_got_val);
+                }
+            }
+            goto around_again;
+        }
+        case yajl_state_sup_boolean: {
+            yajl_bs_pop(hand->stateStack);
+            if (hand->callbacks->yajl_boolean) {
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_boolean(hand->ctx,
+                    *yajl_buf_data(hand->decodeBuf) == 't');
+            }
+            /* got a value.  transition depends on the state we're in. */
+            {
+                yajl_state s = yajl_bs_current(hand->stateStack);
+                if (s == yajl_state_start || s == yajl_state_got_value) {
+                    yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
+                } else if (s == yajl_state_map_need_val ||
+                           s == yajl_state_map_start) {
+                    yajl_bs_set(hand->stateStack, yajl_state_map_sep);
+                } else {
+                    yajl_bs_set(hand->stateStack, yajl_state_array_got_val);
+                }
+            }
+            goto around_again;
+        }
+        case yajl_state_sup_integer: {
+            yajl_bs_pop(hand->stateStack);
+            if (hand->callbacks->yajl_number) {
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_number(hand->ctx,
+                    (const char *) yajl_buf_data(hand->decodeBuf),
+                    yajl_buf_len(hand->decodeBuf));
+            } else if (hand->callbacks->yajl_integer) {
+                long long int i = 0;
+                errno = 0;
+                i = yajl_parse_integer(yajl_buf_data(hand->decodeBuf),
+                                       yajl_buf_len(hand->decodeBuf));
+                if ((i == LLONG_MIN || i == LLONG_MAX) &&
+                    errno == ERANGE)
+                {
+                    yajl_bs_set(hand->stateStack,
+                                yajl_state_parse_error);
+                    hand->parseError = "integer overflow" ;
+                    goto around_again;
+                }
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_integer(hand->ctx, i);
+            }
+            /* got a value.  transition depends on the state we're in. */
+            {
+                yajl_state s = yajl_bs_current(hand->stateStack);
+                if (s == yajl_state_start || s == yajl_state_got_value) {
+                    yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
+                } else if (s == yajl_state_map_need_val ||
+                           s == yajl_state_map_start) {
+                    yajl_bs_set(hand->stateStack, yajl_state_map_sep);
+                } else {
+                    yajl_bs_set(hand->stateStack, yajl_state_array_got_val);
+                }
+            }
+            goto around_again;
+        }
+        case yajl_state_sup_double: {
+            yajl_bs_pop(hand->stateStack);
+            if (hand->callbacks->yajl_number) {
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_number(hand->ctx,
+                    (const char *) yajl_buf_data(hand->decodeBuf),
+                    yajl_buf_len(hand->decodeBuf));
+            } else if (hand->callbacks->yajl_double) {
+                double d = 0.0;
+                errno = 0;
+                d = strtod((char *) yajl_buf_data(hand->decodeBuf),
+                           NULL);
+                if ((d == HUGE_VAL || d == -HUGE_VAL) &&
+                    errno == ERANGE)
+                {
+                    yajl_bs_set(hand->stateStack,
+                                yajl_state_parse_error);
+                    hand->parseError = "numeric (floating point) "
+                        "overflow";
+                    goto around_again;
+                }
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_double(hand->ctx, d);
+            }
+            /* got a value.  transition depends on the state we're in. */
+            {
+                yajl_state s = yajl_bs_current(hand->stateStack);
+                if (s == yajl_state_start || s == yajl_state_got_value) {
+                    yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
+                } else if (s == yajl_state_map_need_val ||
+                           s == yajl_state_map_start) {
+                    yajl_bs_set(hand->stateStack, yajl_state_map_sep);
+                } else {
+                    yajl_bs_set(hand->stateStack, yajl_state_array_got_val);
+                }
+            }
+            goto around_again;
+        }
+        case yajl_state_sup_string: {
+            yajl_bs_pop(hand->stateStack);
+            if (hand->callbacks->yajl_string) {
+                hand->bytesConsumed = 0;
+                cont = hand->callbacks->yajl_string(hand->ctx,
+                    yajl_buf_data(hand->decodeBuf),
+                    yajl_buf_len(hand->decodeBuf));
+            }
+            /* got a value.  transition depends on the state we're in. */
+            {
+                yajl_state s = yajl_bs_current(hand->stateStack);
+                if (s == yajl_state_start || s == yajl_state_got_value) {
+                    yajl_bs_set(hand->stateStack, yajl_state_parse_complete);
+                } else if (s == yajl_state_map_need_val ||
+                           s == yajl_state_map_start) {
+                    yajl_bs_set(hand->stateStack, yajl_state_map_sep);
+                } else {
+                    yajl_bs_set(hand->stateStack, yajl_state_array_got_val);
+                }
+            }
+            goto around_again;
+        }
+#endif
+        default:
+            if (!(hand->flags & yajl_allow_partial_values))
+            {
+                yajl_bs_set(hand->stateStack, yajl_state_parse_error);
+                hand->parseError = "premature EOF";
+                return yajl_status_error;
+            }
+            return yajl_status_ok;
+    }
+}
+
 yajl_status
 yajl_rev_do_parse(yajl_handle hand, const unsigned char * jsonText,
                   ssize_t jsonTextLen)
@@ -854,6 +1077,7 @@ around_again:
                         }
 #endif
                         if (hand->callbacks->yajl_string) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_string(hand->ctx,
                                 buf, bufLen);
                         }
@@ -873,6 +1097,7 @@ around_again:
                         if (hand->callbacks->yajl_string) {
                             yajl_buf_clear(hand->decodeBuf);
                             yajl_string_decode(hand->decodeBuf, buf, bufLen);
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_string(hand->ctx,
                                 yajl_buf_data(hand->decodeBuf),
                                 yajl_buf_len(hand->decodeBuf));
@@ -891,6 +1116,7 @@ around_again:
                         }
 #endif
                         if (hand->callbacks->yajl_boolean) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_boolean(hand->ctx,
                                 *buf == 't');
                         }
@@ -906,18 +1132,21 @@ around_again:
                         }
 #endif
                         if (hand->callbacks->yajl_null) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_null(hand->ctx);
                         }
                     }
                     break;
                 case yajl_tok_right_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_end_map) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_end_map(hand->ctx);
                     }
                     stateToPush = yajl_state_map_start;
                     break;
                 case yajl_tok_right_brace:
                     if (hand->callbacks && hand->callbacks->yajl_end_array) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_end_array(hand->ctx);
                     }
                     stateToPush = yajl_state_array_start;
@@ -935,6 +1164,7 @@ around_again:
                         }
 #endif
                         if (hand->callbacks->yajl_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_number(hand->ctx,
                                 (const char *) buf, bufLen);
                         } else if (hand->callbacks->yajl_integer) {
@@ -949,6 +1179,7 @@ around_again:
                                 hand->parseError = "integer overflow" ;
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_integer(hand->ctx, i);
                         }
                     }
@@ -966,6 +1197,7 @@ around_again:
                         }
 #endif
                         if (hand->callbacks->yajl_number) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_number(hand->ctx,
                                 (const char *) buf, bufLen);
                         } else if (hand->callbacks->yajl_double) {
@@ -984,6 +1216,7 @@ around_again:
                                     "overflow";
                                 goto around_again;
                             }
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_double(hand->ctx, d);
                         }
                     }
@@ -995,6 +1228,7 @@ around_again:
                         if (hand->callbacks &&
                             hand->callbacks->yajl_start_array)
                         {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_start_array(hand->ctx);
                         }
                         yajl_bs_pop(hand->stateStack);
@@ -1006,6 +1240,7 @@ around_again:
                         yajl_state_map_start)
                     {
                         if (hand->callbacks && hand->callbacks->yajl_start_map) {
+                            hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                             cont = hand->callbacks->yajl_start_map(hand->ctx);
                         }
                         yajl_bs_pop(hand->stateStack);
@@ -1062,6 +1297,7 @@ around_again:
                     /* intentional fall-through */
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_map_key(hand->ctx,
                             buf, bufLen);
                     }
@@ -1100,6 +1336,7 @@ around_again:
             switch (tok) {
                 case yajl_tok_left_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_start_map) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_start_map(hand->ctx);
                     }
                     yajl_bs_pop(hand->stateStack);
@@ -1126,6 +1363,7 @@ around_again:
             switch (tok) {
                 case yajl_tok_left_brace:
                     if (hand->callbacks && hand->callbacks->yajl_start_array) {
+                        hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                         cont = hand->callbacks->yajl_start_array(hand->ctx);
                     }
                     yajl_bs_pop(hand->stateStack);
@@ -1160,10 +1398,12 @@ around_again:
             if ((c >= '0' && c <= '9') || c == '"' ||
                 (c >= 'A' && c <= 'Z') || c == ']' ||
                 (c >= 'a' && c <= 'z') || c == '}') {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_sup_null(hand->ctx);
                 goto around_again;
             }
             if (hand->callbacks->yajl_null) {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_null(hand->ctx);
             }
             /* got a value.  transition depends on the state we're in. */
@@ -1193,11 +1433,13 @@ around_again:
             if ((c >= '0' && c <= '9') || c == '"' ||
                 (c >= 'A' && c <= 'Z') || c == ']' ||
                 (c >= 'a' && c <= 'z') || c == '}') {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_sup_boolean(hand->ctx,
                     *yajl_buf_data(hand->decodeBuf) == 't');
                 goto around_again;
             }
             if (hand->callbacks->yajl_boolean) {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_boolean(hand->ctx,
                     *yajl_buf_data(hand->decodeBuf) == 't');
             }
@@ -1229,6 +1471,7 @@ around_again:
                 (c >= 'A' && c <= 'Z') || c == ']' ||
                 (c >= 'a' && c <= 'z') || c == '}') {
                 if (hand->callbacks->yajl_sup_number) {
+                    hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                     cont = hand->callbacks->yajl_sup_number(hand->ctx,
                         (const char *) yajl_buf_data(hand->decodeBuf),
                         yajl_buf_len(hand->decodeBuf));
@@ -1245,11 +1488,13 @@ around_again:
                         hand->parseError = "integer overflow" ;
                         goto around_again;
                     }
+                    hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                     cont = hand->callbacks->yajl_sup_integer(hand->ctx, i);
                 }
                 goto around_again;
             }
             if (hand->callbacks->yajl_number) {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_number(hand->ctx,
                     (const char *) yajl_buf_data(hand->decodeBuf),
                     yajl_buf_len(hand->decodeBuf));
@@ -1266,6 +1511,7 @@ around_again:
                     hand->parseError = "integer overflow" ;
                     goto around_again;
                 }
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_integer(hand->ctx, i);
             }
             /* got a value.  transition depends on the state we're in. */
@@ -1296,6 +1542,7 @@ around_again:
                 (c >= 'A' && c <= 'Z') || c == ']' ||
                 (c >= 'a' && c <= 'z') || c == '}') {
                 if (hand->callbacks->yajl_sup_number) {
+                    hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                     cont = hand->callbacks->yajl_sup_number(hand->ctx,
                         (const char *) yajl_buf_data(hand->decodeBuf),
                         yajl_buf_len(hand->decodeBuf));
@@ -1313,11 +1560,13 @@ around_again:
                             "overflow";
                         goto around_again;
                     }
+                    hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                     cont = hand->callbacks->yajl_sup_double(hand->ctx, d);
                 }
                 goto around_again;
             }
             if (hand->callbacks->yajl_number) {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_number(hand->ctx,
                     (const char *) yajl_buf_data(hand->decodeBuf),
                     yajl_buf_len(hand->decodeBuf));
@@ -1335,6 +1584,7 @@ around_again:
                         "overflow";
                     goto around_again;
                 }
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_double(hand->ctx, d);
             }
             /* got a value.  transition depends on the state we're in. */
@@ -1364,12 +1614,14 @@ around_again:
             if ((c >= '0' && c <= '9') || c == '"' ||
                 (c >= 'A' && c <= 'Z') || c == ']' ||
                 (c >= 'a' && c <= 'z') || c == '}') {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_sup_string(hand->ctx,
                     yajl_buf_data(hand->decodeBuf),
                     yajl_buf_len(hand->decodeBuf));
                 goto around_again;
             }
             if (hand->callbacks->yajl_string) {
+                hand->bytesConsumed = (size_t) (offset - jsonTextLen);
                 cont = hand->callbacks->yajl_string(hand->ctx,
                     yajl_buf_data(hand->decodeBuf),
                     yajl_buf_len(hand->decodeBuf));
