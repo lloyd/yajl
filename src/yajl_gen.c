@@ -29,6 +29,11 @@ typedef enum {
     yajl_gen_map_start,
     yajl_gen_map_key,
     yajl_gen_map_val,
+    /* the following is a hack, it means yajl_gen_map_val but whitespace
+     * has been suppressed, so don't suppress it twice (without this, we
+     * lose the whitespace before the closing } or ] of value inside map)
+     */
+    yajl_gen_map_val2,
     yajl_gen_array_start,
     yajl_gen_in_array,
     yajl_gen_complete,
@@ -175,6 +180,9 @@ yajl_gen_free(yajl_gen g)
                          g->indentString,                               \
                          (unsigned int)strlen(g->indentString));        \
         }                                                               \
+        else {                                                          \
+            g->state[g->depth] = yajl_gen_map_val2;                     \
+        }                                                               \
     }
 
 #define ENSURE_NOT_KEY \
@@ -211,6 +219,7 @@ yajl_gen_free(yajl_gen g)
             g->state[g->depth] = yajl_gen_in_array; \
             break;                                  \
         case yajl_gen_map_val:                      \
+        case yajl_gen_map_val2:                     \
             g->state[g->depth] = yajl_gen_map_key;  \
             break;                                  \
         default:                                    \
