@@ -242,6 +242,8 @@ extern "C" {
      * was encountered.
      */
     YAJL_API size_t yajl_get_bytes_consumed(yajl_handle hand);
+    YAJL_API size_t yajl_get_start_offset(yajl_handle hand);
+    YAJL_API size_t yajl_get_end_offset(yajl_handle hand);
 
     /** free an error returned from yajl_get_error */
     YAJL_API void yajl_free_error(yajl_handle hand, unsigned char * str);

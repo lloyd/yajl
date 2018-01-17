@@ -212,6 +212,18 @@ yajl_get_bytes_consumed(yajl_handle hand)
     else return hand->bytesConsumed;
 }
 
+size_t
+yajl_get_start_offset (yajl_handle hand)
+{
+    return hand->startOffset;
+}
+
+size_t
+yajl_get_end_offset(yajl_handle hand)
+{
+    return hand->endOffset;
+}
+
 
 void
 yajl_free_error(yajl_handle hand, unsigned char * str)

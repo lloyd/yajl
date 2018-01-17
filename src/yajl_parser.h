@@ -53,9 +53,11 @@ struct yajl_handle_t {
     yajl_lexer lexer;
     const char * parseError;
     /* the number of bytes consumed from the last client buffer,
-     * in the case of an error this will be an error offset, in the
-     * case of an error this can be used as the error offset */
+     * in the case of an error this will be the error offset */
     size_t bytesConsumed;
+    /* buffer position of start and end of last thing parsed */
+    size_t startOffset;
+    size_t endOffset;
     /* temporary storage for decoded strings */
     yajl_buf decodeBuf;
     /* a stack of states.  access with yajl_state_XXX routines */

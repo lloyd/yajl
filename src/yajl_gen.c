@@ -45,8 +45,9 @@ struct yajl_gen_t
     void * ctx; /* yajl_buf */
     /* memory allocation routines */
     yajl_alloc_funcs alloc;
-    /* for telling client what was buffer length after whitespace last time */
-    size_t last_offset;
+    /* buffer position of start and end of last thing generated */
+    size_t startOffset;
+    size_t endOffset;
 };
 
 int
@@ -174,9 +175,6 @@ yajl_gen_free(yajl_gen g)
                          g->indentString,                               \
                          (unsigned int)strlen(g->indentString));        \
         }                                                               \
-    }                                                                   \
-    if (g->print == (yajl_print_t)&yajl_buf_append) {                   \
-        g->last_offset = yajl_buf_len((yajl_buf)g->ctx);                \
     }
 
 #define ENSURE_NOT_KEY \
@@ -219,18 +217,34 @@ yajl_gen_free(yajl_gen g)
             break;                                  \
     }                                               \
 
-#define FINAL_NEWLINE                                        \
-    if (((g->flags & (yajl_gen_beautify | yajl_gen_no_final_newline)) == \
-         yajl_gen_beautify) && g->state[g->depth] == yajl_gen_complete) \
-        g->print(g->ctx, "\n", 1);
+#define FINAL_NEWLINE \
+    if (((g->flags &                                             \
+          (yajl_gen_beautify | yajl_gen_no_final_newline)) ==    \
+         yajl_gen_beautify) &&                                   \
+        g->state[g->depth] == yajl_gen_complete)                 \
+    {                                                            \
+        g->print(g->ctx, "\n", 1);                               \
+    }
+ 
+#define START_OFFSET \
+    if (g->print == (yajl_print_t)&yajl_buf_append) {           \
+        g->startOffset = yajl_buf_len((yajl_buf)g->ctx);        \
+    }
 
+#define END_OFFSET \
+    if (g->print == (yajl_print_t)&yajl_buf_append) {           \
+        g->endOffset = yajl_buf_len((yajl_buf)g->ctx);          \
+    }
+ 
 yajl_gen_status
 yajl_gen_integer(yajl_gen g, long long int number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%lld", number);
+    START_OFFSET;
     g->print(g->ctx, i, (unsigned int)strlen(i));
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -253,7 +267,9 @@ yajl_gen_double(yajl_gen g, double number)
     if (strspn(i, "0123456789-") == strlen(i)) {
         strcat(i, ".0");
     }
+    START_OFFSET;
     g->print(g->ctx, i, (unsigned int)strlen(i));
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -263,7 +279,9 @@ yajl_gen_status
 yajl_gen_number(yajl_gen g, const char * s, size_t l)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    START_OFFSET;
     g->print(g->ctx, s, l);
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -282,9 +300,11 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
         }
     }
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
+    START_OFFSET;
     g->print(g->ctx, "\"", 1);
     yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
     g->print(g->ctx, "\"", 1);
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -294,7 +314,9 @@ yajl_gen_status
 yajl_gen_null(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    START_OFFSET;
     g->print(g->ctx, "null", strlen("null"));
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -306,7 +328,9 @@ yajl_gen_bool(yajl_gen g, int boolean)
     const char * val = boolean ? "true" : "false";
 
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
+    START_OFFSET;
     g->print(g->ctx, val, (unsigned int)strlen(val));
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -320,11 +344,9 @@ yajl_gen_bool(yajl_gen g, int boolean)
         return yajl_gen_invalid_sup_item;                       \
     }
 
+
 #define INSERT_WHITESPACE_SUP \
-    g->print(g->ctx, " ", 1);                                   \
-    if (g->print == (yajl_print_t)&yajl_buf_append) {           \
-        g->last_offset = yajl_buf_len((yajl_buf)g->ctx);        \
-    }
+    g->print(g->ctx, " ", 1);
 
 yajl_gen_status
 yajl_gen_sup_integer(yajl_gen g, long long int number)
@@ -332,7 +354,9 @@ yajl_gen_sup_integer(yajl_gen g, long long int number)
     char i[32];
     ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
     sprintf(i, "%lld", number);
+    START_OFFSET;
     g->print(g->ctx, i, (unsigned int)strlen(i));
+    END_OFFSET;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -348,7 +372,9 @@ yajl_gen_sup_double(yajl_gen g, double number)
     if (strspn(i, "0123456789-") == strlen(i)) {
         strcat(i, ".0");
     }
+    START_OFFSET;
     g->print(g->ctx, i, (unsigned int)strlen(i));
+    END_OFFSET;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -357,7 +383,9 @@ yajl_gen_status
 yajl_gen_sup_number(yajl_gen g, const char * s, size_t l)
 {
     ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    START_OFFSET;
     g->print(g->ctx, s, l);
+    END_OFFSET;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -375,9 +403,11 @@ yajl_gen_sup_string(yajl_gen g, const unsigned char * str,
         }
     }
     ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    START_OFFSET;
     g->print(g->ctx, "\"", 1);
     yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
     g->print(g->ctx, "\"", 1);
+    END_OFFSET;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -386,7 +416,9 @@ yajl_gen_status
 yajl_gen_sup_null(yajl_gen g)
 {
     ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    START_OFFSET;
     g->print(g->ctx, "null", strlen("null"));
+    END_OFFSET;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -397,7 +429,9 @@ yajl_gen_sup_bool(yajl_gen g, int boolean)
     const char * val = boolean ? "true" : "false";
 
     ENSURE_VALID_STATE_SUP; INSERT_WHITESPACE_SUP;
+    START_OFFSET;
     g->print(g->ctx, val, (unsigned int)strlen(val));
+    END_OFFSET;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -409,7 +443,9 @@ yajl_gen_map_open(yajl_gen g)
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     INCREMENT_DEPTH;
     g->state[g->depth] = yajl_gen_map_start;
+    START_OFFSET;
     g->print(g->ctx, "{", 1);
+    END_OFFSET;
     return yajl_gen_status_ok;
 }
 
@@ -425,7 +461,9 @@ yajl_gen_map_close(yajl_gen g)
         if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
         INSERT_WHITESPACE;
     }
+    START_OFFSET;
     g->print(g->ctx, "}", 1);
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -437,7 +475,9 @@ yajl_gen_array_open(yajl_gen g)
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     INCREMENT_DEPTH;
     g->state[g->depth] = yajl_gen_array_start;
+    START_OFFSET;
     g->print(g->ctx, "[", 1);
+    END_OFFSET;
     return yajl_gen_status_ok;
 }
 
@@ -453,7 +493,9 @@ yajl_gen_array_close(yajl_gen g)
         if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
         INSERT_WHITESPACE;
     }
+    START_OFFSET;
     g->print(g->ctx, "]", 1);
+    END_OFFSET;
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -470,16 +512,15 @@ yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
 }
 
 size_t
-yajl_gen_get_offset(yajl_gen g)
+yajl_gen_get_start_offset(yajl_gen g)
 {
-    return (g->print == (yajl_print_t)&yajl_buf_append) ?
-        yajl_buf_len((yajl_buf)g->ctx) : 0;
+    return g->startOffset;
 }
 
 size_t
-yajl_gen_get_last_offset(yajl_gen g)
+yajl_gen_get_end_offset(yajl_gen g)
 {
-    return g->last_offset;
+    return g->endOffset;
 }
 
 void
