@@ -1,0 +1,7 @@
+array close ']'
+string: 'Да'
+string: 'Му'
+string: 'Еба'
+string: 'Майката'
+array open '['
+memory leaks:	0

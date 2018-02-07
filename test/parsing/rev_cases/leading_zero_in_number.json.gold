@@ -1,0 +1,4 @@
+map close '}'
+key: 'bad thing'
+lexical error: malformed number, extra leading zeros are not allowed.
+memory leaks:	0

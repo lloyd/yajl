@@ -1,0 +1,4 @@
+array close ']'
+string: 'foo'
+string: 'bar'
+memory leaks:	0

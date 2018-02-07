@@ -36,7 +36,15 @@ typedef enum {
     yajl_state_array_start,
     yajl_state_array_got_val,
     yajl_state_array_need_val,
-    yajl_state_got_value,
+    yajl_state_got_value
+#ifdef YAJL_SUPPLEMENTARY
+    /* reverse parser looks ahead to determine if item is supplementary */
+    , yajl_state_sup_null,
+    yajl_state_sup_boolean,
+    yajl_state_sup_integer,
+    yajl_state_sup_double,
+    yajl_state_sup_string,
+#endif
 } yajl_state;
 
 struct yajl_handle_t {
@@ -45,9 +53,11 @@ struct yajl_handle_t {
     yajl_lexer lexer;
     const char * parseError;
     /* the number of bytes consumed from the last client buffer,
-     * in the case of an error this will be an error offset, in the
-     * case of an error this can be used as the error offset */
+     * in the case of an error this will be the error offset */
     size_t bytesConsumed;
+    /* buffer position of start and end of last thing parsed */
+    size_t startOffset;
+    size_t endOffset;
     /* temporary storage for decoded strings */
     yajl_buf decodeBuf;
     /* a stack of states.  access with yajl_state_XXX routines */

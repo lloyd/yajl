@@ -93,6 +93,21 @@ extern "C" {
 
         int (* yajl_start_array)(void * ctx);
         int (* yajl_end_array)(void * ctx);
+#ifdef YAJL_SUPPLEMENTARY
+        int (* yajl_sup_null)(void * ctx);
+        int (* yajl_sup_boolean)(void * ctx, int boolVal);
+        int (* yajl_sup_integer)(void * ctx, long long integerVal);
+        int (* yajl_sup_double)(void * ctx, double doubleVal);
+        /** A callback which passes the string representation of the number
+         *  back to the client.  Will be used for all numbers when present */
+        int (* yajl_sup_number)(void * ctx, const char * numberVal,
+                            size_t numberLen);
+
+        /** strings are returned as pointers into the JSON text when,
+         * possible, as a result, they are _not_ null padded */
+        int (* yajl_sup_string)(void * ctx, const unsigned char * stringVal,
+                            size_t stringLen);
+#endif
     } yajl_callbacks;
 
     /** allocate a parser handle
@@ -107,6 +122,7 @@ extern "C" {
     YAJL_API yajl_handle yajl_alloc(const yajl_callbacks * callbacks,
                                     yajl_alloc_funcs * afs,
                                     void * ctx);
+    YAJL_API void yajl_reset(yajl_handle hand);
 
 
     /** configuration parameters for the parser, these may be passed to
@@ -156,7 +172,14 @@ extern "C" {
          * yajl will enter an error state (premature EOF).  Setting this
          * flag suppresses that check and the corresponding error.
          */
-        yajl_allow_partial_values = 0x10
+        yajl_allow_partial_values = 0x10,
+        /**
+         * if client returns 0 from a callback the parser returns to the
+         * caller, without this flag it will also clobber the parsing
+         * state with an error state, with this flag it will leave the
+         * parsing state alone so that another call will resume parsing.
+         */
+        yajl_resume_after_cancel = 0x20
     } yajl_option;
 
     /** allow the modification of parser options subsequent to handle
@@ -176,6 +199,9 @@ extern "C" {
     YAJL_API yajl_status yajl_parse(yajl_handle hand,
                                     const unsigned char * jsonText,
                                     size_t jsonTextLength);
+    YAJL_API yajl_status yajl_rev_parse(yajl_handle hand,
+                                        const unsigned char * jsonText,
+                                        size_t jsonTextLength);
 
     /** Parse any remaining buffered json.
      *  Since yajl is a stream-based parser, without an explicit end of
@@ -187,6 +213,7 @@ extern "C" {
      *  \param hand - a handle to the json parser allocated with yajl_alloc
      */
     YAJL_API yajl_status yajl_complete_parse(yajl_handle hand);
+    YAJL_API yajl_status yajl_rev_complete_parse(yajl_handle hand);
 
     /** get an error string describing the state of the
      *  parse.
@@ -215,6 +242,8 @@ extern "C" {
      * was encountered.
      */
     YAJL_API size_t yajl_get_bytes_consumed(yajl_handle hand);
+    YAJL_API size_t yajl_get_start_offset(yajl_handle hand);
+    YAJL_API size_t yajl_get_end_offset(yajl_handle hand);
 
     /** free an error returned from yajl_get_error */
     YAJL_API void yajl_free_error(yajl_handle hand, unsigned char * str);

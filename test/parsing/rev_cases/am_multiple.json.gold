@@ -1,0 +1,5 @@
+map close '}'
+map open '{'
+map close '}'
+map open '{'
+memory leaks:	0

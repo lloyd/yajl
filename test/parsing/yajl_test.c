@@ -150,17 +150,17 @@ static yajl_callbacks callbacks = {
 
 static void usage(const char * progname)
 {
-    fprintf(stderr,
-            "usage:  %s [options]\n"
-            "Parse input from stdin as JSON and ouput parsing details "
-                                                          "to stdout\n"
-            "   -b  set the read buffer size\n"
-            "   -c  allow comments\n"
-            "   -g  allow *g*arbage after valid JSON text\n"
-            "   -m  allows the parser to consume multiple JSON values\n"
-            "       from a single string separated by whitespace\n"
-            "   -p  partial JSON documents should not cause errors\n",
-            progname);
+    printf("usage:  %s [options] [filename]\n"
+           "Parse input from file or stdin as JSON and output parsing "
+                                                         "details to stdout\n"
+           "   -b  set the read buffer size\n"
+           "   -c  allow comments\n"
+           "   -g  allow *g*arbage after valid JSON text\n"
+           "   -m  allows the parser to consume multiple JSON values\n"
+           "       from a single string separated by whitespace\n"
+           "   -p  partial JSON documents should not cause errors\n"
+           "   -v  verbose error messages\n",
+           progname);
     exit(1);
 }
 
@@ -172,6 +172,7 @@ main(int argc, char ** argv)
     static unsigned char * fileData = NULL;
     FILE *file;
     size_t bufSize = BUF_SIZE;
+    unsigned int verbose = 0;
     yajl_status stat;
     size_t rd;
     int i, j;
@@ -220,6 +221,8 @@ main(int argc, char ** argv)
             yajl_config(hand, yajl_allow_multiple_values, 1);
         } else if (!strcmp("-p", argv[i])) {
             yajl_config(hand, yajl_allow_partial_values, 1);
+        } else if (!strcmp("-v", argv[i])) {
+            verbose = 1;
         } else {
             fileName = argv[i];
             break;
@@ -230,7 +233,7 @@ main(int argc, char ** argv)
 
     if (fileData == NULL) {
         fprintf(stderr,
-                "failed to allocate read buffer of %zu bytes, exiting.",
+                "failed to allocate read buffer of %zu bytes\n",
                 bufSize);
         yajl_free(hand);
         exit(2);
@@ -239,6 +242,11 @@ main(int argc, char ** argv)
     if (fileName)
     {
         file = fopen(fileName, "r");
+        if (file == NULL) {
+            fprintf(stderr, "error opening '%s'\n", fileName);
+            yajl_free(hand);
+            exit(2);
+        }
     }
     else
     {
@@ -248,8 +256,10 @@ main(int argc, char ** argv)
         rd = fread((void *) fileData, 1, bufSize, file);
 
         if (rd == 0) {
-            if (!feof(stdin)) {
-                fprintf(stderr, "error reading from '%s'\n", fileName);
+            if (!feof(file)) {
+                fprintf(stderr, "error reading '%s'\n", fileName);
+                yajl_free(hand);
+                exit(2);
             }
             break;
         }
@@ -262,9 +272,9 @@ main(int argc, char ** argv)
     stat = yajl_complete_parse(hand);
     if (stat != yajl_status_ok)
     {
-        unsigned char * str = yajl_get_error(hand, 0, fileData, rd);
+        unsigned char * str = yajl_get_error(hand, verbose, fileData, rd);
         fflush(stdout);
-        fprintf(stderr, "%s", (char *) str);
+        printf(/*fprintf(stderr,*/ "%s", (char *) str);
         yajl_free_error(hand, str);
     }
 

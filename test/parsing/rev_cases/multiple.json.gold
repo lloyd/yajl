@@ -1,0 +1,4 @@
+map close '}'
+map open '{'
+parse error: trailing garbage
+memory leaks:	0

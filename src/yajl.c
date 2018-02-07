@@ -16,7 +16,9 @@
 
 #include "api/yajl_parse.h"
 #include "yajl_lex.h"
+#include "yajl_rev_lex.h"
 #include "yajl_parser.h"
+#include "yajl_rev_parser.h"
 #include "yajl_alloc.h"
 
 #include <stdlib.h>
@@ -78,6 +80,17 @@ yajl_alloc(const yajl_callbacks * callbacks,
     return hand;
 }
 
+void
+yajl_reset(yajl_handle hand)
+{
+    if (hand->lexer) {
+        yajl_lex_reset(hand->lexer);
+    }
+    hand->bytesConsumed = 0;
+    yajl_bs_init(hand->stateStack, &(hand->alloc));
+    yajl_bs_push(hand->stateStack, yajl_state_start);
+}
+
 int
 yajl_config(yajl_handle h, yajl_option opt, ...)
 {
@@ -91,6 +104,7 @@ yajl_config(yajl_handle h, yajl_option opt, ...)
         case yajl_allow_trailing_garbage:
         case yajl_allow_multiple_values:
         case yajl_allow_partial_values:
+        case yajl_resume_after_cancel:
             if (va_arg(ap, int)) h->flags |= opt;
             else h->flags &= ~opt;
             break;
@@ -131,6 +145,22 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
     return status;
 }
 
+yajl_status
+yajl_rev_parse(yajl_handle hand, const unsigned char * jsonText,
+               size_t jsonTextLen)
+{
+    yajl_status status;
+
+    /* lazy allocation of the lexer */
+    if (hand->lexer == NULL) {
+        hand->lexer = yajl_rev_lex_alloc(&(hand->alloc),
+                                         hand->flags & yajl_allow_comments,
+                                         !(hand->flags & yajl_dont_validate_strings));
+    }
+
+    status = yajl_rev_do_parse(hand, jsonText + jsonTextLen, -jsonTextLen);
+    return status;
+}
 
 yajl_status
 yajl_complete_parse(yajl_handle hand)
@@ -150,6 +180,24 @@ yajl_complete_parse(yajl_handle hand)
     return yajl_do_finish(hand);
 }
 
+yajl_status
+yajl_rev_complete_parse(yajl_handle hand)
+{
+    /* The lexer is lazy allocated in the first call to parse.  if parse is
+     * never called, then no data was provided to parse at all.  This is a
+     * "premature EOF" error unless yajl_allow_partial_values is specified.
+     * allocating the lexer now is the simplest possible way to handle this
+     * case while preserving all the other semantics of the parser
+     * (multiple values, partial values, etc). */
+    if (hand->lexer == NULL) {
+        hand->lexer = yajl_rev_lex_alloc(&(hand->alloc),
+                                         hand->flags & yajl_allow_comments,
+                                         !(hand->flags & yajl_dont_validate_strings));
+    }
+
+    return yajl_rev_do_finish(hand);
+}
+
 unsigned char *
 yajl_get_error(yajl_handle hand, int verbose,
                const unsigned char * jsonText, size_t jsonTextLen)
@@ -162,6 +210,18 @@ yajl_get_bytes_consumed(yajl_handle hand)
 {
     if (!hand) return 0;
     else return hand->bytesConsumed;
+}
+
+size_t
+yajl_get_start_offset (yajl_handle hand)
+{
+    return hand->startOffset;
+}
+
+size_t
+yajl_get_end_offset(yajl_handle hand)
+{
+    return hand->endOffset;
 }
 
 

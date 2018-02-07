@@ -54,6 +54,9 @@ extern "C" {
          *  option is enabled and an invalid was passed by client code.
          */
         yajl_gen_invalid_string
+#ifdef YAJL_SUPPLEMENTARY
+        , yajl_gen_invalid_sup_item
+#endif
     } yajl_gen_status;
 
     /** an opaque handle to a generator */
@@ -98,7 +101,12 @@ extern "C" {
          * iterest of saving bytes.  Setting this flag will cause YAJL to
          * always escape '/' in generated JSON strings.
          */
-        yajl_gen_escape_solidus = 0x10
+        yajl_gen_escape_solidus = 0x10,
+        /**
+         * suppressing final newline, useful with YAJL_SUPPLEMENTARY if
+         * supplementary items are going to be added after the root item
+         */
+        yajl_gen_no_final_newline = 0x20
     } yajl_gen_option;
 
     /** allow the modification of generator options subsequent to handle
@@ -133,6 +141,23 @@ extern "C" {
                                              size_t len);
     YAJL_API yajl_gen_status yajl_gen_null(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_bool(yajl_gen hand, int boolean);
+#ifdef YAJL_SUPPLEMENTARY
+    YAJL_API yajl_gen_status yajl_gen_sup_integer(yajl_gen hand,
+                                                  long long int number);
+    /** generate a floating point number.  number may not be infinity or
+     *  NaN, as these have no representation in JSON.  In these cases the
+     *  generator will return 'yajl_gen_invalid_number' */
+    YAJL_API yajl_gen_status yajl_gen_sup_double(yajl_gen hand,
+                                                 double number);
+    YAJL_API yajl_gen_status yajl_gen_sup_number(yajl_gen hand,
+                                                 const char * num,
+                                                 size_t len);
+    YAJL_API yajl_gen_status yajl_gen_sup_string(yajl_gen hand,
+                                                 const unsigned char * str,
+                                                 size_t len);
+    YAJL_API yajl_gen_status yajl_gen_sup_null(yajl_gen hand);
+    YAJL_API yajl_gen_status yajl_gen_sup_bool(yajl_gen hand, int boolean);
+#endif
     YAJL_API yajl_gen_status yajl_gen_map_open(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_map_close(yajl_gen hand);
     YAJL_API yajl_gen_status yajl_gen_array_open(yajl_gen hand);
@@ -144,6 +169,8 @@ extern "C" {
     YAJL_API yajl_gen_status yajl_gen_get_buf(yajl_gen hand,
                                               const unsigned char ** buf,
                                               size_t * len);
+    YAJL_API size_t yajl_gen_get_start_offset(yajl_gen hand);
+    YAJL_API size_t yajl_gen_get_end_offset(yajl_gen hand);
 
     /** clear yajl's output buffer, but maintain all internal generation
      *  state.  This function will not "reset" the generator state, and is
@@ -154,7 +181,8 @@ extern "C" {
      *  json entities in a stream. The "sep" string will be inserted to
      *  separate the previously generated entity from the current,
      *  NULL means *no separation* of entites (clients beware, generating
-     *  multiple JSON numbers without a separator, for instance, will result in ambiguous output)
+     *  multiple JSON numbers without a separator, for instance, will
+     *  result in ambiguous output)
      *
      *  Note: this call will not clear yajl's output buffer.  This
      *  may be accomplished explicitly by calling yajl_gen_clear() */

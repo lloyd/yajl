@@ -1,0 +1,14 @@
+map close '}'
+map open '{'
+array close ']'
+array open '['
+array close ']'
+array open '['
+string: 'sdfasd'
+integer: 123
+map close '}'
+key: '123'
+integer: 123
+map open '{'
+double: 3.1e+124
+memory leaks:	0
