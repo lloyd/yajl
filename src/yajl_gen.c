@@ -209,9 +209,13 @@ yajl_gen_status
 yajl_gen_integer(yajl_gen g, long long int number)
 {
     char i[32];
+    int len;
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%lld", number);
-    g->print(g->ctx, i, (unsigned int)strlen(i));
+    len = sprintf(i, "%lld", number);
+    if (len < 0) {
+        return yajl_gen_invalid_number;
+    }
+    g->print(g->ctx, i, (unsigned int)len);
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
@@ -227,14 +231,18 @@ yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
+    int len;
     ENSURE_VALID_STATE; ENSURE_NOT_KEY;
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
     INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%.20g", number);
-    if (strspn(i, "0123456789-") == strlen(i)) {
+    len = sprintf(i, "%.20g", number);
+    if (len < 0) {
+        return yajl_gen_invalid_number;
+    }
+    if (strspn(i, "0123456789-") == (unsigned int)len) {
         strcat(i, ".0");
     }
-    g->print(g->ctx, i, (unsigned int)strlen(i));
+    g->print(g->ctx, i, (unsigned int)len);
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
