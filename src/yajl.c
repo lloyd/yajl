@@ -86,12 +86,13 @@ yajl_config(yajl_handle h, yajl_option opt, ...)
     va_start(ap, opt);
 
     switch(opt) {
+        case yajl_allow_json5:
+            opt |= yajl_allow_comments; /* JSON5 allows comments */
         case yajl_allow_comments:
         case yajl_dont_validate_strings:
         case yajl_allow_trailing_garbage:
         case yajl_allow_multiple_values:
         case yajl_allow_partial_values:
-        case yajl_allow_json5:
             if (va_arg(ap, int)) h->flags |= opt;
             else h->flags &= ~opt;
             break;
