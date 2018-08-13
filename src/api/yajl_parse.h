@@ -156,7 +156,13 @@ extern "C" {
          * yajl will enter an error state (premature EOF).  Setting this
          * flag suppresses that check and the corresponding error.
          */
-        yajl_allow_partial_values = 0x10
+        yajl_allow_partial_values = 0x10,
+        /**
+         * The JSON5 standard allows additional formats for numbers, strings
+         * and object keys which are not permitted in the JSON standard.
+         * Setting this flag enables JSON5 formats in the lexer and parser.
+         */
+        yajl_allow_json5 = 0x20,
     } yajl_option;
 
     /** allow the modification of parser options subsequent to handle

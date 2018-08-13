@@ -154,6 +154,7 @@ static void usage(const char * progname)
             "usage:  %s [options]\n"
             "Parse input from stdin as JSON and ouput parsing details "
                                                           "to stdout\n"
+            "   -5  allow JSON5\n"
             "   -b  set the read buffer size\n"
             "   -c  allow comments\n"
             "   -g  allow *g*arbage after valid JSON text\n"
@@ -196,7 +197,9 @@ main(int argc, char ** argv)
 
     /* check arguments.  We expect exactly one! */
     for (i=1;i<argc;i++) {
-        if (!strcmp("-c", argv[i])) {
+        if (!strcmp("-5", argv[i])) {
+            yajl_config(hand, yajl_allow_json5, 1);
+        } else if (!strcmp("-c", argv[i])) {
             yajl_config(hand, yajl_allow_comments, 1);
         } else if (!strcmp("-b", argv[i])) {
             if (++i >= argc) usage(argv[0]);

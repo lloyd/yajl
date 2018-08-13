@@ -414,7 +414,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =
-                        "invalid object key (must be a string)"; 
+                        "invalid object key (must be a string)";
                     goto around_again;
             }
         }
@@ -495,4 +495,3 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
     abort();
     return yajl_status_error;
 }
-

@@ -49,7 +49,8 @@ typedef struct yajl_lexer_t * yajl_lexer;
 
 yajl_lexer yajl_lex_alloc(yajl_alloc_funcs * alloc,
                           unsigned int allowComments,
-                          unsigned int validateUTF8);
+                          unsigned int validateUTF8,
+                          unsigned int allowJson5);
 
 void yajl_lex_free(yajl_lexer lexer);
 
