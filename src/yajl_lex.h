@@ -99,6 +99,7 @@ typedef enum {
     yajl_lex_unallowed_comment,
     yajl_lex_missing_hex_digit_after_0x,
     yajl_lex_unallowed_hex_integer,
+    yajl_lex_unallowed_special_number,
 } yajl_lex_error;
 
 const char * yajl_lex_error_to_string(yajl_lex_error error);

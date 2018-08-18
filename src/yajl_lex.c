@@ -395,6 +395,25 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
         c = readChar(lexer, jsonText, offset);
     }
 
+    if (c == 'I') {
+        const char * want = "nfinity";
+        do {
+            RETURN_IF_EOF;
+            c = readChar(lexer, jsonText, offset);
+            if (c != *want) {
+                unreadChar(lexer, offset);
+                lexer->error = yajl_lex_invalid_string;
+                return yajl_tok_error;
+            }
+        } while (*(++want));
+        if (!lexer->allowJson5) {
+            unreadChar(lexer, offset);
+            lexer->error = yajl_lex_unallowed_special_number;
+            return yajl_tok_error;
+        }
+        return yajl_tok_double;
+    }
+
     /* a single zero, hex number, or a series of decimal digits */
     if (c == '0') {
         numRd++;
@@ -530,6 +549,23 @@ yajl_lex_comment(yajl_lexer lexer, const unsigned char * jsonText,
     return tok;
 }
 
+/* Macro to reduce code duplication in yajl_lex_lex() */
+#define LEX_WANT(tring) \
+    const char * want = tring; \
+    do { \
+        if (*offset >= jsonTextLen) { \
+            tok = yajl_tok_eof; \
+            goto lexed; \
+        } \
+        c = readChar(lexer, jsonText, offset); \
+        if (c != *want) { \
+            unreadChar(lexer, offset); \
+            lexer->error = yajl_lex_invalid_string; \
+            tok = yajl_tok_error; \
+            goto lexed; \
+        } \
+    } while (*(++want))
+
 yajl_tok
 yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
              size_t jsonTextLen, size_t * offset,
@@ -575,57 +611,40 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                 startOffset++;
                 break;
             case 't': {
-                const char * want = "rue";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = yajl_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
+                LEX_WANT("rue");
                 tok = yajl_tok_bool;
                 goto lexed;
             }
             case 'f': {
-                const char * want = "alse";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = yajl_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
+                LEX_WANT("alse");
                 tok = yajl_tok_bool;
                 goto lexed;
             }
             case 'n': {
-                const char * want = "ull";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = yajl_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_invalid_string;
-                        tok = yajl_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
+                LEX_WANT("ull");
                 tok = yajl_tok_null;
+                goto lexed;
+            }
+            case 'I': {
+                LEX_WANT("nfinity");
+                if (!lexer->allowJson5) {
+                    unreadChar(lexer, offset);
+                    lexer->error = yajl_lex_unallowed_special_number;
+                    tok = yajl_tok_error;
+                } else {
+                    tok = yajl_tok_double;
+                }
+                goto lexed;
+            }
+            case 'N': {
+                LEX_WANT("aN");
+                if (!lexer->allowJson5) {
+                    unreadChar(lexer, offset);
+                    lexer->error = yajl_lex_unallowed_special_number;
+                    tok = yajl_tok_error;
+                } else {
+                    tok = yajl_tok_double;
+                }
                 goto lexed;
             }
             case '"': {
@@ -753,7 +772,7 @@ yajl_lex_error_to_string(yajl_lex_error error)
                    "decimal point.";
         case yajl_lex_missing_integer_after_minus:
             return "malformed number, a digit is required after the "
-                   "minus sign.";
+                   "plus/minus sign.";
         case yajl_lex_unallowed_comment:
             return "probable comment found in input text, comments are "
                    "not enabled.";
@@ -761,6 +780,8 @@ yajl_lex_error_to_string(yajl_lex_error error)
             return "malformed number, a hex digit is required after the 0x/0X.";
         case yajl_lex_unallowed_hex_integer:
             return "probable hex number found, JSON5 is not enabled.";
+        case yajl_lex_unallowed_special_number:
+            return "special number Infinity or NaN found, JSON5 is not enabled.";
     }
     return "unknown error code";
 }

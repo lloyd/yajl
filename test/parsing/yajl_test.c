@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <assert.h>
 
@@ -85,7 +86,18 @@ static int test_yajl_integer(void *ctx, long long integerVal)
 
 static int test_yajl_double(void *ctx, double doubleVal)
 {
-    printf("double: %g\n", doubleVal);
+    if (doubleVal != doubleVal) {
+        printf("double: NaN\n");
+    }
+    else if (doubleVal == HUGE_VAL) {
+        printf("double: Infinity\n");
+    }
+    else if (doubleVal == -HUGE_VAL) {
+        printf("double: -Infinity\n");
+    }
+    else {
+        printf("double: %g\n", doubleVal);
+    }
     return 1;
 }
 

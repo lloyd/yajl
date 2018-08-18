@@ -3,5 +3,9 @@ double: 10
 double: 10
 double: 3.14157
 double: -1000
+double: NaN
+double: Infinity
+double: Infinity
+double: -Infinity
 array close ']'
 memory leaks:	0

@@ -1,1 +1,1 @@
-[ .1e2, 10., +3.141569, -.1e4]
+[ .1e2, 10., +3.141569, -.1e4, NaN, Infinity, +Infinity, -Infinity ]
