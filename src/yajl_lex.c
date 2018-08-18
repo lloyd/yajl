@@ -380,6 +380,7 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
      *       _beyond_ in order to know that they are complete.  There
      *       is an ambiguous case for integers at EOF. */
 
+    const char hexDigits[] = "0123456789abcdefABCDEF";
     unsigned char c;
     int numRd = 0;
 
@@ -394,11 +395,16 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
         c = readChar(lexer, jsonText, offset);
     }
 
-    /* a single zero, or a series of integers */
+    /* a single zero, hex number, or a series of decimal digits */
     if (c == '0') {
         numRd++;
         RETURN_IF_EOF;
         c = readChar(lexer, jsonText, offset);
+        if (c == 'x' || c == 'X') {
+            if (lexer->allowJson5) goto got_hex;
+            lexer->error = yajl_lex_unallowed_hex_integer;
+            return yajl_tok_error;
+        }
     } else if (c >= '1' && c <= '9') {
         do {
             numRd++;
@@ -415,7 +421,7 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
 
     /* optional fraction (indicates this is floating point) */
     if (c == '.') {
-    got_decimal:
+  got_decimal:
         RETURN_IF_EOF;
         c = readChar(lexer, jsonText, offset);
         if (!lexer->allowJson5) numRd = 0;
@@ -458,6 +464,25 @@ yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
         tok = yajl_tok_double;
     }
 
+    goto end_number;
+
+  got_hex:
+    RETURN_IF_EOF;
+    c = readChar(lexer, jsonText, offset);
+
+    if (strchr(hexDigits, c)) {
+        do {
+            RETURN_IF_EOF;
+            c = readChar(lexer, jsonText, offset);
+        } while (strchr(hexDigits, c));
+    }
+    else {
+        unreadChar(lexer, offset);
+        lexer->error = yajl_lex_missing_hex_digit_after_0x;
+        return yajl_tok_error;
+    }
+
+  end_number:
     /* we always go "one too far" */
     unreadChar(lexer, offset);
 
@@ -732,6 +757,10 @@ yajl_lex_error_to_string(yajl_lex_error error)
         case yajl_lex_unallowed_comment:
             return "probable comment found in input text, comments are "
                    "not enabled.";
+        case yajl_lex_missing_hex_digit_after_0x:
+            return "malformed number, a hex digit is required after the 0x/0X.";
+        case yajl_lex_unallowed_hex_integer:
+            return "probable hex number found, JSON5 is not enabled.";
     }
     return "unknown error code";
 }

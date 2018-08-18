@@ -29,33 +29,52 @@
 #include <assert.h>
 #include <math.h>
 
-#define MAX_VALUE_TO_MULTIPLY ((LLONG_MAX / 10) + (LLONG_MAX % 10))
-
- /* same semantics as strtol */
 long long
 yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
     long long ret  = 0;
     long sign = 1;
+    long base = 10;
+    long long max = LLONG_MAX / base;
     const unsigned char *pos = number;
-    if (*pos == '-') { pos++; sign = -1; }
-    if (*pos == '+') { pos++; }
+    const unsigned char *end = number + length;
 
-    while (pos < number + length) {
-        if ( ret > MAX_VALUE_TO_MULTIPLY ) {
+    if (*pos == '-') {
+        pos++;
+        sign = -1;
+    }
+    else if (*pos == '+') {
+        pos++;
+    }
+
+    if (*pos == '0' &&
+        (pos[1] == 'x' || pos[1] == 'X')) {
+        base = 16;
+        max = LLONG_MAX / base;
+        pos += 2;
+    }
+
+    while (pos < end) {
+        int digit;
+
+        if (ret > max) {
             errno = ERANGE;
             return sign == 1 ? LLONG_MAX : LLONG_MIN;
         }
-        ret *= 10;
-        if (LLONG_MAX - ret < (*pos - '0')) {
+
+        ret *= base;
+        digit = *pos++ - '0';
+        /* Don't have to check for non-digit characters,
+         * the lexer has already rejected any bad digits.
+         */
+        if (digit > 9)
+            digit = (digit - ('A' - '0') + 10) & 0xf;
+
+        if (LLONG_MAX - ret < digit) {
             errno = ERANGE;
             return sign == 1 ? LLONG_MAX : LLONG_MIN;
         }
-        if (*pos < '0' || *pos > '9') {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        ret += (*pos++ - '0');
+        ret += digit;
     }
 
     return sign * ret;
