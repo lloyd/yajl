@@ -58,6 +58,7 @@ yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
         case yajl_gen_beautify:
         case yajl_gen_validate_utf8:
         case yajl_gen_escape_solidus:
+        case yajl_gen_json5:
             if (va_arg(ap, int)) g->flags |= opt;
             else g->flags &= ~opt;
             break;
@@ -227,13 +228,24 @@ yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
+    int special = 1;
     ENSURE_VALID_STATE; ENSURE_NOT_KEY;
-    if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
-    INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%.20g", number);
-    if (strspn(i, "0123456789-") == strlen(i)) {
-        strcat(i, ".0");
+    if (isnan(number)) {
+        strcpy(i, "NaN");
     }
+    else if (isinf(number)) {
+        sprintf(i, "%cInfinity", number < 0 ? '-' : '+');
+    }
+    else {
+        special = 0;
+        sprintf(i, "%.20g", number);
+        if (strspn(i, "0123456789-") == strlen(i)) {
+            strcat(i, ".0");
+        }
+    }
+    if (special && !(g->flags & yajl_gen_json5))
+        return yajl_gen_invalid_number;
+    INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;

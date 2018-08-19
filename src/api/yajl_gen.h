@@ -98,7 +98,14 @@ extern "C" {
          * iterest of saving bytes.  Setting this flag will cause YAJL to
          * always escape '/' in generated JSON strings.
          */
-        yajl_gen_escape_solidus = 0x10
+        yajl_gen_escape_solidus = 0x10,
+        /**
+         * Special numbers such as NaN and Infinity cannot be represented in
+         * the original JSON, but are permitted in JSON5. Setting this flag
+         * allows yajl_gen_double to output the JSON5 representation of these
+         * special numbers instead of returning with an error.
+         */
+        yajl_gen_json5 = 0x20,
     } yajl_gen_option;
 
     /** allow the modification of generator options subsequent to handle
@@ -121,9 +128,12 @@ extern "C" {
     YAJL_API void yajl_gen_free(yajl_gen handle);
 
     YAJL_API yajl_gen_status yajl_gen_integer(yajl_gen hand, long long int number);
-    /** generate a floating point number.  number may not be infinity or
-     *  NaN, as these have no representation in JSON.  In these cases the
-     *  generator will return 'yajl_gen_invalid_number' */
+    /** generate a floating point number
+     *  \param number   the value to output, which may only be Infinity or NaN
+     *                  if the yajl_gen_json5 flag is set, as these values have
+     *                  no legal representation in JSON. In these cases the
+     *                  generator will return 'yajl_gen_invalid_number'
+     */
     YAJL_API yajl_gen_status yajl_gen_double(yajl_gen hand, double number);
     YAJL_API yajl_gen_status yajl_gen_number(yajl_gen hand,
                                              const char * num,
