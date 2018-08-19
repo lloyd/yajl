@@ -45,10 +45,16 @@ static int reformat_boolean(void * ctx, int boolean)
     GEN_AND_RETURN(yajl_gen_bool(g, boolean));
 }
 
-static int reformat_number(void * ctx, const char * s, size_t l)
+static int reformat_integer(void * ctx, long long int i)
 {
     yajl_gen g = (yajl_gen) ctx;
-    GEN_AND_RETURN(yajl_gen_number(g, s, l));
+    GEN_AND_RETURN(yajl_gen_integer(g, i));
+}
+
+static int reformat_double(void * ctx, double d)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    GEN_AND_RETURN(yajl_gen_double(g, d));
 }
 
 static int reformat_string(void * ctx, const unsigned char * stringVal,
@@ -93,9 +99,9 @@ static int reformat_end_array(void * ctx)
 static yajl_callbacks callbacks = {
     reformat_null,
     reformat_boolean,
+    reformat_integer,
+    reformat_double,
     NULL,
-    NULL,
-    reformat_number,
     reformat_string,
     reformat_start_map,
     reformat_map_key,
@@ -146,6 +152,7 @@ main(int argc, char ** argv)
             switch (argv[a][i]) {
                 case '5':
                     yajl_config(hand, yajl_allow_json5, 1);
+                    yajl_gen_config(g, yajl_gen_json5, 1);
                     break;
                 case 'm':
                     yajl_gen_config(g, yajl_gen_beautify, 0);
