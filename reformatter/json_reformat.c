@@ -116,6 +116,7 @@ usage(const char * progname)
     fprintf(stderr, "%s: reformat json from stdin\n"
             "usage:  json_reformat [options]\n"
             "    -5 allow JSON5 input\n"
+            "    -g generate JSON5 output\n"
             "    -e escape any forward slashes (for embedding in HTML)\n"
             "    -m minimize json rather than beautify (default)\n"
             "    -s reformat a stream of multiple json entites\n"
@@ -152,6 +153,8 @@ main(int argc, char ** argv)
             switch (argv[a][i]) {
                 case '5':
                     yajl_config(hand, yajl_allow_json5, 1);
+                    break;
+                case 'g':
                     yajl_gen_config(g, yajl_gen_json5, 1);
                     break;
                 case 'm':

@@ -275,9 +275,18 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
         }
     }
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
-    g->print(g->ctx, "\"", 1);
-    yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
-    g->print(g->ctx, "\"", 1);
+    if (g->flags & yajl_gen_json5 &&
+        (g->state[g->depth] == yajl_gen_map_key ||
+         g->state[g->depth] == yajl_gen_map_start) &&
+        yajl_string_validate_identifier(str, len)) {
+        /* No need to quote this key */
+        g->print(g->ctx, (const char *) str, len);
+    }
+    else {
+        g->print(g->ctx, "\"", 1);
+        yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
+        g->print(g->ctx, "\"", 1);
+    }
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
