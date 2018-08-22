@@ -332,11 +332,19 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
                         goto finish_string_lex;
                     }
                 }
-            } else if (!(charLookupTable[curChar] & VEC)) {
+            }
+            else if (lexer->allowJson5 ? (curChar >= '1' && curChar <= '9')
+                : !(charLookupTable[curChar] & VEC)) {
                 /* back up to offending char */
                 unreadChar(lexer, offset);
                 lexer->error = yajl_lex_string_invalid_escaped_char;
                 goto finish_string_lex;
+            }
+            else if (lexer->allowJson5 && curChar == '\r') {
+                STR_CHECK_EOF;
+                curChar = readChar(lexer, jsonText, offset);
+                if (curChar != '\n')
+                    unreadChar(lexer, offset);
             }
         }
         /* when not validating UTF8 it's a simple table lookup to determine

@@ -128,8 +128,6 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                 case 'r': unescaped = "\r"; break;
                 case 'n': unescaped = "\n"; break;
                 case '\\': unescaped = "\\"; break;
-                case '/': unescaped = "/"; break;
-                case '"': unescaped = "\""; break;
                 case 'f': unescaped = "\f"; break;
                 case 'b': unescaped = "\b"; break;
                 case 't': unescaped = "\t"; break;
@@ -165,8 +163,24 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
 
                     break;
                 }
+                /* The following escapes are only valid when parsing JSON5.
+                 * The lexer catches them when allowJson5 is not set.
+                 */
+                case '\n': beg = ++end; continue;
+                case '\r':
+                    if (str[++end] == '\n') ++end;
+                    beg = end;
+                    continue;
+                case '0':
+                    utf8Buf[0] = '\0';
+                    yajl_buf_append(buf, utf8Buf, 1);
+                    beg = ++end;
+                    continue;
+                case 'v': unescaped = "\v"; break;
                 default:
-                    assert("this should never happen" == NULL);
+                    utf8Buf[0] = str[end];
+                    utf8Buf[1] = 0;
+                    unescaped = utf8Buf;
             }
             yajl_buf_append(buf, unescaped, (unsigned int)strlen(unescaped));
             beg = ++end;
