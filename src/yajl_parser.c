@@ -398,8 +398,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
         case yajl_state_map_need_key: {
             /* only difference between these two states is that in
              * start '}' is valid, whereas in need_key, we've parsed
-             * a comma, and a string key _must_ follow */
-            tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
+             * a comma, so unless this is JSON5 a key _must_ follow. */
+            tok = yajl_lex_key(hand->lexer, jsonText, jsonTextLen,
                                offset, &buf, &bufLen);
             switch (tok) {
                 case yajl_tok_eof:
@@ -437,7 +437,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 }
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
-                    hand->parseError =
+                    hand->parseError = hand->flags & yajl_allow_json5 ?
+                        "invalid object key (must be a string or identifier)" :
                         "invalid object key (must be a string)";
                     goto around_again;
             }

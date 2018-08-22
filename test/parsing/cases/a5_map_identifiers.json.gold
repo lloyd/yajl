@@ -1,0 +1,21 @@
+map open '{'
+key: '$'
+integer: 1
+key: '_'
+integer: 2
+key: 'A'
+integer: 3
+key: 'Z'
+integer: 4
+key: 'a'
+integer: 5
+key: 'z'
+integer: 6
+key: '$1'
+integer: 7
+key: '_zz'
+integer: 8
+key: 'ZZ9$Zalpha'
+integer: 9
+map close '}'
+memory leaks:	0

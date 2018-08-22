@@ -126,19 +126,21 @@ yajl_lex_free(yajl_lexer lxr)
     return;
 }
 
-/* a lookup table which lets us quickly determine three things:
+/* a lookup table which lets us quickly determine various things:
  * VEC - valid escaped control char
- * note.  the solidus '/' may be escaped or not.
+ *       Note: the solidus '/' may be escaped or not.
  * IJC - invalid json char
  * VHC - valid hex char
  * NFP - needs further processing (from a string scanning perspective)
  * NUC - needs utf8 checking when enabled (from a string scanning perspective)
+ * VIC - valid identifier char (after the first char)
  */
 #define VEC 0x01
 #define IJC 0x02
 #define VHC 0x04
 #define NFP 0x08
 #define NUC 0x10
+#define VIC 0x20
 
 static const char charLookupTable[256] =
 {
@@ -147,20 +149,20 @@ static const char charLookupTable[256] =
 /*10*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 /*18*/ IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    , IJC    ,
 
-/*20*/ 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      , 0      , 0      ,
+/*20*/ 0      , 0      , NFP|VEC|IJC, 0  , VIC    , 0      , 0      , 0      ,
 /*28*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , VEC    ,
-/*30*/ VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    ,
-/*38*/ VHC    , VHC    , 0      , 0      , 0      , 0      , 0      , 0      ,
+/*30*/ VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC,
+/*38*/ VHC|VIC, VHC|VIC, 0      , 0      , 0      , 0      , 0      , 0      ,
 
-/*40*/ 0      , VHC    , VHC    , VHC    , VHC    , VHC    , VHC    , 0      ,
-/*48*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
-/*50*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
-/*58*/ 0      , 0      , 0      , 0      , NFP|VEC|IJC, 0      , 0      , 0      ,
+/*40*/ 0      , VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VIC    ,
+/*48*/ VIC    , VIC    , VIC    , VIC    , VIC    , VIC    , VIC    , VIC    ,
+/*50*/ VIC    , VIC    , VIC    , VIC    , VIC    , VIC    , VIC    , VIC    ,
+/*58*/ VIC    , VIC    , VIC    , 0      , NFP|VEC|IJC, 0  , 0      , VIC    ,
 
-/*60*/ 0      , VHC    , VEC|VHC, VHC    , VHC    , VHC    , VEC|VHC, 0      ,
-/*68*/ 0      , 0      , 0      , 0      , 0      , 0      , VEC    , 0      ,
-/*70*/ 0      , 0      , VEC    , 0      , VEC    , 0      , 0      , 0      ,
-/*78*/ 0      , 0      , 0      , 0      , 0      , 0      , 0      , 0      ,
+/*60*/ 0      , VHC|VIC, VEC|VHC|VIC, VHC|VIC, VHC|VIC, VHC|VIC, VEC|VHC|VIC, VIC,
+/*68*/ VIC    , VIC    , VIC    , VIC    , VIC    , VIC    , VEC|VIC, VIC    ,
+/*70*/ VIC    , VIC    , VEC    , VIC    , VEC|VIC, VIC    , VIC    , VIC    ,
+/*78*/ VIC    , VIC    , VIC    , 0      , 0      , 0      , 0      , 0      ,
 
        NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
        NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    , NUC    ,
@@ -372,14 +374,31 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
 
 #define RETURN_IF_EOF if (*offset >= jsonTextLen) return yajl_tok_eof;
 
+/* For both identifiers and numbers, we always have to lex one
+ * character too many to know when they are complete.
+ */
+
+static yajl_tok
+yajl_lex_identifier(yajl_lexer lexer, const unsigned char * jsonText,
+                size_t jsonTextLen, size_t * offset)
+{
+    unsigned char c;
+
+    do {
+        RETURN_IF_EOF;
+        c = readChar(lexer, jsonText, offset);
+    } while (charLookupTable[c] & VIC);
+
+    /* we always go "one too far" */
+    unreadChar(lexer, offset);
+
+    return yajl_tok_identifier;
+}
+
 static yajl_tok
 yajl_lex_number(yajl_lexer lexer, const unsigned char * jsonText,
                 size_t jsonTextLen, size_t * offset)
 {
-    /** XXX: numbers are the only entities in json that we must lex
-     *       _beyond_ in order to know that they are complete.  There
-     *       is an ambiguous case for integers at EOF. */
-
     const char hexDigits[] = "0123456789abcdefABCDEF";
     unsigned char c;
     int numRd = 0;
@@ -728,6 +747,122 @@ yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
         *outLen -= 2;
     }
 
+#ifdef YAJL_LEXER_DEBUG
+    if (tok == yajl_tok_error) {
+        printf("lexical error: %s\n",
+               yajl_lex_error_to_string(yajl_lex_get_error(lexer)));
+    } else if (tok == yajl_tok_eof) {
+        printf("EOF hit\n");
+    } else {
+        printf("lexed %s: '", tokToStr(tok));
+        fwrite(*outBuf, 1, *outLen, stdout);
+        printf("'\n");
+    }
+#endif
+
+    return tok;
+}
+
+yajl_tok yajl_lex_key(yajl_lexer lexer, const unsigned char * jsonText,
+                    size_t jsonTextLen, size_t * offset,
+                    const unsigned char ** outBuf, size_t * outLen)
+{
+    yajl_tok tok = yajl_tok_error;
+    unsigned char c;
+    size_t startOffset = *offset;
+
+    *outBuf = NULL;
+    *outLen = 0;
+
+    for (;;) {
+        assert(*offset <= jsonTextLen);
+
+        if (*offset >= jsonTextLen) {
+            tok = yajl_tok_eof;
+            goto lexed;
+        }
+
+        c = readChar(lexer, jsonText, offset);
+
+        switch (c) {
+            case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
+                startOffset++;
+                break;
+            case '}':
+                tok = yajl_tok_right_brace;
+                goto lexed;
+            case '"': {
+                tok = yajl_lex_string(lexer, jsonText, jsonTextLen, offset);
+                goto lexed;
+            }
+            case '/':
+                /* If comments are disabled this is an error. */
+                if (!lexer->allowComments) {
+                    unreadChar(lexer, offset);
+                    lexer->error = yajl_lex_unallowed_comment;
+                    tok = yajl_tok_error;
+                    goto lexed;
+                }
+                /* Comments are enabled, so lex it.
+                 * Possible outcomes are:
+                 * - successful lex (tok_comment, which means continue),
+                 * - malformed comment opening (slash not followed by
+                 *   '*' or '/') (tok_error)
+                 * - eof hit. (tok_eof) */
+                tok = yajl_lex_comment(lexer, jsonText, jsonTextLen, offset);
+                if (tok == yajl_tok_comment) {
+                    /* "error" is silly, but that's the initial
+                     * state of tok.  guilty until proven innocent. */
+                    tok = yajl_tok_error;
+                    yajl_buf_clear(lexer->buf);
+                    lexer->bufInUse = 0;
+                    startOffset = *offset;
+                    break;
+                }
+                /* hit error or eof, bail */
+                goto lexed;
+            default:
+                if (lexer->allowJson5 && (c == '$' || c == '_' ||
+                    (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
+                    tok = yajl_lex_identifier(lexer, jsonText, jsonTextLen, offset);
+                }
+                else {
+                    lexer->error = yajl_lex_invalid_char;
+                    tok = yajl_tok_error;
+                }
+                goto lexed;
+        }
+    }
+
+  lexed:
+    /* need to append to buffer if the buffer is in use or
+     * if it's an EOF token */
+    if (tok == yajl_tok_eof || lexer->bufInUse) {
+        if (!lexer->bufInUse) yajl_buf_clear(lexer->buf);
+        lexer->bufInUse = 1;
+        yajl_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
+        lexer->bufOff = 0;
+
+        if (tok != yajl_tok_eof) {
+            *outBuf = yajl_buf_data(lexer->buf);
+            *outLen = yajl_buf_len(lexer->buf);
+            lexer->bufInUse = 0;
+        }
+    } else if (tok != yajl_tok_error) {
+        *outBuf = jsonText + startOffset;
+        *outLen = *offset - startOffset;
+    }
+
+    /* For strings skip the quotes. */
+    if (tok == yajl_tok_string ||
+        tok == yajl_tok_string_with_escapes) {
+        assert(*outLen >= 2);
+        (*outBuf)++;
+        *outLen -= 2;
+    }
+    else if (tok == yajl_tok_identifier) {
+        tok = yajl_tok_string;
+    }
 
 #ifdef YAJL_LEXER_DEBUG
     if (tok == yajl_tok_error) {

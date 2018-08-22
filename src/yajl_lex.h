@@ -41,7 +41,12 @@ typedef enum {
     yajl_tok_string,
     yajl_tok_string_with_escapes,
 
-    /* comment tokens are not currently returned to the parser, ever */
+    /* These tokens are used within the lexer and never seen by the parser: */
+
+    /* An unquoted map key, for JSON5 only, returned as yajl_tok_string */
+    yajl_tok_identifier,
+
+    /* A comment token, never returned */
     yajl_tok_comment
 } yajl_tok;
 
@@ -79,6 +84,14 @@ void yajl_lex_free(yajl_lexer lexer);
 yajl_tok yajl_lex_lex(yajl_lexer lexer, const unsigned char * jsonText,
                       size_t jsonTextLen, size_t * offset,
                       const unsigned char ** outBuf, size_t * outLen);
+
+/**
+ * A specialized version of yajl_lex_lex for use when the next token is
+ * a map key, which the parser knows.
+ */
+yajl_tok yajl_lex_key(yajl_lexer lexer, const unsigned char * jsonText,
+                    size_t jsonTextLen, size_t * offset,
+                    const unsigned char ** outBuf, size_t * outLen);
 
 /** have a peek at the next token, but don't move the lexer forward */
 yajl_tok yajl_lex_peek(yajl_lexer lexer, const unsigned char * jsonText,
