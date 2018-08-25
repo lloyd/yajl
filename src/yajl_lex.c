@@ -196,7 +196,7 @@ static const char charLookupTable[256] =
  *
  *  NOTE: on error the offset will point to the first char of the
  *  invalid utf8 */
-#define UTF8_CHECK_EOF if (*offset >= jsonTextLen) { return yajl_tok_eof; }
+#define UTF8_CHECK_EOF if (*offset >= jsonTextLen) return yajl_tok_eof;
 
 static yajl_tok
 yajl_lex_utf8_char(yajl_lexer lexer, const unsigned char * jsonText,

@@ -142,17 +142,17 @@ yajl_gen_free(yajl_gen g)
 }
 
 #define INSERT_SEP \
-    if (g->state[g->depth] == yajl_gen_map_key ||               \
-        g->state[g->depth] == yajl_gen_in_array) {              \
-        g->print(g->ctx, ",", 1);                               \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);               \
-    } else if (g->state[g->depth] == yajl_gen_map_val) {        \
-        g->print(g->ctx, ":", 1);                               \
-        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);                \
-   }
+    if (g->state[g->depth] == yajl_gen_map_key ||                       \
+        g->state[g->depth] == yajl_gen_in_array) {                      \
+        g->print(g->ctx, ",", 1);                                       \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);  \
+    } else if (g->state[g->depth] == yajl_gen_map_val) {                \
+        g->print(g->ctx, ":", 1);                                       \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);   \
+    }
 
-#define INSERT_WHITESPACE                                               \
-    if ((g->flags & yajl_gen_beautify)) {                                                    \
+#define INSERT_WHITESPACE \
+    if ((g->flags & yajl_gen_beautify)) {                               \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
             for (_i=0;_i<g->depth;_i++)                                 \
@@ -171,8 +171,8 @@ yajl_gen_free(yajl_gen g)
 /* check that we're not complete, or in error state.  in a valid state
  * to be generating */
 #define ENSURE_VALID_STATE \
-    if (g->state[g->depth] == yajl_gen_error) {   \
-        return yajl_gen_in_error_state;\
+    if (g->state[g->depth] == yajl_gen_error) {             \
+        return yajl_gen_in_error_state;                     \
     } else if (g->state[g->depth] == yajl_gen_complete) {   \
         return yajl_gen_generation_complete;                \
     }
@@ -202,8 +202,9 @@ yajl_gen_free(yajl_gen g)
             break;                                  \
     }                                               \
 
-#define FINAL_NEWLINE                                        \
-    if ((g->flags & yajl_gen_beautify) && g->state[g->depth] == yajl_gen_complete) \
+#define FINAL_NEWLINE \
+    if ((g->flags & yajl_gen_beautify) &&           \
+        g->state[g->depth] == yajl_gen_complete)    \
         g->print(g->ctx, "\n", 1);
 
 yajl_gen_status
@@ -238,7 +239,7 @@ yajl_gen_double(yajl_gen g, double number)
     }
     else {
         special = 0;
-        sprintf(i, "%.20g", number);
+        sprintf(i, "%.17g", number);
         if (strspn(i, "0123456789-") == strlen(i)) {
             strcat(i, ".0");
         }
