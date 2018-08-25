@@ -1,5 +1,5 @@
 [
-  "Hello\!",
+  'Hello\!',
   "\"Evenin\',\" said the barman.",
   // The following string has 3 different escaped line-endings,
   // LF, CR, and CR+LF, which all disappear from the final string.
@@ -7,5 +7,5 @@
 hi \there \
 y'all!",
   "\b\f\n\r\t\v\\",
-  "\A\C\/\D\C",
+  '\A\C\/\D\C',
 ]
