@@ -37,7 +37,7 @@
 extern "C" {
 #endif
 
-/** possible data types that a yajl_val_s can hold */
+/** Possible data types that a yajl_val_s can hold */
 typedef enum {
     yajl_t_string = 1,
     yajl_t_number = 2,
@@ -99,33 +99,33 @@ struct yajl_val_s
 /**
  * Parse a string.
  *
- * Parses an null-terminated string containing JSON data and returns a pointer
+ * Parses a zero-terminated string containing JSON5 data and returns a pointer
  * to the top-level value (root of the parse tree).
  *
  * \param input              Pointer to a null-terminated utf8 string containing
- *                           JSON data.
+ *                           JSON or JSON5 data.
  * \param error_buffer       Pointer to a buffer in which an error message will
- *                           be stored if \em yajl_tree_parse fails, or
+ *                           be stored if yajl_tree_parse() fails, or
  *                           \c NULL. The buffer will be initialized before
  *                           parsing, so its content will be destroyed even if
- *                           \em yajl_tree_parse succeeds.
+ *                           yajl_tree_parse() succeeds.
  * \param error_buffer_size  Size of the memory area pointed to by
- *                           \em error_buffer_size. If \em error_buffer_size is
- *                           \c NULL, this argument is ignored.
+ *                           \p error_buffer. If \p error_buffer
+ *                           is \c NULL, this argument is ignored.
  *
  * \returns Pointer to the top-level value or \c NULL on error. The memory
- * pointed to must be freed using \em yajl_tree_free. In case of an error, a
- * null terminated message describing the error in more detail is stored in
- * \em error_buffer if it is not \c NULL.
+ * pointed to must be freed using yajl_tree_free(). In case of an error, a
+ * zero-terminated message describing the error in more detail is stored in
+ * \p error_buffer if it is not \c NULL.
  */
 YAJL_API yajl_val yajl_tree_parse (const char *input,
                                    char *error_buffer, size_t error_buffer_size);
 
 
 /**
- * Free a parse tree returned by "yajl_tree_parse".
+ * Free a parse tree returned by yajl_tree_parse().
  *
- * \param v Pointer to a JSON value returned by "yajl_tree_parse". Passing NULL
+ * \param v Pointer to a JSON value returned by yajl_tree_parse(). Passing \c NULL
  * is valid and results in a no-op.
  */
 YAJL_API void yajl_tree_free (yajl_val v);
@@ -134,10 +134,10 @@ YAJL_API void yajl_tree_free (yajl_val v);
  * Access a nested value inside a tree.
  *
  * \param parent the node under which you'd like to extract values.
- * \param path A null terminated array of strings, each the name of an object key
- * \param type the yajl_type of the object you seek, or yajl_t_any if any will do.
+ * \param path A null terminated array of strings, each the name of an object key.
+ * \param type the \ref yajl_type of the object you seek, or \ref yajl_t_any if any will do.
  *
- * \returns a pointer to the found value, or NULL if we came up empty.
+ * \returns a pointer to the found value, or \c NULL if we came up empty.
  *
  * Future Ideas:  it'd be nice to move path to a string and implement support for
  * a teeny tiny micro language here, so you can extract array elements, do things
@@ -146,7 +146,11 @@ YAJL_API void yajl_tree_free (yajl_val v);
  */
 YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type type);
 
-/* Various convenience macros to check the type of a `yajl_val` */
+/** @name Type Check Macros
+ *
+ *  Convenience macros to check the type of a \ref yajl_val.
+ */
+/**@{*/
 #define YAJL_IS_STRING(v) (((v) != NULL) && ((v)->type == yajl_t_string))
 #define YAJL_IS_NUMBER(v) (((v) != NULL) && ((v)->type == yajl_t_number))
 #define YAJL_IS_INTEGER(v) (YAJL_IS_NUMBER(v) && ((v)->u.number.flags & YAJL_NUMBER_INT_VALID))
@@ -156,28 +160,37 @@ YAJL_API yajl_val yajl_tree_get(yajl_val parent, const char ** path, yajl_type t
 #define YAJL_IS_TRUE(v)   (((v) != NULL) && ((v)->type == yajl_t_true  ))
 #define YAJL_IS_FALSE(v)  (((v) != NULL) && ((v)->type == yajl_t_false ))
 #define YAJL_IS_NULL(v)   (((v) != NULL) && ((v)->type == yajl_t_null  ))
+/**@}*/
 
-/** Given a yajl_val_string return a ptr to the bare string it contains,
- *  or NULL if the value is not a string. */
+/** @name Value Get Macros
+ *
+ *  Macros to fetch values from a \ref yajl_val.
+ */
+/**@{*/
+
+/** Given a \ref yajl_t_string return a ptr to the bare string it contains,
+ *  or \c NULL if the value is not a string. */
 #define YAJL_GET_STRING(v) (YAJL_IS_STRING(v) ? (v)->u.string : NULL)
 
 /** Get the string representation of a number.  You should check type first,
- *  perhaps using YAJL_IS_NUMBER */
+ *  perhaps using \ref YAJL_IS_NUMBER */
 #define YAJL_GET_NUMBER(v) ((v)->u.number.r)
 
 /** Get the double representation of a number.  You should check type first,
- *  perhaps using YAJL_IS_DOUBLE */
+ *  perhaps using \ref YAJL_IS_DOUBLE */
 #define YAJL_GET_DOUBLE(v) ((v)->u.number.d)
 
 /** Get the 64bit (long long) integer representation of a number.  You should
- *  check type first, perhaps using YAJL_IS_INTEGER */
+ *  check type first, perhaps using \ref YAJL_IS_INTEGER */
 #define YAJL_GET_INTEGER(v) ((v)->u.number.i)
 
-/** Get a pointer to a yajl_val_object or NULL if the value is not an object. */
+/** Get a pointer to a \ref yajl_t_object or \c NULL if the value is not an object. */
 #define YAJL_GET_OBJECT(v) (YAJL_IS_OBJECT(v) ? &(v)->u.object : NULL)
 
-/** Get a pointer to a yajl_val_array or NULL if the value is not an object. */
+/** Get a pointer to a \ref yajl_t_array or \c NULL if the value is not an object. */
 #define YAJL_GET_ARRAY(v)  (YAJL_IS_ARRAY(v)  ? &(v)->u.array  : NULL)
+
+/**@}*/
 
 #ifdef __cplusplus
 }
