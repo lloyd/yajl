@@ -59,9 +59,8 @@ FILE(MAKE_DIRECTORY ${libDir})
 FILE(MAKE_DIRECTORY ${incDir})
 
 # generate build-time source
-SET(dollar $)
 CONFIGURE_FILE(api/yajl_version.h.cmake ${incDir}/yajl_version.h)
-CONFIGURE_FILE(yajl.pc.cmake ${shareDir}/yajl.pc)
+CONFIGURE_FILE(yajl.pc.cmake ${shareDir}/yajl.pc @ONLY)
 
 # copy public headers to output directory
 FOREACH (header ${PUB_HDRS})
