@@ -1,6 +1,6 @@
 prefix=${pcfiledir}/../..
 libdir=${prefix}/lib@LIB_SUFFIX@
-includedir=${prefix}/include/yajl
+includedir=${prefix}/include
 
 Name: Yet Another JSON Library
 Description: A Portable JSON parsing and serialization library in ANSI C
