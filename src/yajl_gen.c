@@ -47,12 +47,17 @@ struct yajl_gen_t
     yajl_alloc_funcs alloc;
 };
 
-int
-yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
-{
-    int rv = 1;
+int yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...) {
     va_list ap;
     va_start(ap, opt);
+    int rv = yajl_gen_config_v(g, opt, ap);
+    va_end(ap);
+    return rv;
+}
+
+int yajl_gen_config_v(yajl_gen g, yajl_gen_option opt, va_list ap)
+{
+    int rv = 1;
 
     switch(opt) {
         case yajl_gen_beautify:
@@ -86,8 +91,6 @@ yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
         default:
             rv = 0;
     }
-
-    va_end(ap);
 
     return rv;
 }
