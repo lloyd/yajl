@@ -84,4 +84,4 @@ INSTALL(TARGETS yajl
 INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib${LIB_SUFFIX})
 INSTALL(FILES ${PUB_HDRS} DESTINATION include/yajl)
 INSTALL(FILES ${incDir}/yajl_version.h DESTINATION include/yajl)
-INSTALL(FILES ${shareDir}/yajl.pc DESTINATION share/pkgconfig)
+INSTALL(FILES ${shareDir}/yajl.pc DESTINATION lib${LIB_SUFFIX})
