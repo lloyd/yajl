@@ -19,5 +19,15 @@ NOTE: for 64-bit systems where lib64 is used you can pass the cmake
       variable LIB_SUFFIX to cause installation into the system's 'lib64'
       directory.
 
+Alternatively, you can build and install yajl using [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
+
+1. git clone https://github.com/Microsoft/vcpkg.git
+2. cd vcpkg
+3. ./bootstrap-vcpkg.sh
+4. ./vcpkg integrate install
+5. ./vcpkg install yajl
+
+The yajl port in vcpkg is kept up to date by Microsoft team members and community contributors.
+
 best,
 lloyd
