@@ -328,7 +328,21 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
                     if (!(charLookupTable[curChar] & VHC)) {
                         /* back up to offending char */
                         unreadChar(lexer, offset);
-                        lexer->error = yajl_lex_string_invalid_hex_char;
+                        lexer->error = yajl_lex_string_invalid_hex_u_char;
+                        goto finish_string_lex;
+                    }
+                }
+            }
+            else if (lexer->allowJson5 && curChar == 'x') {
+                unsigned int i = 0;
+
+                for (i=0;i<2;i++) {
+                    STR_CHECK_EOF;
+                    curChar = readChar(lexer, jsonText, offset);
+                    if (!(charLookupTable[curChar] & VHC)) {
+                        /* back up to offending char */
+                        unreadChar(lexer, offset);
+                        lexer->error = yajl_lex_string_invalid_hex_x_char;
                         goto finish_string_lex;
                     }
                 }
@@ -901,8 +915,11 @@ yajl_lex_error_to_string(yajl_lex_error error)
                    "which it may not.";
         case yajl_lex_string_invalid_json_char:
             return "invalid character inside string.";
-        case yajl_lex_string_invalid_hex_char:
+        case yajl_lex_string_invalid_hex_u_char:
             return "invalid (non-hex) character occurs after '\\u' inside "
+                   "string.";
+        case yajl_lex_string_invalid_hex_x_char:
+            return "invalid (non-hex) character occurs after '\\x' inside "
                    "string.";
         case yajl_lex_invalid_char:
             return "invalid char in json text.";

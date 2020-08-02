@@ -284,7 +284,8 @@ yajl_gen_string(yajl_gen g, const unsigned char * str,
     }
     else {
         g->print(g->ctx, "\"", 1);
-        yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
+        yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus,
+            g->flags & yajl_gen_json5);
         g->print(g->ctx, "\"", 1);
     }
     APPENDED_ATOM;
