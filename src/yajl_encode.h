@@ -24,11 +24,14 @@ void yajl_string_encode(const yajl_print_t printer,
                         void * ctx,
                         const unsigned char * str,
                         size_t length,
-                        int escape_solidus);
+                        int escape_solidus,
+                        int output_json5);
 
 void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                         size_t length);
 
 int yajl_string_validate_utf8(const unsigned char * s, size_t len);
+
+int yajl_string_validate_identifier(const unsigned char * str, size_t len);
 
 #endif

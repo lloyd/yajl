@@ -430,7 +430,7 @@ yajl_val yajl_tree_parse (const char *input,
         memset (error_buffer, 0, error_buffer_size);
 
     handle = yajl_alloc (&callbacks, NULL, &ctx);
-    yajl_config(handle, yajl_allow_comments, 1);
+    yajl_config(handle, yajl_allow_json5, 1);
 
     status = yajl_parse(handle,
                         (unsigned char *) input,

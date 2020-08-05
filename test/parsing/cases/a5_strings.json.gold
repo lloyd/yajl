@@ -1,0 +1,9 @@
+array open '['
+string: 'Hello!'
+string: '"Evenin'," said the barman.'
+string: 'Well hi there y'all!'
+string: '
+	\'
+string: 'AC/DC'
+array close ']'
+memory leaks:	0

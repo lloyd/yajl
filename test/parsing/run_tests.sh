@@ -37,13 +37,16 @@ testsSucceeded=0
 testsTotal=0
 
 for file in cases/*.json ; do
+  allowJson5=""
   allowComments=""
   allowGarbage=""
   allowMultiple=""
   allowPartials=""
 
-  # if the filename starts with dc_, we disallow comments for this test
   case $(basename $file) in
+    a5_*)
+      allowJson5="-5 "
+      ;;
     ac_*)
       allowComments="-c "
     ;;
@@ -64,10 +67,10 @@ for file in cases/*.json ; do
   iter=1
   success="SUCCESS"
 
-  # ${ECHO} -n "$testBinShort $allowPartials$allowComments$allowGarbage$allowMultiple-b $iter < $fileShort > ${fileShort}.test : "
+  # ${ECHO} -n "$testBinShort $allowPartials$allowJson5$allowComments$allowGarbage$allowMultiple-b $iter < $fileShort > ${fileShort}.test : "
   # parse with a read buffer size ranging from 1-31 to stress stream parsing
   while [ $iter -lt 32  ] && [ $success = "SUCCESS" ] ; do
-    $testBin $allowPartials $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
+    $testBin $allowPartials $allowJson5 $allowComments $allowGarbage $allowMultiple -b $iter < $file > ${file}.test  2>&1
     diff ${DIFF_FLAGS} ${file}.gold ${file}.test > ${file}.out
     if [ $? -eq 0 ] ; then
       if [ $iter -eq 31 ] ; then testsSucceeded=$(( $testsSucceeded + 1 )) ; fi

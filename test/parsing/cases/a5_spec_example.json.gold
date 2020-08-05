@@ -1,0 +1,25 @@
+map open '{'
+key: 'unquoted'
+string: 'and you can quote me on that'
+key: 'singleQuotes'
+string: 'I can use "double quotes" here'
+key: 'lineBreaks'
+string: 'Look, Mom! No \n's!'
+key: 'hexadecimal'
+integer: 912559
+key: 'leadingDecimalPoint'
+double: 0.867531
+key: 'andTrailing'
+double: 8.67531e+06
+key: 'positiveSign'
+integer: 1
+key: 'trailingComma'
+string: 'in objects'
+key: 'andIn'
+array open '['
+string: 'arrays'
+array close ']'
+key: 'backwardsCompatible'
+string: 'with JSON'
+map close '}'
+memory leaks:	0

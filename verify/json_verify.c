@@ -25,6 +25,7 @@ usage(const char * progname)
 {
     fprintf(stderr, "%s: validate json from stdin\n"
                     "usage: json_verify [options]\n"
+                    "    -5 allow JSON5\n"
                     "    -c allow comments\n"
                     "    -q quiet mode\n"
                     "    -s verify a stream of multiple json entities\n"
@@ -52,6 +53,9 @@ main(int argc, char ** argv)
         unsigned int i;
         for ( i=1; i < strlen(argv[a]); i++) {
             switch (argv[a][i]) {
+                case '5':
+                    yajl_config(hand, yajl_allow_json5, 1);
+                    break;
                 case 'q':
                     quiet = 1;
                     break;

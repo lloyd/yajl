@@ -1,0 +1,13 @@
+map open '{'
+key: 'array'
+array open '['
+integer: 1
+integer: 2
+array close ']'
+key: 'map'
+map open '{'
+key: 'a'
+integer: 1
+map close '}'
+map close '}'
+memory leaks:	0

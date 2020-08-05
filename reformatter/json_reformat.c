@@ -45,10 +45,16 @@ static int reformat_boolean(void * ctx, int boolean)
     GEN_AND_RETURN(yajl_gen_bool(g, boolean));
 }
 
-static int reformat_number(void * ctx, const char * s, size_t l)
+static int reformat_integer(void * ctx, long long int i)
 {
     yajl_gen g = (yajl_gen) ctx;
-    GEN_AND_RETURN(yajl_gen_number(g, s, l));
+    GEN_AND_RETURN(yajl_gen_integer(g, i));
+}
+
+static int reformat_double(void * ctx, double d)
+{
+    yajl_gen g = (yajl_gen) ctx;
+    GEN_AND_RETURN(yajl_gen_double(g, d));
 }
 
 static int reformat_string(void * ctx, const unsigned char * stringVal,
@@ -93,9 +99,9 @@ static int reformat_end_array(void * ctx)
 static yajl_callbacks callbacks = {
     reformat_null,
     reformat_boolean,
+    reformat_integer,
+    reformat_double,
     NULL,
-    NULL,
-    reformat_number,
     reformat_string,
     reformat_start_map,
     reformat_map_key,
@@ -109,6 +115,8 @@ usage(const char * progname)
 {
     fprintf(stderr, "%s: reformat json from stdin\n"
             "usage:  json_reformat [options]\n"
+            "    -5 allow JSON5 input\n"
+            "    -g generate JSON5 output\n"
             "    -e escape any forward slashes (for embedding in HTML)\n"
             "    -m minimize json rather than beautify (default)\n"
             "    -s reformat a stream of multiple json entites\n"
@@ -143,6 +151,12 @@ main(int argc, char ** argv)
         unsigned int i;
         for ( i=1; i < strlen(argv[a]); i++) {
             switch (argv[a][i]) {
+                case '5':
+                    yajl_config(hand, yajl_allow_json5, 1);
+                    break;
+                case 'g':
+                    yajl_gen_config(g, yajl_gen_json5, 1);
+                    break;
                 case 'm':
                     yajl_gen_config(g, yajl_gen_beautify, 0);
                     break;

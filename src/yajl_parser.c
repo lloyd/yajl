@@ -29,33 +29,52 @@
 #include <assert.h>
 #include <math.h>
 
-#define MAX_VALUE_TO_MULTIPLY ((LLONG_MAX / 10) + (LLONG_MAX % 10))
-
- /* same semantics as strtol */
 long long
 yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
     long long ret  = 0;
     long sign = 1;
+    long base = 10;
+    long long max = LLONG_MAX / base;
     const unsigned char *pos = number;
-    if (*pos == '-') { pos++; sign = -1; }
-    if (*pos == '+') { pos++; }
+    const unsigned char *end = number + length;
 
-    while (pos < number + length) {
-        if ( ret > MAX_VALUE_TO_MULTIPLY ) {
+    if (*pos == '-') {
+        pos++;
+        sign = -1;
+    }
+    else if (*pos == '+') {
+        pos++;
+    }
+
+    if (*pos == '0' &&
+        (pos[1] == 'x' || pos[1] == 'X')) {
+        base = 16;
+        max = LLONG_MAX / base;
+        pos += 2;
+    }
+
+    while (pos < end) {
+        int digit;
+
+        if (ret > max) {
             errno = ERANGE;
             return sign == 1 ? LLONG_MAX : LLONG_MIN;
         }
-        ret *= 10;
-        if (LLONG_MAX - ret < (*pos - '0')) {
+
+        ret *= base;
+        digit = *pos++ - '0';
+        /* Don't have to check for non-digit characters,
+         * the lexer has already rejected any bad digits.
+         */
+        if (digit > 9)
+            digit = (digit - ('A' - '0') + 10) & 0xf;
+
+        if (LLONG_MAX - ret < digit) {
             errno = ERANGE;
             return sign == 1 ? LLONG_MAX : LLONG_MIN;
         }
-        if (*pos < '0' || *pos > '9') {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        ret += (*pos++ - '0');
+        ret += digit;
     }
 
     return sign * ret;
@@ -264,13 +283,13 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         _CC_CHK(hand->callbacks->yajl_null(hand->ctx));
                     }
                     break;
-                case yajl_tok_left_bracket:
+                case yajl_tok_left_brace:
                     if (hand->callbacks && hand->callbacks->yajl_start_map) {
                         _CC_CHK(hand->callbacks->yajl_start_map(hand->ctx));
                     }
                     stateToPush = yajl_state_map_start;
                     break;
-                case yajl_tok_left_brace:
+                case yajl_tok_left_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_start_array) {
                         _CC_CHK(hand->callbacks->yajl_start_array(hand->ctx));
                     }
@@ -330,9 +349,11 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         }
                     }
                     break;
-                case yajl_tok_right_brace: {
-                    if (yajl_bs_current(hand->stateStack) ==
-                        yajl_state_array_start)
+                case yajl_tok_right_bracket: {
+                    yajl_state s = yajl_bs_current(hand->stateStack);
+                    if (s == yajl_state_array_start ||
+                        ((hand->flags & yajl_allow_json5) &&
+                        (s == yajl_state_array_need_val)))
                     {
                         if (hand->callbacks &&
                             hand->callbacks->yajl_end_array)
@@ -346,7 +367,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 }
                 case yajl_tok_colon:
                 case yajl_tok_comma:
-                case yajl_tok_right_bracket:
+                case yajl_tok_right_brace:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =
                         "unallowed token at this point in JSON text";
@@ -377,8 +398,8 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
         case yajl_state_map_need_key: {
             /* only difference between these two states is that in
              * start '}' is valid, whereas in need_key, we've parsed
-             * a comma, and a string key _must_ follow */
-            tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
+             * a comma, so unless this is JSON5 a key _must_ follow. */
+            tok = yajl_lex_key(hand->lexer, jsonText, jsonTextLen,
                                offset, &buf, &bufLen);
             switch (tok) {
                 case yajl_tok_eof:
@@ -401,9 +422,11 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                     }
                     yajl_bs_set(hand->stateStack, yajl_state_map_sep);
                     goto around_again;
-                case yajl_tok_right_bracket:
-                    if (yajl_bs_current(hand->stateStack) ==
-                        yajl_state_map_start)
+                case yajl_tok_right_brace: {
+                    yajl_state s = yajl_bs_current(hand->stateStack);
+                    if (s == yajl_state_map_start ||
+                        ((hand->flags & yajl_allow_json5) &&
+                        (s == yajl_state_map_need_key)))
                     {
                         if (hand->callbacks && hand->callbacks->yajl_end_map) {
                             _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
@@ -411,10 +434,12 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         yajl_bs_pop(hand->stateStack);
                         goto around_again;
                     }
+                }
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
-                    hand->parseError =
-                        "invalid object key (must be a string)"; 
+                    hand->parseError = hand->flags & yajl_allow_json5 ?
+                        "invalid object key (must be a string or identifier)" :
+                        "invalid object key (must be a string)";
                     goto around_again;
             }
         }
@@ -441,7 +466,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
                                offset, &buf, &bufLen);
             switch (tok) {
-                case yajl_tok_right_bracket:
+                case yajl_tok_right_brace:
                     if (hand->callbacks && hand->callbacks->yajl_end_map) {
                         _CC_CHK(hand->callbacks->yajl_end_map(hand->ctx));
                     }
@@ -469,7 +494,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
             tok = yajl_lex_lex(hand->lexer, jsonText, jsonTextLen,
                                offset, &buf, &bufLen);
             switch (tok) {
-                case yajl_tok_right_brace:
+                case yajl_tok_right_bracket:
                     if (hand->callbacks && hand->callbacks->yajl_end_array) {
                         _CC_CHK(hand->callbacks->yajl_end_array(hand->ctx));
                     }
@@ -495,4 +520,3 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
     abort();
     return yajl_status_error;
 }
-

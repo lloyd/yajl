@@ -86,6 +86,8 @@ yajl_config(yajl_handle h, yajl_option opt, ...)
     va_start(ap, opt);
 
     switch(opt) {
+        case yajl_allow_json5:
+            opt |= yajl_allow_comments; /* JSON5 allows comments */
         case yajl_allow_comments:
         case yajl_dont_validate_strings:
         case yajl_allow_trailing_garbage:
@@ -124,7 +126,8 @@ yajl_parse(yajl_handle hand, const unsigned char * jsonText,
     if (hand->lexer == NULL) {
         hand->lexer = yajl_lex_alloc(&(hand->alloc),
                                      hand->flags & yajl_allow_comments,
-                                     !(hand->flags & yajl_dont_validate_strings));
+                                     !(hand->flags & yajl_dont_validate_strings),
+                                     hand->flags & yajl_allow_json5);
     }
 
     status = yajl_do_parse(hand, jsonText, jsonTextLen);
@@ -144,7 +147,8 @@ yajl_complete_parse(yajl_handle hand)
     if (hand->lexer == NULL) {
         hand->lexer = yajl_lex_alloc(&(hand->alloc),
                                      hand->flags & yajl_allow_comments,
-                                     !(hand->flags & yajl_dont_validate_strings));
+                                     !(hand->flags & yajl_dont_validate_strings),
+                                     hand->flags & yajl_allow_json5);
     }
 
     return yajl_do_finish(hand);
