@@ -16,11 +16,11 @@ fi
 # find test binary on both platforms.  allow the caller to force a
 # particular test binary (useful for non-cmake build systems).
 if [ -z "$testBin" ]; then
-    testBin="../build/test/parsing/Release/yajl_test.exe"
+    testBin="../../build/test/parsing/Release/yajl_test.exe"
     if [ ! -x $testBin ] ; then
-        testBin="../build/test/parsing/Debug/yajl_test.exe"
+        testBin="../../build/test/parsing/Debug/yajl_test.exe"
         if [ ! -x $testBin ] ; then
-            testBin="../build/test/parsing/yajl_test"
+            testBin="../../build/test/parsing/yajl_test"
             if [  ! -x $testBin ] ; then
                 ${ECHO} "cannot execute test binary: '$testBin'"
                 exit 1;
