@@ -343,6 +343,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         goto around_again;
                     }
                     /* intentional fall-through */
+                    __attribute__((fallthrough));
                 }
                 case yajl_tok_colon:
                 case yajl_tok_comma:
@@ -394,6 +395,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         bufLen = yajl_buf_len(hand->decodeBuf);
                     }
                     /* intentional fall-through */
+                    __attribute__((fallthrough));
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
                         _CC_CHK(hand->callbacks->yajl_map_key(hand->ctx, buf,
