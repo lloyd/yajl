@@ -1,6 +1,6 @@
 Short story (If you already have ruby and cmake):
 
-./configure && make install
+./configure-cmake && make install
 
 When things go wrong:
 
