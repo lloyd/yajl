@@ -250,10 +250,14 @@ static int context_add_value (context_t *ctx, yajl_val v)
         else /* if (ctx->key != NULL) */
         {
             char * key;
+            int ret;
 
             key = ctx->stack->key;
             ctx->stack->key = NULL;
-            return (object_add_keyval (ctx, ctx->stack->value, key, v));
+            ret = object_add_keyval (ctx, ctx->stack->value, key, v);
+            if (ret)
+                ctx->stack->key = key;
+            return ret;
         }
     }
     else if (YAJL_IS_ARRAY (ctx->stack->value))
@@ -286,7 +290,10 @@ static int handle_string (void *ctx,
     memcpy(v->u.string, string, string_length);
     v->u.string[string_length] = 0;
 
-    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_add_value (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_number (void *ctx, const char *string, size_t string_length)
@@ -321,7 +328,10 @@ static int handle_number (void *ctx, const char *string, size_t string_length)
     if ((errno == 0) && (endptr != NULL) && (*endptr == 0))
         v->u.number.flags |= YAJL_NUMBER_DOUBLE_VALID;
 
-    return ((context_add_value(ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_add_value (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_start_map (void *ctx)
@@ -336,7 +346,11 @@ static int handle_start_map (void *ctx)
     v->u.object.values = NULL;
     v->u.object.len = 0;
 
-    return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_push (ctx, v) == 0))
+        return STATUS_CONTINUE;
+
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_end_map (void *ctx)
@@ -347,7 +361,10 @@ static int handle_end_map (void *ctx)
     if (v == NULL)
         return (STATUS_ABORT);
 
-    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_add_value (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_start_array (void *ctx)
@@ -361,7 +378,10 @@ static int handle_start_array (void *ctx)
     v->u.array.values = NULL;
     v->u.array.len = 0;
 
-    return ((context_push (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_push (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_end_array (void *ctx)
@@ -372,7 +392,10 @@ static int handle_end_array (void *ctx)
     if (v == NULL)
         return (STATUS_ABORT);
 
-    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_add_value (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_boolean (void *ctx, int boolean_value)
@@ -383,7 +406,10 @@ static int handle_boolean (void *ctx, int boolean_value)
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_add_value (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 static int handle_null (void *ctx)
@@ -394,7 +420,10 @@ static int handle_null (void *ctx)
     if (v == NULL)
         RETURN_ERROR ((context_t *) ctx, STATUS_ABORT, "Out of memory");
 
-    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
+    if ((context_add_value (ctx, v) == 0))
+        return STATUS_CONTINUE;
+    yajl_tree_free (v);
+    return STATUS_ABORT;
 }
 
 /*
@@ -448,6 +477,7 @@ yajl_val yajl_tree_parse (const char *input,
              yajl_val v = context_pop(&ctx);
              yajl_tree_free(v);
         }
+        yajl_tree_free(ctx.root);
         yajl_free (handle);
         return NULL;
     }
