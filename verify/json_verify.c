@@ -15,10 +15,43 @@
  */
 
 #include <yajl/yajl_parse.h>
+#include <yajl/yajl_tree.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
+
+#ifdef FUZZER
+int
+LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+  return 0;
+}
+
+int
+LLVMFuzzerTestOneInput(uint8_t *buf, size_t len)
+{
+  yajl_val tree;
+  yajl_handle hand;
+  char err[1024];
+  char *str = malloc(len+1);
+
+  memcpy(str, buf, len);
+  str[len] = '\0';
+
+  hand = yajl_alloc(NULL, NULL, NULL);
+  yajl_parse(hand, buf, len);
+  yajl_free(hand);
+
+  /* make sure it is NUL terminated.  */
+  tree = yajl_tree_parse(str, err, sizeof(err));
+  if (tree)
+    yajl_tree_free(tree);
+  free(str);
+  return 0;
+}
+#endif
 
 static void
 usage(const char * progname)
@@ -43,6 +76,20 @@ main(int argc, char ** argv)
     int quiet = 0;
     int retval = 0;
     int a = 1;
+
+#ifdef FUZZER
+  if (getenv("VALIDATE_FUZZ")) {
+    extern void HF_ITER(uint8_t** buf, size_t* len);
+    for (;;) {
+      size_t len;
+      uint8_t *buf;
+
+      HF_ITER(&buf, &len);
+  
+      LLVMFuzzerTestOneInput(buf, len);
+    }
+  }
+#endif
 
     /* allocate a parser */
     hand = yajl_alloc(NULL, NULL, NULL);
