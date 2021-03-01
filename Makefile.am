@@ -19,3 +19,9 @@ libyajl_la_SOURCES = \
 	src/yajl_encode.c \
 	src/yajl_lex.c \
 	src/yajl_tree.c
+
+noinst_PROGRAMS = verify/json_verify
+
+verify_json_verify_SOURCES = verify/json_verify.c
+verify_json_verify_CFLAGS = -I $(srcdir)/src/headers
+verify_json_verify_LDADD = libyajl.la

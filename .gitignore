@@ -27,3 +27,7 @@ libtool
 libyajl.la
 ltmain.sh
 src/*.lo
+verify/.deps/
+verify/.dirstamp
+verify/json_verify
+verify/json_verify-json_verify.o
