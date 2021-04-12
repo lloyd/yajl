@@ -31,3 +31,14 @@ verify/.deps/
 verify/.dirstamp
 verify/json_verify
 verify/json_verify-json_verify.o
+build-aux/compile
+build-aux/config.guess
+build-aux/config.sub
+build-aux/depcomp
+build-aux/install-sh
+build-aux/ltmain.sh
+build-aux/missing
+build-aux/test-driver
+build-aux/config.guess~
+build-aux/config.sub~
+configure~
