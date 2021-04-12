@@ -41,4 +41,6 @@ build-aux/missing
 build-aux/test-driver
 build-aux/config.guess~
 build-aux/config.sub~
+config.guess~
+config.sub~
 configure~
