@@ -272,7 +272,6 @@ static int handle_string (void *ctx,
                           const unsigned char *string, size_t string_length)
 {
     yajl_val v;
-    int ret_val = 0;
 
     v = value_alloc (yajl_t_string);
     if (v == NULL)
@@ -286,14 +285,8 @@ static int handle_string (void *ctx,
     }
     memcpy(v->u.string, string, string_length);
     v->u.string[string_length] = 0;
-	
-    ret_val = (context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT;
-    
-    //If the requested memory is not released in time, it will cause memory leakage   
-    free (v->u.string);
-    free (v);
 
-    return ret_val;
+    return ((context_add_value (ctx, v) == 0) ? STATUS_CONTINUE : STATUS_ABORT);
 }
 
 static int handle_number (void *ctx, const char *string, size_t string_length)
