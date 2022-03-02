@@ -30,7 +30,7 @@ struct yajl_buf_t {
 };
 
 static
-void yajl_buf_ensure_available(yajl_buf buf, size_t want)
+int yajl_buf_ensure_available(yajl_buf buf, size_t want)
 {
     size_t need;
     
@@ -46,11 +46,15 @@ void yajl_buf_ensure_available(yajl_buf buf, size_t want)
     need = buf->len;
 
     while (want >= (need - buf->used)) need <<= 1;
+    if (need < buf->used) {
+         return -1;
+    }
 
     if (need != buf->len) {
         buf->data = (unsigned char *) YA_REALLOC(buf->alloc, buf->data, need);
         buf->len = need;
     }
+    return 0;
 }
 
 yajl_buf yajl_buf_alloc(yajl_alloc_funcs * alloc)
@@ -70,7 +74,8 @@ void yajl_buf_free(yajl_buf buf)
 
 void yajl_buf_append(yajl_buf buf, const void * data, size_t len)
 {
-    yajl_buf_ensure_available(buf, len);
+    if (yajl_buf_ensure_available(buf, len))
+        return;
     if (len > 0) {
         assert(data != NULL);
         memcpy(buf->data + buf->used, data, len);
