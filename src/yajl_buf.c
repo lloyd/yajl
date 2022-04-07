@@ -45,7 +45,17 @@ void yajl_buf_ensure_available(yajl_buf buf, size_t want)
 
     need = buf->len;
 
-    while (want >= (need - buf->used)) need <<= 1;
+    if (((buf->used > want) ? buf->used : want) > (size_t)(buf->used + want)) {
+        /* We cannot allocate more memory than SIZE_MAX. */
+        abort();
+    }
+    while (want >= (need - buf->used)) {
+        if (need >= (size_t)((size_t)(-1)<<1)>>1) {
+            /* need would overflow. */
+            abort();
+        }
+        need <<= 1;
+    }
 
     if (need != buf->len) {
         buf->data = (unsigned char *) YA_REALLOC(buf->alloc, buf->data, need);
