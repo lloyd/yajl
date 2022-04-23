@@ -1,6 +1,6 @@
 #ifndef YAJL_VERSION_H_
 #define YAJL_VERSION_H_
-
+0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 #include <yajl/yajl_common.h>
 
 #define YAJL_MAJOR ${YAJL_MAJOR}
