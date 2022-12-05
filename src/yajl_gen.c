@@ -1,34 +1,18 @@
 /*
- * Copyright 2010, Lloyd Hilaiel.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- * 
- *  1. Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- * 
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- * 
- *  3. Neither the name of Lloyd Hilaiel nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ * Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #include "api/yajl_gen.h"
 #include "yajl_buf.h"
@@ -38,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdarg.h>
 
 typedef enum {
     yajl_gen_start,
@@ -50,10 +35,10 @@ typedef enum {
     yajl_gen_error
 } yajl_gen_state;
 
-struct yajl_gen_t 
+struct yajl_gen_t
 {
+    unsigned int flags;
     unsigned int depth;
-    unsigned int pretty;
     const char * indentString;
     yajl_gen_state state[YAJL_MAX_DEPTH];
     yajl_print_t print;
@@ -62,18 +47,55 @@ struct yajl_gen_t
     yajl_alloc_funcs alloc;
 };
 
-yajl_gen
-yajl_gen_alloc(const yajl_gen_config * config,
-               const yajl_alloc_funcs * afs)
+int
+yajl_gen_config(yajl_gen g, yajl_gen_option opt, ...)
 {
-    return yajl_gen_alloc2(NULL, config, afs, NULL);
+    int rv = 1;
+    va_list ap;
+    va_start(ap, opt);
+
+    switch(opt) {
+        case yajl_gen_beautify:
+        case yajl_gen_validate_utf8:
+        case yajl_gen_escape_solidus:
+            if (va_arg(ap, int)) g->flags |= opt;
+            else g->flags &= ~opt;
+            break;
+        case yajl_gen_indent_string: {
+            const char *indent = va_arg(ap, const char *);
+            g->indentString = indent;
+            for (; *indent; indent++) {
+                if (*indent != '\n'
+                    && *indent != '\v'
+                    && *indent != '\f'
+                    && *indent != '\t'
+                    && *indent != '\r'
+                    && *indent != ' ')
+                {
+                    g->indentString = NULL;
+                    rv = 0;
+                }
+            }
+            break;
+        }
+        case yajl_gen_print_callback:
+            yajl_buf_free(g->ctx);
+            g->print = va_arg(ap, const yajl_print_t);
+            g->ctx = va_arg(ap, void *);
+            break;
+        default:
+            rv = 0;
+    }
+
+    va_end(ap);
+
+    return rv;
 }
 
+
+
 yajl_gen
-yajl_gen_alloc2(const yajl_print_t callback,
-                const yajl_gen_config * config,
-                const yajl_alloc_funcs * afs,
-                void * ctx)
+yajl_gen_alloc(const yajl_alloc_funcs * afs)
 {
     yajl_gen g = NULL;
     yajl_alloc_funcs afsBuffer;
@@ -96,37 +118,19 @@ yajl_gen_alloc2(const yajl_print_t callback,
     /* copy in pointers to allocation routines */
     memcpy((void *) &(g->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
 
-    if (config) {
-        const char *indent = config->indentString;
-        g->pretty = config->beautify;
-        g->indentString = config->indentString;
-        if (indent) {
-          for (; *indent; indent++) {
-            if (*indent != '\n'
-                && *indent != '\v'
-                && *indent != '\f'
-                && *indent != '\t'
-                && *indent != '\r'
-                && *indent != ' ') {
-              g->indentString = NULL;
-              break;
-            }
-          }
-        }
-        if (!g->indentString) {
-          g->indentString = "  ";
-        }
-    }
-
-    if (callback) {
-        g->print = callback;
-        g->ctx = ctx;
-    } else {
-        g->print = (yajl_print_t)&yajl_buf_append;
-        g->ctx = yajl_buf_alloc(&(g->alloc));
-    }
+    g->print = (yajl_print_t)&yajl_buf_append;
+    g->ctx = yajl_buf_alloc(&(g->alloc));
+    g->indentString = "    ";
 
     return g;
+}
+
+void
+yajl_gen_reset(yajl_gen g, const char * sep)
+{
+    g->depth = 0;
+    memset((void *) &(g->state), 0, sizeof(g->state));
+    if (sep != NULL) g->print(g->ctx, sep, strlen(sep));
 }
 
 void
@@ -140,14 +144,14 @@ yajl_gen_free(yajl_gen g)
     if (g->state[g->depth] == yajl_gen_map_key ||               \
         g->state[g->depth] == yajl_gen_in_array) {              \
         g->print(g->ctx, ",", 1);                               \
-        if (g->pretty) g->print(g->ctx, "\n", 1);               \
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);               \
     } else if (g->state[g->depth] == yajl_gen_map_val) {        \
         g->print(g->ctx, ":", 1);                               \
-        if (g->pretty) g->print(g->ctx, " ", 1);                \
-   } 
+        if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, " ", 1);                \
+   }
 
 #define INSERT_WHITESPACE                                               \
-    if (g->pretty) {                                                    \
+    if ((g->flags & yajl_gen_beautify)) {                                                    \
         if (g->state[g->depth] != yajl_gen_map_val) {                   \
             unsigned int _i;                                            \
             for (_i=0;_i<g->depth;_i++)                                 \
@@ -176,7 +180,7 @@ yajl_gen_free(yajl_gen g)
     if (++(g->depth) >= YAJL_MAX_DEPTH) return yajl_max_depth_exceeded;
 
 #define DECREMENT_DEPTH \
-  if (--(g->depth) >= YAJL_MAX_DEPTH) return yajl_gen_error;
+  if (--(g->depth) >= YAJL_MAX_DEPTH) return yajl_gen_generation_complete;
 
 #define APPENDED_ATOM \
     switch (g->state[g->depth]) {                   \
@@ -198,22 +202,22 @@ yajl_gen_free(yajl_gen g)
     }                                               \
 
 #define FINAL_NEWLINE                                        \
-    if (g->pretty && g->state[g->depth] == yajl_gen_complete) \
-        g->print(g->ctx, "\n", 1);        
-    
+    if ((g->flags & yajl_gen_beautify) && g->state[g->depth] == yajl_gen_complete) \
+        g->print(g->ctx, "\n", 1);
+
 yajl_gen_status
-yajl_gen_integer(yajl_gen g, long int number)
+yajl_gen_integer(yajl_gen g, long long int number)
 {
     char i[32];
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    sprintf(i, "%ld", number);
+    sprintf(i, "%lld", number);
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
 
-#ifdef WIN32
+#if defined(_WIN32) || defined(WIN32)
 #include <float.h>
 #define isnan _isnan
 #define isinf !_finite
@@ -223,10 +227,13 @@ yajl_gen_status
 yajl_gen_double(yajl_gen g, double number)
 {
     char i[32];
-    ENSURE_VALID_STATE; ENSURE_NOT_KEY; 
+    ENSURE_VALID_STATE; ENSURE_NOT_KEY;
     if (isnan(number) || isinf(number)) return yajl_gen_invalid_number;
     INSERT_SEP; INSERT_WHITESPACE;
     sprintf(i, "%.20g", number);
+    if (strspn(i, "0123456789-") == strlen(i)) {
+        strcat(i, ".0");
+    }
     g->print(g->ctx, i, (unsigned int)strlen(i));
     APPENDED_ATOM;
     FINAL_NEWLINE;
@@ -234,7 +241,7 @@ yajl_gen_double(yajl_gen g, double number)
 }
 
 yajl_gen_status
-yajl_gen_number(yajl_gen g, const char * s, unsigned int l)
+yajl_gen_number(yajl_gen g, const char * s, size_t l)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, s, l);
@@ -245,11 +252,19 @@ yajl_gen_number(yajl_gen g, const char * s, unsigned int l)
 
 yajl_gen_status
 yajl_gen_string(yajl_gen g, const unsigned char * str,
-                unsigned int len)
+                size_t len)
 {
+    // if validation is enabled, check that the string is valid utf8
+    // XXX: This checking could be done a little faster, in the same pass as
+    // the string encoding
+    if (g->flags & yajl_gen_validate_utf8) {
+        if (!yajl_string_validate_utf8(str, len)) {
+            return yajl_gen_invalid_string;
+        }
+    }
     ENSURE_VALID_STATE; INSERT_SEP; INSERT_WHITESPACE;
     g->print(g->ctx, "\"", 1);
-    yajl_string_encode2(g->print, g->ctx, str, len);
+    yajl_string_encode(g->print, g->ctx, str, len, g->flags & yajl_gen_escape_solidus);
     g->print(g->ctx, "\"", 1);
     APPENDED_ATOM;
     FINAL_NEWLINE;
@@ -282,11 +297,11 @@ yajl_gen_status
 yajl_gen_map_open(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    INCREMENT_DEPTH; 
-    
+    INCREMENT_DEPTH;
+
     g->state[g->depth] = yajl_gen_map_start;
     g->print(g->ctx, "{", 1);
-    if (g->pretty) g->print(g->ctx, "\n", 1);
+    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -294,10 +309,10 @@ yajl_gen_map_open(yajl_gen g)
 yajl_gen_status
 yajl_gen_map_close(yajl_gen g)
 {
-    ENSURE_VALID_STATE; 
+    ENSURE_VALID_STATE;
     DECREMENT_DEPTH;
-    
-    if (g->pretty) g->print(g->ctx, "\n", 1);
+
+    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     APPENDED_ATOM;
     INSERT_WHITESPACE;
     g->print(g->ctx, "}", 1);
@@ -309,10 +324,10 @@ yajl_gen_status
 yajl_gen_array_open(yajl_gen g)
 {
     ENSURE_VALID_STATE; ENSURE_NOT_KEY; INSERT_SEP; INSERT_WHITESPACE;
-    INCREMENT_DEPTH; 
+    INCREMENT_DEPTH;
     g->state[g->depth] = yajl_gen_array_start;
     g->print(g->ctx, "[", 1);
-    if (g->pretty) g->print(g->ctx, "\n", 1);
+    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     FINAL_NEWLINE;
     return yajl_gen_status_ok;
 }
@@ -322,7 +337,7 @@ yajl_gen_array_close(yajl_gen g)
 {
     ENSURE_VALID_STATE;
     DECREMENT_DEPTH;
-    if (g->pretty) g->print(g->ctx, "\n", 1);
+    if ((g->flags & yajl_gen_beautify)) g->print(g->ctx, "\n", 1);
     APPENDED_ATOM;
     INSERT_WHITESPACE;
     g->print(g->ctx, "]", 1);
@@ -332,7 +347,7 @@ yajl_gen_array_close(yajl_gen g)
 
 yajl_gen_status
 yajl_gen_get_buf(yajl_gen g, const unsigned char ** buf,
-                 unsigned int * len)
+                 size_t * len)
 {
     if (g->print != (yajl_print_t)&yajl_buf_append) return yajl_gen_no_buf;
     *buf = yajl_buf_data((yajl_buf)g->ctx);

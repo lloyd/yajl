@@ -1,6 +1,6 @@
 **********************************************************************
-     This is YAJL 1.x, the legacy version of YAJL.  For YAJL 2
-               see https://github.com/lloyd/yajl
+        This is YAJL 2.  For the legacy version of YAJL see
+              https://github.com/lloyd/yajl/tree/1.x
 **********************************************************************
 
 Welcome to Yet Another JSON Library (YAJL)
@@ -20,15 +20,16 @@ unable to find one that satisfies my requirements.  Those are,
 7. simple to use
 8. tiny
 
-Numbers 3, 5, 6, and 7 where particularly hard to find, and were what 
+Numbers 3, 5, 6, and 7 were particularly hard to find, and were what 
 caused me to ultimately create YAJL.  This document is a tour of some
 of the more important aspects of YAJL.
 
 ## YAJL is Free.
 
-BSD licensing means you can use it in open source and commercial products
-alike.  My request beyond the licensing is that if you find bugs drop
-me a email, or better yet, fork me on git and fix it!
+Permissive licensing means you can use it in open source and
+commercial products alike without any fees.  My request beyond the
+licensing is that if you find bugs drop me a email, or better yet,
+fork and fix.
 
 Porting YAJL should be trivial, the implementation is ANSI C.  If you
 port to new systems I'd love to hear of it and integrate your patches.

@@ -1,34 +1,18 @@
 /*
- * Copyright 2010, Lloyd Hilaiel.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- * 
- *  1. Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- * 
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- * 
- *  3. Neither the name of Lloyd Hilaiel nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ * Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #include "yajl_encode.h"
 
@@ -45,20 +29,14 @@ static void CharToHex(unsigned char c, char * hexBuf)
 }
 
 void
-yajl_string_encode(yajl_buf buf, const unsigned char * str,
-                   unsigned int len)
+yajl_string_encode(const yajl_print_t print,
+                   void * ctx,
+                   const unsigned char * str,
+                   size_t len,
+                   int escape_solidus)
 {
-    yajl_string_encode2((const yajl_print_t) &yajl_buf_append, buf, str, len);
-}
-
-void
-yajl_string_encode2(const yajl_print_t print,
-                    void * ctx,
-                    const unsigned char * str,
-                    unsigned int len)
-{
-    unsigned int beg = 0;
-    unsigned int end = 0;    
+    size_t beg = 0;
+    size_t end = 0;
     char hexBuf[7];
     hexBuf[0] = '\\'; hexBuf[1] = 'u'; hexBuf[2] = '0'; hexBuf[3] = '0';
     hexBuf[6] = 0;
@@ -69,7 +47,12 @@ yajl_string_encode2(const yajl_print_t print,
             case '\r': escaped = "\\r"; break;
             case '\n': escaped = "\\n"; break;
             case '\\': escaped = "\\\\"; break;
-            /* case '/': escaped = "\\/"; break; */
+            /* it is not required to escape a solidus in JSON:
+             * read sec. 2.5: http://www.ietf.org/rfc/rfc4627.txt
+             * specifically, this production from the grammar:
+             *   unescaped = %x20-21 / %x23-5B / %x5D-10FFFF
+             */
+            case '/': if (escape_solidus) escaped = "\\/"; break;
             case '"': escaped = "\\\""; break;
             case '\f': escaped = "\\f"; break;
             case '\b': escaped = "\\b"; break;
@@ -131,10 +114,10 @@ static void Utf32toUtf8(unsigned int codepoint, char * utf8Buf)
 }
 
 void yajl_string_decode(yajl_buf buf, const unsigned char * str,
-                        unsigned int len)
+                        size_t len)
 {
-    unsigned int beg = 0;
-    unsigned int end = 0;    
+    size_t beg = 0;
+    size_t end = 0;    
 
     while (end < len) {
         if (str[end] == '\\') {
@@ -192,4 +175,46 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
         }
     }
     yajl_buf_append(buf, str + beg, end - beg);
+}
+
+#define ADV_PTR s++; if (!(len--)) return 0;
+
+int yajl_string_validate_utf8(const unsigned char * s, size_t len)
+{
+    if (!len) return 1;
+    if (!s) return 0;
+    
+    while (len--) {
+        /* single byte */
+        if (*s <= 0x7f) {
+            /* noop */
+        }
+        /* two byte */ 
+        else if ((*s >> 5) == 0x6) {
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+        }
+        /* three byte */
+        else if ((*s >> 4) == 0x0e) {
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+        }
+        /* four byte */        
+        else if ((*s >> 3) == 0x1e) {
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+            ADV_PTR;
+            if (!((*s >> 6) == 0x2)) return 0;
+        } else {
+            return 0;
+        }
+        
+        s++;
+    }
+    
+    return 1;
 }

@@ -1,34 +1,18 @@
 /*
- * Copyright 2010, Lloyd Hilaiel.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- * 
- *  1. Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- * 
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- * 
- *  3. Neither the name of Lloyd Hilaiel nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ * Copyright (c) 2007-2014, Lloyd Hilaiel <me@lloyd.io>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #include "api/yajl_parse.h"
 #include "yajl_lex.h"
@@ -37,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
 
 const char *
@@ -50,9 +35,6 @@ yajl_status_to_string(yajl_status stat)
         case yajl_status_client_canceled:
             statStr = "client canceled parse";
             break;
-        case yajl_status_insufficient_data:
-            statStr = "eof was met before the parse could complete";
-            break;
         case yajl_status_error:
             statStr = "parse error";
             break;
@@ -62,15 +44,12 @@ yajl_status_to_string(yajl_status stat)
 
 yajl_handle
 yajl_alloc(const yajl_callbacks * callbacks,
-           const yajl_parser_config * config,
-           const yajl_alloc_funcs * afs,
+           yajl_alloc_funcs * afs,
            void * ctx)
 {
-    unsigned int allowComments = 0;
-    unsigned int validateUTF8 = 0;
     yajl_handle hand = NULL;
     yajl_alloc_funcs afsBuffer;
-    
+
     /* first order of business is to set up memory allocation routines */
     if (afs != NULL) {
         if (afs->malloc == NULL || afs->realloc == NULL || afs->free == NULL)
@@ -87,21 +66,40 @@ yajl_alloc(const yajl_callbacks * callbacks,
     /* copy in pointers to allocation routines */
     memcpy((void *) &(hand->alloc), (void *) afs, sizeof(yajl_alloc_funcs));
 
-    if (config != NULL) {
-        allowComments = config->allowComments;
-        validateUTF8 = config->checkUTF8;
-    }
-
     hand->callbacks = callbacks;
     hand->ctx = ctx;
-    hand->lexer = yajl_lex_alloc(&(hand->alloc), allowComments, validateUTF8);
+    hand->lexer = NULL; 
     hand->bytesConsumed = 0;
     hand->decodeBuf = yajl_buf_alloc(&(hand->alloc));
+    hand->flags	    = 0;
     yajl_bs_init(hand->stateStack, &(hand->alloc));
-
-    yajl_bs_push(hand->stateStack, yajl_state_start);    
+    yajl_bs_push(hand->stateStack, yajl_state_start);
 
     return hand;
+}
+
+int
+yajl_config(yajl_handle h, yajl_option opt, ...)
+{
+    int rv = 1;
+    va_list ap;
+    va_start(ap, opt);
+
+    switch(opt) {
+        case yajl_allow_comments:
+        case yajl_dont_validate_strings:
+        case yajl_allow_trailing_garbage:
+        case yajl_allow_multiple_values:
+        case yajl_allow_partial_values:
+            if (va_arg(ap, int)) h->flags |= opt;
+            else h->flags &= ~opt;
+            break;
+        default:
+            rv = 0;
+    }
+    va_end(ap);
+
+    return rv;
 }
 
 void
@@ -109,39 +107,57 @@ yajl_free(yajl_handle handle)
 {
     yajl_bs_free(handle->stateStack);
     yajl_buf_free(handle->decodeBuf);
-    yajl_lex_free(handle->lexer);
+    if (handle->lexer) {
+        yajl_lex_free(handle->lexer);
+        handle->lexer = NULL;
+    }
     YA_FREE(&(handle->alloc), handle);
 }
 
 yajl_status
 yajl_parse(yajl_handle hand, const unsigned char * jsonText,
-           unsigned int jsonTextLen)
+           size_t jsonTextLen)
 {
     yajl_status status;
+
+    /* lazy allocation of the lexer */
+    if (hand->lexer == NULL) {
+        hand->lexer = yajl_lex_alloc(&(hand->alloc),
+                                     hand->flags & yajl_allow_comments,
+                                     !(hand->flags & yajl_dont_validate_strings));
+    }
+
     status = yajl_do_parse(hand, jsonText, jsonTextLen);
     return status;
 }
 
+
 yajl_status
-yajl_parse_complete(yajl_handle hand)
+yajl_complete_parse(yajl_handle hand)
 {
-    /* The particular case we want to handle is a trailing number.
-     * Further input consisting of digits could cause our interpretation
-     * of the number to change (buffered "1" but "2" comes in).
-     * A very simple approach to this is to inject whitespace to terminate
-     * any number in the lex buffer.
-     */
-    return yajl_parse(hand, (const unsigned char *)" ", 1);
+    /* The lexer is lazy allocated in the first call to parse.  if parse is
+     * never called, then no data was provided to parse at all.  This is a
+     * "premature EOF" error unless yajl_allow_partial_values is specified.
+     * allocating the lexer now is the simplest possible way to handle this
+     * case while preserving all the other semantics of the parser
+     * (multiple values, partial values, etc). */
+    if (hand->lexer == NULL) {
+        hand->lexer = yajl_lex_alloc(&(hand->alloc),
+                                     hand->flags & yajl_allow_comments,
+                                     !(hand->flags & yajl_dont_validate_strings));
+    }
+
+    return yajl_do_finish(hand);
 }
 
 unsigned char *
 yajl_get_error(yajl_handle hand, int verbose,
-               const unsigned char * jsonText, unsigned int jsonTextLen)
+               const unsigned char * jsonText, size_t jsonTextLen)
 {
     return yajl_render_error_string(hand, jsonText, jsonTextLen, verbose);
 }
 
-unsigned int
+size_t
 yajl_get_bytes_consumed(yajl_handle hand)
 {
     if (!hand) return 0;
