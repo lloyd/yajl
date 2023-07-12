@@ -15,6 +15,7 @@
  */
 
 #include "api/yajl_parse.h"
+#include "api/yajl_common.h"
 #include "yajl_lex.h"
 #include "yajl_parser.h"
 #include "yajl_encode.h"
@@ -343,7 +344,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         goto around_again;
                     }
                     /* intentional fall-through */
-                    __attribute__((fallthrough));
+                    YAJL_FALLTHROUGH;
                 }
                 case yajl_tok_colon:
                 case yajl_tok_comma:
@@ -395,7 +396,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                         bufLen = yajl_buf_len(hand->decodeBuf);
                     }
                     /* intentional fall-through */
-                    __attribute__((fallthrough));
+                    YAJL_FALLTHROUGH;
                 case yajl_tok_string:
                     if (hand->callbacks && hand->callbacks->yajl_map_key) {
                         _CC_CHK(hand->callbacks->yajl_map_key(hand->ctx, buf,
@@ -416,7 +417,7 @@ yajl_do_parse(yajl_handle hand, const unsigned char * jsonText,
                 default:
                     yajl_bs_set(hand->stateStack, yajl_state_parse_error);
                     hand->parseError =
-                        "invalid object key (must be a string)"; 
+                        "invalid object key (must be a string)";
                     goto around_again;
             }
         }

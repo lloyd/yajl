@@ -42,6 +42,12 @@ extern "C" {
 #  endif
 #endif
 
+#if defined(__GNUC__) && __GNUC__ >= 7
+#  define YAJL_FALLTHROUGH __attribute__((fallthrough))
+#else
+#  define YAJL_FALLTHROUGH
+#endif
+
 /** pointer to a malloc function, supporting client overriding memory
  *  allocation routines */
 typedef void * (*yajl_malloc_func)(void *ctx, size_t sz);
