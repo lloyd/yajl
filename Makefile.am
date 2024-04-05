@@ -20,8 +20,12 @@ libyajl_la_SOURCES = \
 	src/yajl_lex.c \
 	src/yajl_tree.c
 
-noinst_PROGRAMS = verify/json_verify
+noinst_PROGRAMS = verify/json_verify example/parse_config
 
 verify_json_verify_SOURCES = verify/json_verify.c
 verify_json_verify_CFLAGS = -I $(srcdir)/src/headers
 verify_json_verify_LDADD = libyajl.la
+
+example_parse_config_SOURCES = example/parse_config.c
+example_parse_config_CFLAGS = -I $(srcdir)/src/headers
+example_parse_config_LDADD = libyajl.la
