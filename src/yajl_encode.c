@@ -135,12 +135,32 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                 case 't': unescaped = "\t"; break;
                 case 'u': {
                     unsigned int codepoint = 0;
-                    hexToDigit(&codepoint, str + ++end);
+                    /* A complete \uXXXX escape needs four more bytes.  The
+                     * image we are handed here is the re-lexed string, so it is not
+                     * guaranteed to be well formed: the surrogate branch below
+                     * advances `end` by a single byte, which can leave it sitting on
+                     * a \u whose digits - and the end of the buffer - have already
+                     * passed.  Validate against len before reading, otherwise
+                     * hexToDigit() runs off the end of the string. */
+                    if (++end + 4 > len) {
+                        unescaped = "?";
+                        break;
+                    }
+                    hexToDigit(&codepoint, str + end);
                     end+=3;
                     /* check if this is a surrogate */
                     if ((codepoint & 0xFC00) == 0xD800) {
                         end++;
-                        if (str[end] == '\\' && str[end + 1] == 'u') {
+                        /* an unpaired high surrogate is emitted as '?'; a low
+                         * surrogate needs six more bytes (\uXXXX) and they
+                         * must all still be inside the buffer */
+                        if (end + 6 > len ||
+                            str[end] != '\\' || str[end + 1] != 'u')
+                        {
+                            unescaped = "?";
+                            break;
+                        }
+                        {
                             unsigned int surrogate = 0;
                             hexToDigit(&surrogate, str + end + 2);
                             codepoint =
@@ -148,9 +168,6 @@ void yajl_string_decode(yajl_buf buf, const unsigned char * str,
                                  ((((codepoint >> 6) & 0xF) + 1) << 16) | 
                                  (surrogate & 0x3FF));
                             end += 5;
-                        } else {
-                            unescaped = "?";
-                            break;
                         }
                     }
                     
