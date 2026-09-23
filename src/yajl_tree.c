@@ -149,6 +149,26 @@ static yajl_val context_pop(context_t *ctx)
     return (v);
 }
 
+/* Release the elements that are still open after a parse failure. Each stack
+ * element holds a container that was not closed, and each of those containers
+ * owns everything below it, so freeing them bottom-up releases the whole tree
+ * that was built before the failure. A container may be reachable twice, once
+ * through its parent and once through the stack, when its parent did close and
+ * re-added it as a child (context_pop already took it off the stack in that
+ * case, so the stack only holds containers that were never added anywhere). */
+static void context_free_stack(context_t *ctx)
+{
+    while (ctx->stack)
+    {
+        stack_elem_t *stack = ctx->stack;
+        ctx->stack = stack->next;
+        if (stack->key != NULL)
+            free(stack->key);
+        yajl_tree_free(stack->value);
+        free(stack);
+    }
+}
+
 static int object_add_keyval(context_t *ctx,
                              yajl_val obj, char *key, yajl_val value)
 {
@@ -444,6 +464,12 @@ yajl_val yajl_tree_parse (const char *input,
              snprintf(error_buffer, error_buffer_size, "%s", internal_err_str);
              YA_FREE(&(handle->alloc), internal_err_str);
         }
+        /* The parse failed partway, so the tree built so far is not returned
+         * to the caller and nothing else will free it. The open stack elements
+         * point at values that belong to that tree, so drop them first and
+         * then release the tree. */
+        context_free_stack(&ctx);
+        yajl_tree_free(ctx.root);
         yajl_free (handle);
         return NULL;
     }
