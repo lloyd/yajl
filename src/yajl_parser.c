@@ -29,7 +29,10 @@
 #include <assert.h>
 #include <math.h>
 
-#define MAX_VALUE_TO_MULTIPLY ((LLONG_MAX / 10) + (LLONG_MAX % 10))
+/* Largest value for which ret * 10 still fits in a long long. The check in
+ * yajl_parse_integer() below rejects a larger ret before multiplying, so the
+ * multiplication itself cannot overflow. */
+#define MAX_VALUE_TO_MULTIPLY (LLONG_MAX / 10)
 
  /* same semantics as strtol */
 long long
