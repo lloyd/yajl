@@ -445,7 +445,21 @@ yajl_val yajl_tree_parse (const char *input,
              YA_FREE(&(handle->alloc), internal_err_str);
         }
         yajl_free (handle);
-        return NULL;
+
+        /* Release the partially built tree, if any. */
+        while (ctx.stack != NULL)
+        {
+            stack_elem_t *s = ctx.stack;
+
+            ctx.stack = s->next;
+            free (s->key);
+            yajl_tree_free (s->value);
+            free (s);
+        }
+        if (ctx.root != NULL)
+            yajl_tree_free (ctx.root);
+
+        return (NULL);
     }
 
     yajl_free (handle);
