@@ -356,7 +356,7 @@ yajl_lex_string(yajl_lexer lexer, const unsigned char * jsonText,
         /* accept it, and move on */
     }
   finish_string_lex:
-    /* tell our buddy, the parser, wether he needs to process this string
+    /* tell our buddy, the parser, whether he needs to process this string
      * again */
     if (hasEscapes && tok == yajl_tok_string) {
         tok = yajl_tok_string_with_escapes;
