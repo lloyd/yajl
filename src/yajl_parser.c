@@ -35,30 +35,26 @@
 long long
 yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
-    long long ret  = 0;
-    long sign = 1;
-    const unsigned char *pos = number;
-    if (*pos == '-') { pos++; sign = -1; }
-    if (*pos == '+') { pos++; }
+    char buf[21] = {0};
 
-    while (pos < number + length) {
-        if ( ret > MAX_VALUE_TO_MULTIPLY ) {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        ret *= 10;
-        if (LLONG_MAX - ret < (*pos - '0')) {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        if (*pos < '0' || *pos > '9') {
-            errno = ERANGE;
-            return sign == 1 ? LLONG_MAX : LLONG_MIN;
-        }
-        ret += (*pos++ - '0');
+#ifdef NDEBUG
+    char *endptr = NULL;
+#endif
+
+    if (length >= sizeof(buf)) {
+        errno = ERANGE;
+        return LLONG_MAX;
     }
 
-    return sign * ret;
+    memcpy(buf, number, length);
+
+    const long long ret = strtoll(buf, &endptr, 10);
+
+    assert(endptr != NULL); // endptr should always be NULL.
+                            // the parser catches invalid integers
+                            // before parse_integer is called...
+
+    return ret;
 }
 
 unsigned char *
