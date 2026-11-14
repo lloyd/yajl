@@ -37,9 +37,7 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
 {
     char buf[21] = {0};
 
-#ifdef NDEBUG
     char *endptr = NULL;
-#endif
 
     if (length >= sizeof(buf)) {
         errno = ERANGE;
@@ -53,6 +51,8 @@ yajl_parse_integer(const unsigned char *number, unsigned int length)
     assert(endptr != NULL); // endptr should always be NULL.
                             // the parser catches invalid integers
                             // before parse_integer is called...
+
+    (void*) endptr; // needed for /ANALYZE and -fanalyzer in release mode.
 
     return ret;
 }
