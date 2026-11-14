@@ -1,0 +1,8 @@
+map open '{'
+key: 'e'
+map open '{'
+key: '?\DC00'
+string: 'a'
+map close '}'
+map close '}'
+memory leaks:	0
